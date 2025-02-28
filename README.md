@@ -1,4 +1,4 @@
-# flutter_application_1
+# EcoChatBot
 
 A new Flutter project.
 

@@ -1,6 +1,6 @@
 {
-    "name": "flutter_application_1",
-    "short_name": "flutter_application_1",
+    "name": "eco_chat_bot",
+    "short_name": "eco_chat_bot",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
