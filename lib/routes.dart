@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/pages/general/views/home.dart';
 import 'package:flutter/material.dart';
 
 final Map<String, WidgetBuilder> routes = {
@@ -10,17 +11,6 @@ final Map<String, WidgetBuilder> routes = {
   // SignUpView.routeName: (context) => const SignUpView(),
   // ResetPasswordView.routeName: (context) => const ResetPasswordView(),
 
-  // // Home
-  // HomeView.routeName: (context) => const HomeView(),
-
-  // // Topic
-  // SelectTopicView.routeName: (context) => SelectTopicView(),
-  // SearchTopicView.routeName: (context) => const SearchTopicView(),
-  // TopicDetailsView.routeName: (context) => const TopicDetailsView(),
-
-  // // Favorite
-  // FavoriteView.routeName: (context) => FavoriteView(),
-  // // Connect teacher
-  // ConnectTeacherView.routeName: (context) => const ConnectTeacherView(),
-  // HangUpMeetingView.routeName: (context) => const HangUpMeetingView()
+  // Home
+  HomeView.routeName: (context) => const HomeView(),
 };
