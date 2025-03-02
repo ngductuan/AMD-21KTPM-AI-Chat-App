@@ -1,4 +1,4 @@
-import 'package:eco_chat_bot/src/pages/general/views/home.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/homepage.dart';
 import 'package:flutter/material.dart';
 
 final Map<String, WidgetBuilder> routes = {
@@ -12,5 +12,5 @@ final Map<String, WidgetBuilder> routes = {
   // ResetPasswordView.routeName: (context) => const ResetPasswordView(),
 
   // Home
-  HomeView.routeName: (context) => const HomeView(),
+  HomePage.routeName: (context) => const HomePage(),
 };

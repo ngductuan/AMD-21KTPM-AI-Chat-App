@@ -1,8 +1,7 @@
 import 'package:eco_chat_bot/routes.dart';
 import 'package:eco_chat_bot/src/helpers/local_storage_helper.dart';
-import 'package:eco_chat_bot/src/pages/general/views/home.dart';
-import 'package:eco_chat_bot/src/pages/general/views/homepage.dart';
-import 'package:eco_chat_bot/src/pages/general/views/login.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/homepage.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
