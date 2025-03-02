@@ -1,4 +1,11 @@
 pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url 'https://storage.googleapis.com/download.flutter.io' }
+    }
+    
     def flutterSdkPath = {
         def properties = new Properties()
         file("local.properties").withInputStream { properties.load(it) }
@@ -11,10 +18,12 @@ pluginManagement {
     includeBuild("${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle")
 
     plugins {
-        id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
+        id 'com.android.application' version '8.1.0' apply false
+        id 'kotlin-android' apply false
+        id 'dev.flutter.flutter-gradle-plugin' apply false
     }
 }
 
 include ":app"
 
-apply from: "${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+//apply from: "${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle/app_plugin_loader.gradle"
