@@ -1,4 +1,5 @@
 import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/widgets/gradient_text.dart';
 import 'package:eco_chat_bot/src/widgets/logo_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,14 +36,7 @@ class WelcomeScreen extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
-                Text(
-                  "I'm EcoChatBot!",
-                  style: GoogleFonts.poppins(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
+                GradientTextWidget(text: 'I\'m EcoChatBot', fontSize: 36),
                 Text(
                   'Your own chat buddy',
                   style: GoogleFonts.poppins(
@@ -52,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-        
+
                 // Buttons
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 0),
@@ -72,11 +66,11 @@ class WelcomeScreen extends StatelessWidget {
                               const begin = Offset(1.0, 0.0);
                               const end = Offset.zero;
                               const curve = Curves.easeInOut;
-        
+
                               var tween = Tween(begin: begin, end: end)
                                   .chain(CurveTween(curve: curve));
                               var offsetAnimation = animation.drive(tween);
-        
+
                               return SlideTransition(
                                   position: offsetAnimation, child: child);
                             },
@@ -89,7 +83,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-        
+
                 // Sign up text
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -98,7 +92,7 @@ class WelcomeScreen extends StatelessWidget {
                       'No account yet? ',
                       style: TextStyle(
                         color: Colors.black54,
-                        fontSize: 16,
+                        fontSize: 14,
                       ),
                     ),
                     GestureDetector(
@@ -107,7 +101,7 @@ class WelcomeScreen extends StatelessWidget {
                         'Sign up',
                         style: TextStyle(
                           color: Colors.purple,
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -115,7 +109,7 @@ class WelcomeScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 32),
-        
+
                 // Terms text
                 Padding(
                   padding: const EdgeInsets.symmetric(

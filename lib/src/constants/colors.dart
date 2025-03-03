@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 class ColorConst {
+  static const primaryColorArray = [
+    Color(0xFF0099FF),
+    Color(0xFFA334FA),
+    Color(0xFFFF5280),
+    Color(0xFFFF7061),
+  ];
+
   static const LinearGradient primaryGradientColor = LinearGradient(
-    colors: [
-      Color(0xEB0099FF),
-      Color(0xEBA334FA),
-      Color(0xEBFF5280),
-      Color(0xEBFF7061),
-    ],
+    colors: primaryColorArray,
     stops: [0.0, 0.36, 0.71, 0.97],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
