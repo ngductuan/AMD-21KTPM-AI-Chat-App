@@ -8,7 +8,7 @@ class GoogleSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 56,
       child: ElevatedButton.icon(
         icon: SvgPicture.asset('assets/icons/google.svg', height: 24),
         label: const Text(
