@@ -1,4 +1,4 @@
-import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,15 +6,16 @@ import '../../widgets/input_field.dart';
 import '../../widgets/google_signin_button.dart';
 import '../../widgets/gradient_button.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
 
@@ -74,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: [
                         Text(
-                          'LOGIN',
+                          'SIGN UP',
                           style: GoogleFonts.poppins(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -96,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ] else ...[
-                          SizedBox(height: 24),
+                          SizedBox(height: 10),
                         ],
 
                         InputField(
@@ -104,7 +105,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _usernameController,
                           hintText: 'Enter your username',
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 4),
+
+                        InputField(
+                          label: 'Email',
+                          controller: _emailController,
+                          hintText: 'Enter your email',
+                        ),
+                        const SizedBox(height: 4),
 
                         InputField(
                           label: 'Password',
@@ -112,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           hintText: 'Enter your password',
                           isPassword: true,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 2),
 
                         // Forgot Password
                         Align(
@@ -133,14 +141,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
 
                   // Buttons
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
                       children: [
-                        buildGradientButton(context, "Login", () {
+                        buildGradientButton(context, "Sign up", () {
                           setState(() {
                             if (_usernameController.text.isEmpty ||
                                 _passwordController.text.isEmpty) {
@@ -153,19 +161,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           });
                         }),
                         const SizedBox(height: 16),
-                        GoogleSignInButton(),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 10),
 
-                  // Sign Up
+                  // Login
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'No account yet? ',
+                        'Already have an account? ',
                         style: GoogleFonts.poppins(
                           color: Colors.black54,
                           fontSize: 14,
@@ -180,10 +187,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const Duration(milliseconds: 400),
                               pageBuilder:
                                   (context, animation, secondaryAnimation) =>
-                                      const SignUpScreen(),
+                                      const LoginScreen(),
                               transitionsBuilder: (context, animation,
                                   secondaryAnimation, child) {
-                                const begin = Offset(1.0, 0.0);
+                                const begin = Offset(-1.0, 0.0);
                                 const end = Offset.zero;
                                 const curve = Curves.easeInOut;
 
@@ -198,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                         },
                         child: Text(
-                          'Sign up',
+                          'Login',
                           style: GoogleFonts.poppins(
                             color: Colors.purple,
                             fontSize: 14,

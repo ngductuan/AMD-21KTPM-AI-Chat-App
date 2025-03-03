@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,8 +6,8 @@ import 'login.dart';
 import '../../widgets/google_signin_button.dart';
 import '../../widgets/gradient_button.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
   static const String routeName = '/home';
 
   @override
@@ -121,7 +122,30 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          transitionDuration: const Duration(milliseconds: 400),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const SignUpScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.easeInOut;
+
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            var offsetAnimation = animation.drive(tween);
+
+                            return SlideTransition(
+                                position: offsetAnimation, child: child);
+                          },
+                        ),
+                      );
+                    },
                     child: const Text(
                       'Sign up',
                       style: TextStyle(

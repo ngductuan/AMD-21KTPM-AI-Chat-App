@@ -1,6 +1,6 @@
 import 'package:eco_chat_bot/routes.dart';
 import 'package:eco_chat_bot/src/helpers/local_storage_helper.dart';
-import 'package:eco_chat_bot/src/pages/authentication/views/homepage.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/welcome.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
 
 import 'package:flutter/material.dart';
@@ -25,6 +25,6 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         routes: routes,
         //home: const LoginScreen());
-        home: const HomePage());
+        home: const WelcomePage());
   }
 }
