@@ -25,6 +25,11 @@ class ColorConst {
     end: Alignment.bottomRight,
   );
   static const backgroundGrayColor = Color(0xFFF3F3F3);
+  static const backgroundWhiteColor = Color(0xFFFFFFFF);
+  static const backgroundBlackColor = Color(0xFF000000);
+  static const backgroundRedColor = Color(0xFFFF3B30);
+  static const backgroundLightGrayColor = Color(0xFFE5E5E5);
+  static const backgroundLightGrayColor2 = Color(0xFFEFEFF4);
 
   static const textHighlightColor = Color(0xFF675DFF);
   static const textGrayColor = Color(0xFF8E8E93);
