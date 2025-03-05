@@ -2,9 +2,9 @@ import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../widgets/input_field.dart';
-import '../../widgets/google_signin_button.dart';
-import '../../widgets/gradient_button.dart';
+import '../../../widgets/input_field.dart';
+import '../../../widgets/google_signin_button.dart';
+import '../../../widgets/gradient_button.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);

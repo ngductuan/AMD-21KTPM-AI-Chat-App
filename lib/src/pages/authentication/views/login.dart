@@ -1,9 +1,11 @@
 import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/input_field.dart';
-import '../widgets/google_signin_button.dart';
+import '../../../widgets/input_field.dart';
+import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
+import './verification_code.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -156,7 +158,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
                           }),
                           const SizedBox(height: 16),
-                          GoogleSignInButton(),
+                          GoogleSignInButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const VerificationCodeScreen(
+                                    email: 'test@gmail.com',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
