@@ -6,6 +6,7 @@ import '../../../widgets/input_field.dart';
 import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
 import './verification_code.dart';
+import 'verification_email.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -123,7 +124,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const VerificationEmailScreen(),
+                                  ),
+                                );
+                              },
                               child: Text(
                                 'Forgot password?',
                                 style: GoogleFonts.poppins(

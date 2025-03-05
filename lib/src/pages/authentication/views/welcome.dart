@@ -4,6 +4,7 @@ import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
 import 'sign_up.dart';
 import 'login.dart';
+import 'verification_email.dart';
 import 'verification_code.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -45,6 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
+
               // Welcome Text
               Text(
                 'Hello',
@@ -110,9 +112,8 @@ class WelcomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const VerificationCodeScreen(
-                              email: 'test@gmail.com',
-                            ),
+                            builder: (context) =>
+                                const VerificationEmailScreen(),
                           ),
                         );
                       },
