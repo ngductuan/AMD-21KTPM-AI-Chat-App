@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../constants/styles.dart';
+import 'verification_code.dart';
 
 class VerificationEmailScreen extends StatefulWidget {
   const VerificationEmailScreen({Key? key}) : super(key: key);
@@ -19,7 +20,9 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
   }
 
   void _handleSendCode() {
-    if (!_isValidEmail(_emailController.text)) {
+    String _email = _emailController.text.trim(); // Trim extra spaces
+
+    if (!_isValidEmail(_email)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a valid email address'),
@@ -35,11 +38,21 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
 
     // Simulate API call
     Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return; // Prevent state update if widget is disposed
+
       setState(() {
         _isLoading = false;
       });
-      // Navigate to verification code screen
-      // Navigator.push(...);
+
+      // Navigate to verification code screen with email as an argument
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VerificationCodeScreen(
+            email: _email,
+          ),
+        ),
+      );
     });
   }
 
@@ -109,35 +122,17 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
               ),
             ),
             const SizedBox(height: spacing24),
-            Container(
+            SizedBox(
               width: double.infinity,
               height: spacing56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(spacing30),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF4285F4), // Google blue
-                    Color(0xFFEA4335), // Google red
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _handleSendCode,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
+                  backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(spacing30),
                   ),
+                  padding: const EdgeInsets.symmetric(vertical: spacing16),
                 ),
                 child: _isLoading
                     ? const SizedBox(
