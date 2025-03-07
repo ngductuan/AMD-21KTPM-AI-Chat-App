@@ -37,7 +37,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  
+
   flutter_lints: ^5.0.0
 
 flutter:
@@ -47,6 +47,7 @@ flutter:
   assets:
     - assets/logo/
     - assets/icons/
+    - assets/icons/nav_bar/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -71,4 +72,3 @@ flutter:
       fonts:
         - asset: fonts/mercadillo/Mercadillo-Bold.ttf
           weight: 700
-
