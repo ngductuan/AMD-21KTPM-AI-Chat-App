@@ -8,5 +8,4 @@ final Map<String, WidgetBuilder> routes = {
   LoginScreen.routeName: (context) => const LoginScreen(),
 
   // Chat
-
 };

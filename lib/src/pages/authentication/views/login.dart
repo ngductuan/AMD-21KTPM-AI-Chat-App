@@ -1,9 +1,12 @@
 import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/input_field.dart';
-import '../widgets/google_signin_button.dart';
+import '../../../widgets/input_field.dart';
+import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
+import './verification_code.dart';
+import 'verification_email.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -15,9 +18,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _isPasswordVisible = false;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String _errorMessage = '';
 
   @override
   void dispose() {
@@ -85,7 +88,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.black,
                             ),
                           ),
-                          const SizedBox(height: 24),
+
+                          //Error message
+                          if (_errorMessage.isNotEmpty) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                _errorMessage,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ] else ...[
+                            SizedBox(height: 24),
+                          ],
 
                           InputField(
                             label: 'Username',
@@ -105,7 +124,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const VerificationEmailScreen(),
+                                  ),
+                                );
+                              },
                               child: Text(
                                 'Forgot password?',
                                 style: GoogleFonts.poppins(
@@ -128,10 +155,31 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           buildGradientButton(context, "Login", () {
-                            // Handle login logic here
+                            setState(() {
+                              if (_usernameController.text.isEmpty ||
+                                  _passwordController.text.isEmpty) {
+                                _errorMessage =
+                                    'Username or password is incorrect!';
+                              } else {
+                                _errorMessage = '';
+                                // Handle login logic here
+                              }
+                            });
                           }),
                           const SizedBox(height: 16),
-                          GoogleSignInButton(),
+                          GoogleSignInButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const VerificationCodeScreen(
+                                    email: 'test@gmail.com',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -150,7 +198,31 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                transitionDuration:
+                                    const Duration(milliseconds: 400),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const SignUpScreen(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = Offset(1.0, 0.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
+                                },
+                              ),
+                            );
+                          },
                           child: Text(
                             'Sign up',
                             style: GoogleFonts.poppins(
