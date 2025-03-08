@@ -5,6 +5,19 @@ class AssetPath {
   // Authentication icons
   static const String googleIcon = 'assets/icons/google.svg';
 
+  // Chat view
+  static const List<String> chatThreadAvatarList = [
+    'assets/images/avatar/chat_avatar_1.png',
+    'assets/images/avatar/chat_avatar_2.png',
+    'assets/images/avatar/chat_avatar_3.png',
+    'assets/images/avatar/chat_avatar_4.png',
+    'assets/images/avatar/chat_avatar_5.png',
+    'assets/images/avatar/chat_avatar_6.png',
+    'assets/images/avatar/chat_avatar_7.png',
+    'assets/images/avatar/chat_avatar_8.png',
+    'assets/images/avatar/chat_avatar_9.png',
+  ];
+
 
   // Others
   static const String noDataIcon = 'assets/icons/no_data.svg';

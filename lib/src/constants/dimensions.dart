@@ -27,7 +27,6 @@ const spacing32 = 32.0;
 const spacing40 = 40.0;
 const spacing44 = 44.0;
 const spacing48 = 48.0;
-const spacing50 = 50.0;
 const spacing52 = 52.0;
 const spacing56 = 56.0;
 const spacing60 = 60.0;
