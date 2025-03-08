@@ -3,6 +3,7 @@ import 'package:eco_chat_bot/src/constants/colors.dart';
 import 'package:eco_chat_bot/src/constants/dimensions.dart';
 import 'package:eco_chat_bot/src/constants/font_styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
 import 'package:eco_chat_bot/src/widgets/no_data_gadget.dart';
@@ -20,15 +21,14 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   int listCount = 1;
 
-  @override
-  void initState() {
-    super.initState();
-    // Auto show modal after the screen is built
-    Future.delayed(Duration(milliseconds: 500), () {
-      Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
-    });
-    
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // Auto show modal after the screen is built
+  //   Future.delayed(Duration(milliseconds: 500), () {
+  //     Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+  //   });
+  // }
 
   // Dummy chat data
   final List<Map<String, String>> chatData = [
@@ -87,6 +87,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                   onTap: () {
                     // Handle chat item tap
+                    Navigator.of(context).pushNamed(
+                      ChatThreadScreen.routeName,
+                      arguments: chatData[index],
+                    );
                   },
                 );
               },
