@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/constants/asset_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -26,7 +27,7 @@ class GoogleSignInButton extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
                 ),
               )
-            : SvgPicture.asset('assets/icons/google.svg', height: 24),
+            : SvgPicture.asset(AssetPath.googleIcon, height: 24),
         label: Text(
           isLoading ? 'Signing in...' : 'Continue with Google',
           style: const TextStyle(
