@@ -18,9 +18,11 @@ class AssetPath {
     'assets/images/avatar/chat_avatar_9.png',
   ];
 
-
   // Others
   static const String noDataIcon = 'assets/icons/no_data.svg';
+  static const String icoErrorToast = 'assets/icons/ic_error_toast.svg';
+  static const String icoWhiteTick = 'assets/icons/white_tick.svg';
+  static const String icoWhiteExclamation = 'assets/icons/white_exclamation.svg';
 
   // Assets for bottom nav bar
   static const String chatBeforeNavIcon = 'assets/icons/nav_bar/chat_before.svg';
@@ -33,5 +35,4 @@ class AssetPath {
   static const String bellAfterNavIcon = 'assets/icons/nav_bar/bell_after.svg';
   static const String meBeforeNavIcon = 'assets/icons/nav_bar/me_before.svg';
   static const String meAfterNavIcon = 'assets/icons/nav_bar/me_after.svg';
-
 }
