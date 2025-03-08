@@ -2,8 +2,7 @@ import 'package:eco_chat_bot/src/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-Widget buildGradientButton(
-    BuildContext context, String text, VoidCallback onPressed) {
+Widget buildGradientButton(BuildContext context, String text, VoidCallback onPressed) {
   return Container(
     width: double.infinity,
     height: 56, // Increased height

@@ -3,6 +3,8 @@ import 'package:eco_chat_bot/src/constants/colors.dart';
 import 'package:eco_chat_bot/src/constants/dimensions.dart';
 import 'package:eco_chat_bot/src/constants/font_styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
+import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
+import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
 import 'package:eco_chat_bot/src/widgets/no_data_gadget.dart';
 import 'package:flutter/material.dart';
 
@@ -17,6 +19,16 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   int listCount = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto show modal after the screen is built
+    Future.delayed(Duration(milliseconds: 500), () {
+      Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+    });
+    
+  }
 
   // Dummy chat data
   final List<Map<String, String>> chatData = [
@@ -37,7 +49,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       appBar: AppBar(
         title: Text(
           'All chat',
-          style: AppFontStyles.poppinsBold(fontSize: fontSize20),
+          style: AppFontStyles.poppinsTitleBold(fontSize: fontSize20),
         ),
         elevation: 1,
         shadowColor: ColorConst.backgroundLightGrayColor,
@@ -63,7 +75,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                   title: Text(
                     chatData[index]["title"]!,
-                    style: AppFontStyles.poppinsBold(fontSize: fontSize16, fontWeight: FontWeight.w500),
+                    style: AppFontStyles.poppinsTextBold(fontSize: fontSize16, fontWeight: FontWeight.w500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -110,7 +122,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           if (value == 1) {
             print("New Chat Clicked");
           } else if (value == 2) {
-            print("Create Bot Clicked");
+            Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
           }
         },
         itemBuilder: (context) => [
