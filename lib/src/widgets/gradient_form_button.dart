@@ -27,6 +27,7 @@ class GradientFormButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: isActiveButton == false ? ColorConst.backgroundWhiteColor : Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(spacing8),
           ),
