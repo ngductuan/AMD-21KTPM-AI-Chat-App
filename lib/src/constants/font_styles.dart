@@ -13,8 +13,17 @@ class AppFontStyles {
     );
   }
 
-  static TextStyle poppinsBold(
+  static TextStyle poppinsTitleBold(
       {double? fontSize, FontWeight fontWeight = FontWeight.bold, Color color = ColorConst.textBlackColor}) {
+    return GoogleFonts.poppins(
+      fontSize: fontSize ?? globalFontSize,
+      fontWeight: fontWeight,
+      color: color,
+    );
+  }
+
+  static TextStyle poppinsTextBold(
+      {double? fontSize, FontWeight fontWeight = FontWeight.w500, Color color = ColorConst.textBlackColor}) {
     return GoogleFonts.poppins(
       fontSize: fontSize ?? globalFontSize,
       fontWeight: fontWeight,

@@ -1,4 +1,3 @@
-import 'package:eco_chat_bot/src/constants/dimensions.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +21,7 @@ class _AppBottomNavBarState extends State<AppBottomNavBar> {
     _currentIndex = 0;
   }
 
-  BottomNavigationBarItem _bottomNavItem(
-      String label, String icoBefore, String icoAfter, Color? color) {
+  BottomNavigationBarItem _bottomNavItem(String label, String icoBefore, String icoAfter, Color? color) {
     return BottomNavigationBarItem(
         icon: ImageHelper.loadFromAsset(
           icoBefore,
@@ -82,16 +80,14 @@ class _AppBottomNavBarState extends State<AppBottomNavBar> {
             // ).show(context);
           },
           items: [
-            _bottomNavItem('Chat', AssetPath.chatBeforeNavIcon,
-                AssetPath.chatAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem('Explore', AssetPath.searchBeforeNavIcon,
-                AssetPath.searchAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem('Add', AssetPath.addBeforeNavIcon,
-                AssetPath.addAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem('Message', AssetPath.bellBeforeNavIcon,
-                AssetPath.bellAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem('Me', AssetPath.meBeforeNavIcon,
-                AssetPath.meAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem(
+                'Chat', AssetPath.chatBeforeNavIcon, AssetPath.chatAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem(
+                'Explore', AssetPath.searchBeforeNavIcon, AssetPath.searchAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem('Add', AssetPath.addBeforeNavIcon, AssetPath.addAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem(
+                'Message', AssetPath.bellBeforeNavIcon, AssetPath.bellAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem('Me', AssetPath.meBeforeNavIcon, AssetPath.meAfterNavIcon, ColorConst.textHighlightColor),
           ],
         ),
       ),

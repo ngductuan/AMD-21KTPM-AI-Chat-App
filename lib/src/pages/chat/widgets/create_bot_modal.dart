@@ -1,0 +1,164 @@
+import 'package:dotted_border/dotted_border.dart';
+import 'package:eco_chat_bot/src/constants/colors.dart';
+import 'package:eco_chat_bot/src/constants/dimensions.dart';
+import 'package:eco_chat_bot/src/constants/font_styles.dart';
+import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
+import 'package:flutter/material.dart';
+
+class CreateBotModal extends StatefulWidget {
+  const CreateBotModal({super.key});
+
+  @override
+  State<CreateBotModal> createState() => _CreateBotModalState();
+}
+
+class _CreateBotModalState extends State<CreateBotModal> {
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withOpacity(0.5),
+      child: Center(
+        child: Container(
+          decoration: BoxDecoration(
+            color: ColorConst.backgroundWhiteColor,
+            borderRadius: BorderRadius.circular(radius12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(padding16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Title and Close Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Create Your Own Bot',
+                      style: AppFontStyles.poppinsTitleBold(fontSize: fontSize16),
+                    ),
+                    SizedBox(
+                      width: spacing32,
+                      height: spacing32,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          size: spacing20,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: spacing16),
+
+                // Name Field
+                _buildTextField('Name', 'Enter a name for your bot', required: true),
+
+                SizedBox(height: spacing16),
+
+                // Instructions Field
+                _buildTextField('Instructions (Optional)', 'Enter instructions for the bot', maxLines: 3),
+
+                SizedBox(height: spacing16),
+
+                // Knowledge Base Section
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Knowledge base (Optional)', style: AppFontStyles.poppinsTextBold()),
+                    SizedBox(height: spacing4),
+                    Text(
+                      'Enhance your bot’s responses by adding custom knowledge',
+                      style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
+                    ),
+                    SizedBox(height: spacing12),
+                    Center(
+                      child: DottedBorder(
+                        strokeWidth: 1,
+                        dashPattern: [8, 4], // Dashed pattern
+                        borderType: BorderType.RRect, // Rounded rectangle
+                        radius: Radius.circular(radius12), // Border radius
+                        color: ColorConst.textHighlightColor,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            // overlayColor: Colors.transparent,
+                            padding: EdgeInsets.symmetric(horizontal: padding32),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(radius12),
+                            ),
+                          ),
+                          onPressed: () {
+                            // Your onPressed logic
+                          },
+                          child: Text(
+                            "+ Add knowledge source",
+                            style: AppFontStyles.poppinsRegular(),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+
+                SizedBox(height: spacing40),
+
+                // Buttons Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GradientFormButton(
+                      text: 'Cancel',
+                      onPressed: () => Navigator.pop(context),
+                      isActiveButton: false,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: spacing12),
+                      child: GradientFormButton(
+                        text: 'Create',
+                        onPressed: () {},
+                        isActiveButton: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper function for input fields
+  Widget _buildTextField(String label, String hint, {int maxLines = 1, bool required = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RichText(
+          text: TextSpan(
+            text: label,
+            style: AppFontStyles.poppinsTextBold(),
+            children: [
+              TextSpan(
+                text: required == true ? ' *' : '',
+                style: AppFontStyles.poppinsTextBold(color: ColorConst.textRedColor),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 5),
+        TextField(
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
+            contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
+          ),
+        ),
+      ],
+    );
+  }
+}
