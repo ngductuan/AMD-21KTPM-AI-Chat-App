@@ -61,6 +61,9 @@ const fontSize36 = 36.0;
 // Navigation bar
 const iconBottomNav26 = 26.0;
 
+// AppToast
+const iconAppToast22 = 22.0;
+
 // Bottom navigation height
 const bottomNavHeightAndroid = 70.0;
 const bottomNavHeightIOS = 100.0;
