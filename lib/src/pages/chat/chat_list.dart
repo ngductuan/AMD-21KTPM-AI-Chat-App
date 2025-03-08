@@ -44,12 +44,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         backgroundColor: ColorConst.backgroundWhiteColor,
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline), // Example: Search icon
-            onPressed: () {
-              print("Search button tapped!");
-            },
-          ),
+          _buildPopupMenu(),
         ],
       ),
       backgroundColor: ColorConst.backgroundGrayColor,
@@ -94,6 +89,49 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 );
               },
             ),
+    );
+  }
+
+  // Menu Popup
+  Widget _buildPopupMenu() {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        popupMenuTheme: PopupMenuThemeData(
+          color: ColorConst.backgroundWhiteColor,
+        ),
+      ),
+      child: PopupMenuButton<int>(
+        icon: const Icon(Icons.add),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius12),
+        ),
+        offset: const Offset(0, spacing48),
+        onSelected: (value) {
+          if (value == 1) {
+            print("New Chat Clicked");
+          } else if (value == 2) {
+            print("Create Bot Clicked");
+          }
+        },
+        itemBuilder: (context) => [
+          _buildPopupItem(1, Icons.chat_bubble_outline, "New Chat"),
+          _buildPopupItem(2, Icons.smart_toy_outlined, "Create Bot"),
+        ],
+      ),
+    );
+  }
+
+  // Build Menu Items
+  PopupMenuItem<int> _buildPopupItem(int value, IconData icon, String text) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: spacing24, color: Colors.black),
+          const SizedBox(width: spacing12),
+          Text(text, style: AppFontStyles.poppinsRegular(fontSize: fontSize16)),
+        ],
+      ),
     );
   }
 }
