@@ -43,10 +43,12 @@ class _PromptLibraryState extends State<PromptLibrary>
 
   final List<Map<String, dynamic>> _customPrompts = [];
 
+  final List<Map<String, dynamic>> _filteredPrompts = [];
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: spacing4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -65,6 +67,9 @@ class _PromptLibraryState extends State<PromptLibrary>
       ),
       child: TextField(
         controller: _searchController,
+        onChanged: (value) {
+          setState(() {}); // Refresh UI to filter search results
+        },
         decoration: InputDecoration(
           hintText: 'Search',
           hintStyle: GoogleFonts.poppins(
@@ -119,10 +124,12 @@ class _PromptLibraryState extends State<PromptLibrary>
   }
 
   Widget _buildPromptList(bool isCustom) {
-    final List<Map<String, dynamic>> filteredPrompts = isCustom
-        ? _customPrompts
-        : [..._prompts, ..._customPrompts]
-            .where((p) => p['isFavorite'] == true)
+    final String searchText = _searchController.text.toLowerCase();
+    final List<Map<String, dynamic>> filteredPrompts =
+        (isCustom ? _customPrompts : [..._prompts, ..._customPrompts])
+            .where((p) =>
+                p['title'].toLowerCase().contains(searchText) ||
+                p['description'].toLowerCase().contains(searchText))
             .toList();
 
     return filteredPrompts.isNotEmpty
@@ -157,139 +164,145 @@ class _PromptLibraryState extends State<PromptLibrary>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(spacing20),
           ),
-          child: Container(
-            padding: const EdgeInsets.all(spacing24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'New prompt',
-                  style: GoogleFonts.poppins(
-                    fontSize: fontSize24,
-                    fontWeight: FontWeight.bold,
-                  ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-                const SizedBox(height: 24),
-                // Name field
-                Text(
-                  'Name',
-                  style: GoogleFonts.poppins(
-                    fontSize: fontSize16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(spacing12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: spacing24),
-                // Prompt field
-                Row(
-                  children: [
-                    Text(
-                      'Prompt',
-                      style: GoogleFonts.poppins(
-                        fontSize: fontSize16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: spacing4),
-                    Text(
-                      '*',
-                      style: GoogleFonts.poppins(
-                        fontSize: fontSize16,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Use square brackets [ ] to specify user input.',
-                  style: GoogleFonts.poppins(
-                    fontSize: fontSize12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: spacing8),
-                TextField(
-                  controller: _promptController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    hintText:
-                        'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
-                    hintStyle: GoogleFonts.poppins(
-                      color: Colors.grey[400],
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(spacing12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: spacing24),
-                // Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _nameController.clear();
-                        _promptController.clear();
-                      },
-                      child: Text(
-                        'Cancel',
+                child: Container(
+                  padding: const EdgeInsets.all(spacing24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'New prompt',
                         style: GoogleFonts.poppins(
+                          fontSize: fontSize24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Name',
+                        style: GoogleFonts.poppins(
+                          fontSize: fontSize16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      TextField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(spacing12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: spacing24),
+                      Row(
+                        children: [
+                          Text(
+                            'Prompt',
+                            style: GoogleFonts.poppins(
+                              fontSize: fontSize16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: spacing4),
+                          Text(
+                            '*',
+                            style: GoogleFonts.poppins(
+                              fontSize: fontSize16,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Use square brackets [ ] to specify user input.',
+                        style: GoogleFonts.poppins(
+                          fontSize: fontSize12,
                           color: Colors.grey[600],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: spacing16),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_nameController.text.isNotEmpty &&
-                            _promptController.text.isNotEmpty) {
-                          setState(() {
-                            _customPrompts.add({
-                              'title': _nameController.text,
-                              'description': _promptController.text,
-                              'isFavorite': false,
-                              'isCustom': true,
-                            });
-                          });
-                          Navigator.pop(context);
-                          _nameController.clear();
-                          _promptController.clear();
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[400],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(spacing20),
+                      const SizedBox(height: spacing8),
+                      TextField(
+                        controller: _promptController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          hintText:
+                              'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
+                          hintStyle: GoogleFonts.poppins(
+                            color: Colors.grey[400],
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(spacing12),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        'Create',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                        ),
+                      const SizedBox(height: spacing24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _nameController.clear();
+                              _promptController.clear();
+                            },
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.poppins(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: spacing16),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (_nameController.text.isNotEmpty &&
+                                  _promptController.text.isNotEmpty) {
+                                setState(() {
+                                  _customPrompts.add({
+                                    'title': _nameController.text,
+                                    'description': _promptController.text,
+                                    'isFavorite': false,
+                                    'isCustom': true,
+                                  });
+                                });
+                                Navigator.pop(context);
+                                _nameController.clear();
+                                _promptController.clear();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[400],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(spacing20),
+                              ),
+                            ),
+                            child: Text(
+                              'Create',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         );
       },
@@ -305,8 +318,8 @@ class _PromptLibraryState extends State<PromptLibrary>
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(100),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          child: Column(
+            children: [
               _buildSearchBar(),
               TabBar(
                 controller: _tabController,
