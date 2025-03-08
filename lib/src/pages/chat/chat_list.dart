@@ -55,8 +55,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
       backgroundColor: ColorConst.backgroundGrayColor,
       body: listCount == 0
           ? NoDataGadget()
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: padding8),
               itemCount: chatData.length,
               itemBuilder: (context, index) {
                 return ListTile(
@@ -81,6 +81,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   onTap: () {
                     // Handle chat item tap
                   },
+                );
+              },
+              separatorBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: spacing16),
+                  child: const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: ColorConst.backgroundLightGrayColor,
+                  ),
                 );
               },
             ),
