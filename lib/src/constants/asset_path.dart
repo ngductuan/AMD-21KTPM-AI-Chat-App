@@ -18,6 +18,8 @@ class AssetPath {
     'assets/images/avatar/chat_avatar_9.png',
   ];
   static const String icSend = 'assets/icons/ic_send.svg';
+  static const String icAttachFile = 'assets/icons/ic_attach_file.svg';
+  static const imgUploadChat = 'assets/images/img_upload_chat.png';
 
   // Ai models
   static const Map<String, String> aiModels = {
