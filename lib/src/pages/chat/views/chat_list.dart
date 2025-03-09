@@ -21,14 +21,21 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   int listCount = 1;
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // Auto show modal after the screen is built
-  //   Future.delayed(Duration(milliseconds: 500), () {
-  //     Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
-  //   });
-  // }
+  @override
+  void initState() {
+    super.initState();
+    // Auto show modal after the screen is built
+    Future.delayed(Duration(milliseconds: 500), () {
+      // Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+      Navigator.of(context).pushNamed(
+        ChatThreadScreen.routeName,
+        arguments: {
+          ...chatData[0],
+          'avatarPath': 'assets/images/avatar/chat_avatar_1.png',
+        },
+      );
+    });
+  }
 
   // Dummy chat data
   final List<Map<String, String>> chatData = [
@@ -66,22 +73,25 @@ class _ChatListScreenState extends State<ChatListScreen> {
               padding: const EdgeInsets.symmetric(vertical: padding8),
               itemCount: chatData.length,
               itemBuilder: (context, index) {
+                // Avatar path
+                String avatarPath = AssetPath.chatThreadAvatarList[index % AssetPath.chatThreadAvatarList.length];
+
                 return ListTile(
                   leading: ImageHelper.loadFromAsset(
-                    AssetPath.chatThreadAvatarList[index % AssetPath.chatThreadAvatarList.length],
+                    avatarPath,
                     width: spacing48,
                     height: spacing48,
-                    radius: BorderRadius.circular(50),
+                    radius: BorderRadius.circular(radius32),
                   ),
                   title: Text(
                     chatData[index]["title"]!,
-                    style: AppFontStyles.poppinsTextBold(fontSize: fontSize16, fontWeight: FontWeight.w500),
+                    style: AppFontStyles.poppinsTextBold(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
                     chatData[index]["subtitle"]!,
-                    style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
+                    style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor, fontSize: fontSize12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -89,7 +99,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     // Handle chat item tap
                     Navigator.of(context).pushNamed(
                       ChatThreadScreen.routeName,
-                      arguments: chatData[index],
+                      arguments: {
+                        ...chatData[index],
+                        'avatarPath': avatarPath,
+                      },
                     );
                   },
                 );
