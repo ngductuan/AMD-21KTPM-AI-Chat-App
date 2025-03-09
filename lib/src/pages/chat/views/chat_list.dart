@@ -1,6 +1,7 @@
 import 'package:eco_chat_bot/src/constants/asset_path.dart';
 import 'package:eco_chat_bot/src/constants/colors.dart';
 import 'package:eco_chat_bot/src/constants/dimensions.dart';
+import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/font_styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
@@ -25,16 +26,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void initState() {
     super.initState();
     // Auto show modal after the screen is built
-    Future.delayed(Duration(milliseconds: 500), () {
-      // Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
-      Navigator.of(context).pushNamed(
-        ChatThreadScreen.routeName,
-        arguments: {
-          ...chatData[0],
-          'avatarPath': 'assets/images/avatar/chat_avatar_1.png',
-        },
-      );
-    });
+    // Future.delayed(Duration(milliseconds: 500), () {
+    //   // Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+    //   Navigator.of(context).pushNamed(
+    //     ChatThreadScreen.routeName,
+    //     arguments: {
+    //       ...chatData[0],
+    //       'avatarPath': 'assets/images/avatar/chat_avatar_1.png',
+    //       'chatStatus': ChatThreadStatus.existing,
+    //     },
+    //   );
+    // });
   }
 
   // Dummy chat data
@@ -102,6 +104,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       arguments: {
                         ...chatData[index],
                         'avatarPath': avatarPath,
+                        'chatStatus': ChatThreadStatus.existing,
                       },
                     );
                   },
@@ -137,7 +140,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
         offset: const Offset(0, spacing48),
         onSelected: (value) {
           if (value == 1) {
-            print("New Chat Clicked");
+            Navigator.of(context)
+                .pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
           } else if (value == 2) {
             Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
           }

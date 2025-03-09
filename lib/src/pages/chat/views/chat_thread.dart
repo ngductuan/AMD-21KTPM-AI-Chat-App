@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/widgets/animations/typing_indicator.dart';
@@ -17,15 +18,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   int activeAiModel = 0;
 
   final TextEditingController _controller = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [
-    {'text': "Hello.👋 I'm your new friend, StarryAI Bot.", 'isBot': true},
-    {'text': "Have a healthy meal.", 'isBot': true},
-    {'text': "How much price is it?", 'isBot': false},
-    {'text': "Only 5\$ for hamburger.", 'isBot': true},
-    {'text': "", 'isBot': true},
-  ];
 
-  List<Map<String, String>> aiModels = [
+  final List<Map<String, String>> aiModels = [
     {"value": "gpt4o_mini", "display": "GPT-4o mini"},
     {"value": "gpt4o", "display": "GPT-4o"},
     {"value": "gemini_15_flash", "display": "Gemini 1.5 Flash"},
@@ -35,20 +29,38 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     {"value": "deepseek_chat", "display": "Deepseek Chat"},
   ];
 
-  void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
-      setState(() {
-        _messages.add({'text': _controller.text, 'isBot': false});
-        _controller.clear();
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    List<Map<String, dynamic>> _messages = [
+      {'text': "Hello.👋 I'm your new friend, StarryAI Bot.", 'isBot': true},
+    ];
+
     final args = ModalRoute.of(context)!.settings.arguments as Map;
-    String title = args['title'];
-    String avatarPath = args['avatarPath'];
+    String avatarPath = args['avatarPath'] ?? AssetPath.chatThreadAvatarList[0];
+    String? title;
+
+    ChatThreadStatus chatStatus = args['chatStatus'];
+
+    if (chatStatus == ChatThreadStatus.existing) {
+      title = args['title'];
+
+      _messages.addAll([
+        {'text': "Have a healthy meal.", 'isBot': true},
+        {'text': "How much price is it?", 'isBot': false},
+        {'text': "Only 5\$ for hamburger.", 'isBot': true},
+        {'text': 'What is this image?', 'imagePath': AssetPath.imgUploadChat, 'isBot': false},
+        {'text': "", 'isBot': true}
+      ]);
+    }
+
+    // void _sendMessage() {
+    //   if (_controller.text.isNotEmpty) {
+    //     setState(() {
+    //       _messages.add({'text': _controller.text, 'isBot': false});
+    //       _controller.clear();
+    //     });
+    //   }
+    // }
 
     return Scaffold(
       appBar: AppBar(
@@ -67,7 +79,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             SizedBox(width: spacing8),
             Expanded(
               child: Text(
-                title,
+                title ?? 'New chat',
                 style: AppFontStyles.poppinsTextBold(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -109,10 +121,22 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           color: message['isBot'] ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
                           borderRadius: BorderRadius.circular(radius12),
                         ),
-                        child: Text(
-                          message['text'],
-                          style: TextStyle(
-                              color: message['isBot'] ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (messageContent.isNotEmpty)
+                              Text(messageContent,
+                                  style: TextStyle(
+                                      color: message['isBot'] ? ColorConst.textBlackColor : ColorConst.textWhiteColor)),
+                            if (message['imagePath'] != null) ...[
+                              SizedBox(
+                                height: spacing4,
+                              ),
+                              ImageHelper.loadFromAsset(
+                                message['imagePath'],
+                              ),
+                            ]
+                          ],
                         ),
                       ),
                     );
@@ -121,7 +145,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.only(left: spacing12, right: spacing12, bottom: spacing8),
               color: Colors.transparent,
               child: Column(
                 children: [
@@ -205,7 +229,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 ),
                                 color: Colors.transparent,
                               ),
-                              padding: EdgeInsets.all(spacing16),
+                              padding:
+                                  EdgeInsets.only(left: spacing16, right: spacing16, bottom: spacing16, top: spacing4),
                               child: TextField(
                                 decoration: InputDecoration(
                                   hintText: "Send message...",
@@ -227,10 +252,20 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                ImageHelper.loadFromAsset(
-                                  AssetPath.icoPromptLibrary,
-                                  width: spacing16,
-                                  height: spacing16,
+                                Row(
+                                  spacing: spacing12,
+                                  children: [
+                                    ImageHelper.loadFromAsset(
+                                      AssetPath.icAttachFile,
+                                      width: spacing16,
+                                      height: spacing16,
+                                    ),
+                                    ImageHelper.loadFromAsset(
+                                      AssetPath.icoPromptLibrary,
+                                      width: spacing16,
+                                      height: spacing16,
+                                    ),
+                                  ],
                                 ),
                                 ImageHelper.loadFromAsset(
                                   AssetPath.icSend,
