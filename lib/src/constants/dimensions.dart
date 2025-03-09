@@ -71,3 +71,6 @@ const iconAppToast22 = 22.0;
 // Bottom navigation height
 const bottomNavHeightAndroid = 70.0;
 const bottomNavHeightIOS = 100.0;
+
+// Image upload chat
+const maxSizeImageUploadChat = 200.0;
