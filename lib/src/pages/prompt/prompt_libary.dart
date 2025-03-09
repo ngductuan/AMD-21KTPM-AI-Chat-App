@@ -17,6 +17,11 @@ class _PromptLibraryState extends State<PromptLibrary>
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _promptController = TextEditingController();
 
+  // Track if we're editing an existing prompt
+  bool _isEditing = false;
+  int _editingIndex = -1;
+  bool _isCustomPrompt = false;
+
   // Sample data - replace with your actual data model
   final List<Map<String, dynamic>> _prompts = [
     {
@@ -47,8 +52,6 @@ class _PromptLibraryState extends State<PromptLibrary>
 
   final List<Map<String, dynamic>> _customPrompts = [];
 
-  final List<Map<String, dynamic>> _filteredPrompts = [];
-
   @override
   void initState() {
     super.initState();
@@ -59,6 +62,8 @@ class _PromptLibraryState extends State<PromptLibrary>
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _nameController.dispose();
+    _promptController.dispose();
     super.dispose();
   }
 
@@ -89,16 +94,84 @@ class _PromptLibraryState extends State<PromptLibrary>
     );
   }
 
-  Widget _buildPromptItem(Map<String, dynamic> prompt) {
+  // Show confirmation dialog before deleting a prompt
+  void _showDeleteConfirmation(int index, bool isCustom) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Prompt',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete this prompt?',
+            style: GoogleFonts.poppins(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  if (isCustom) {
+                    _customPrompts.removeAt(index);
+                  } else {
+                    // For built-in prompts, you might want to handle differently
+                    // Maybe just hide them instead of removing
+                    _prompts.removeAt(index);
+                  }
+                });
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Delete',
+                style: GoogleFonts.poppins(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Edit an existing prompt
+  void _editPrompt(int index, bool isCustom) {
+    final prompt = isCustom ? _customPrompts[index] : _prompts[index];
+
+    setState(() {
+      _isEditing = true;
+      _editingIndex = index;
+      _isCustomPrompt = isCustom;
+      _nameController.text = prompt['title'];
+      _promptController.text = prompt['prompt'];
+    });
+
+    _showPromptDialog();
+  }
+
+  Widget _buildPromptItem(
+      Map<String, dynamic> prompt, int index, bool isCustom) {
     return Container(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: spacing16,
-          vertical: spacing8,
-        ),
+            horizontal: spacing16, vertical: spacing8),
         title: Text(
           prompt['title'],
           style: GoogleFonts.poppins(
@@ -116,6 +189,20 @@ class _PromptLibraryState extends State<PromptLibrary>
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Edit button (only for custom prompts)
+            if (isCustom)
+              IconButton(
+                icon: Icon(Icons.edit, size: 20),
+                onPressed: () => _editPrompt(index, isCustom),
+              ),
+
+            // Delete button
+            IconButton(
+              icon: Icon(Icons.delete, size: 20),
+              onPressed: () => _showDeleteConfirmation(index, isCustom),
+            ),
+
+            // Favorite button
             GestureDetector(
               onTap: () {
                 setState(() {
@@ -130,6 +217,8 @@ class _PromptLibraryState extends State<PromptLibrary>
                 height: spacing24,
               ),
             ),
+
+            // Select button
             IconButton(
               icon: Icon(Icons.arrow_forward_ios, size: 16),
               onPressed: () {
@@ -168,7 +257,7 @@ class _PromptLibraryState extends State<PromptLibrary>
     );
   }
 
-  void _showNewPromptDialog() {
+  void _showPromptDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -189,7 +278,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'New prompt',
+                        _isEditing ? 'Edit prompt' : 'New prompt',
                         style: GoogleFonts.poppins(
                           fontSize: fontSize24,
                           fontWeight: FontWeight.bold,
@@ -273,6 +362,8 @@ class _PromptLibraryState extends State<PromptLibrary>
                               Navigator.pop(context);
                               _nameController.clear();
                               _promptController.clear();
+                              _isEditing = false;
+                              _editingIndex = -1;
                             },
                             child: Text(
                               'Cancel',
@@ -287,13 +378,39 @@ class _PromptLibraryState extends State<PromptLibrary>
                               if (_nameController.text.isNotEmpty &&
                                   _promptController.text.isNotEmpty) {
                                 setState(() {
-                                  _customPrompts.add({
-                                    'title': _nameController.text,
-                                    'description': 'Your own custom prompt',
-                                    'prompt': _promptController.text,
-                                    'isFavorite': false,
-                                    'isCustom': true,
-                                  });
+                                  if (_isEditing) {
+                                    // Update existing prompt
+                                    final promptData = {
+                                      'title': _nameController.text,
+                                      'description': 'Your own custom prompt',
+                                      'prompt': _promptController.text,
+                                      'isFavorite': _isCustomPrompt
+                                          ? _customPrompts[_editingIndex]
+                                              ['isFavorite']
+                                          : _prompts[_editingIndex]
+                                              ['isFavorite'],
+                                      'isCustom': true,
+                                    };
+
+                                    if (_isCustomPrompt) {
+                                      _customPrompts[_editingIndex] =
+                                          promptData;
+                                    } else {
+                                      _prompts[_editingIndex] = promptData;
+                                    }
+
+                                    _isEditing = false;
+                                    _editingIndex = -1;
+                                  } else {
+                                    // Create new prompt
+                                    _customPrompts.add({
+                                      'title': _nameController.text,
+                                      'description': 'Your own custom prompt',
+                                      'prompt': _promptController.text,
+                                      'isFavorite': false,
+                                      'isCustom': true,
+                                    });
+                                  }
                                 });
                                 Navigator.pop(context);
                                 _nameController.clear();
@@ -307,7 +424,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                               ),
                             ),
                             child: Text(
-                              'Create',
+                              _isEditing ? 'Update' : 'Create',
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                               ),
@@ -387,11 +504,17 @@ class _PromptLibraryState extends State<PromptLibrary>
                           p['title'].toLowerCase().contains(searchText) ||
                           p['description'].toLowerCase().contains(searchText))
                       .length,
-                  itemBuilder: (context, index) => _buildPromptItem(_prompts
-                      .where((p) =>
-                          p['title'].toLowerCase().contains(searchText) ||
-                          p['description'].toLowerCase().contains(searchText))
-                      .toList()[index]),
+                  itemBuilder: (context, index) {
+                    final filteredPrompts = _prompts
+                        .where((p) =>
+                            p['title'].toLowerCase().contains(searchText) ||
+                            p['description'].toLowerCase().contains(searchText))
+                        .toList();
+                    final originalIndex =
+                        _prompts.indexOf(filteredPrompts[index]);
+                    return _buildPromptItem(
+                        filteredPrompts[index], originalIndex, false);
+                  },
                 )
               : _buildEmptyState(),
 
@@ -403,34 +526,72 @@ class _PromptLibraryState extends State<PromptLibrary>
                           p['title'].toLowerCase().contains(searchText) ||
                           p['description'].toLowerCase().contains(searchText))
                       .length,
-                  itemBuilder: (context, index) => _buildPromptItem(
-                      _customPrompts
-                          .where((p) =>
-                              p['title'].toLowerCase().contains(searchText) ||
-                              p['description']
-                                  .toLowerCase()
-                                  .contains(searchText))
-                          .toList()[index]),
+                  itemBuilder: (context, index) {
+                    final filteredPrompts = _customPrompts
+                        .where((p) =>
+                            p['title'].toLowerCase().contains(searchText) ||
+                            p['description'].toLowerCase().contains(searchText))
+                        .toList();
+                    final originalIndex =
+                        _customPrompts.indexOf(filteredPrompts[index]);
+                    return _buildPromptItem(
+                        filteredPrompts[index], originalIndex, true);
+                  },
                 )
               : _buildEmptyState(),
 
           // Favorite tab - with search
           (() {
-            final List<Map<String, dynamic>> favPrompts = [
-              ..._prompts,
-              ..._customPrompts
-            ]
-                .where((p) => p['isFavorite'] == true)
-                .where((p) =>
-                    p['title'].toLowerCase().contains(searchText) ||
-                    p['description'].toLowerCase().contains(searchText))
-                .toList();
+            final List<Map<String, dynamic>> favPrompts = [];
+
+            // Add public prompts with their original indices
+            for (int i = 0; i < _prompts.length; i++) {
+              if (_prompts[i]['isFavorite'] == true &&
+                  (_prompts[i]['title'].toLowerCase().contains(searchText) ||
+                      _prompts[i]['description']
+                          .toLowerCase()
+                          .contains(searchText))) {
+                favPrompts.add({
+                  ..._prompts[i],
+                  'originalIndex': i,
+                  'isCustom': false,
+                });
+              }
+            }
+
+            // Add custom prompts with their original indices
+            for (int i = 0; i < _customPrompts.length; i++) {
+              if (_customPrompts[i]['isFavorite'] == true &&
+                  (_customPrompts[i]['title']
+                          .toLowerCase()
+                          .contains(searchText) ||
+                      _customPrompts[i]['description']
+                          .toLowerCase()
+                          .contains(searchText))) {
+                favPrompts.add({
+                  ..._customPrompts[i],
+                  'originalIndex': i,
+                  'isCustom': true,
+                });
+              }
+            }
 
             return favPrompts.isNotEmpty
                 ? ListView.builder(
                     itemCount: favPrompts.length,
-                    itemBuilder: (context, index) =>
-                        _buildPromptItem(favPrompts[index]),
+                    itemBuilder: (context, index) {
+                      final prompt = favPrompts[index];
+                      return _buildPromptItem(
+                        {
+                          'title': prompt['title'],
+                          'description': prompt['description'],
+                          'prompt': prompt['prompt'],
+                          'isFavorite': prompt['isFavorite'],
+                        },
+                        prompt['originalIndex'],
+                        prompt['isCustom'],
+                      );
+                    },
                   )
                 : _buildEmptyState();
           })(),
@@ -439,7 +600,13 @@ class _PromptLibraryState extends State<PromptLibrary>
 
       //Add new prompt button
       floatingActionButton: FloatingActionButton(
-        onPressed: _showNewPromptDialog,
+        onPressed: () {
+          _isEditing = false;
+          _editingIndex = -1;
+          _nameController.clear();
+          _promptController.clear();
+          _showPromptDialog();
+        },
         child: const Icon(Icons.add),
         backgroundColor: Colors.blue[400],
       ),

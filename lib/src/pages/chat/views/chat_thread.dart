@@ -4,7 +4,6 @@ import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/widgets/animations/typing_indicator.dart';
 import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ChatThreadScreen extends StatefulWidget {
   const ChatThreadScreen({super.key});
@@ -20,6 +19,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   int activeAiModel = 0;
 
   final TextEditingController _controller = TextEditingController();
+  final Map<String, TextEditingController> _placeholderControllers = {};
+
   final List<Map<String, dynamic>> _messages = [
     {'text': "Hello.👋 I'm your new friend, StarryAI Bot.", 'isBot': true},
     {'text': "Have a healthy meal.", 'isBot': true},
@@ -45,6 +46,23 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         _controller.clear();
       });
     }
+  }
+
+  // Extract placeholders from prompt text (text in square brackets)
+  List<String> _extractPlaceholders(String promptText) {
+    final RegExp regex = RegExp(r'\[(.*?)\]');
+    final matches = regex.allMatches(promptText);
+    return matches.map((match) => match.group(1)!).toList();
+  }
+
+  // Replace placeholders with user input
+  String _replacePlaceholders(
+      String promptText, Map<String, String> replacements) {
+    String result = promptText;
+    replacements.forEach((placeholder, value) {
+      result = result.replaceAll('[$placeholder]', value);
+    });
+    return result;
   }
 
   @override
@@ -150,7 +168,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           isDense: true,
                           isExpanded: false,
                           icon: const Icon(Icons.arrow_drop_down,
-                              color: Colors.black), // Default Flutter icon
+                              color: Colors.black),
                           dropdownColor: ColorConst.backgroundWhiteColor,
                           value: aiModels[activeAiModel]["value"],
                           items:
@@ -182,14 +200,16 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                         ),
                       ),
                       Row(
-                        spacing: spacing16,
                         children: [
                           const Icon(Icons.camera_enhance_outlined,
                               color: ColorConst.backgroundBlackColor),
+                          SizedBox(width: spacing16),
                           const Icon(Icons.image,
                               color: ColorConst.backgroundBlackColor),
+                          SizedBox(width: spacing16),
                           const Icon(Icons.history_outlined,
                               color: ColorConst.backgroundBlackColor),
+                          SizedBox(width: spacing16),
                           const Icon(Icons.add_circle_outline,
                               color: ColorConst.backgroundBlackColor),
                         ],
@@ -204,7 +224,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                       borderRadius: BorderRadius.circular(radius20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withAlpha(77), // 0.3 * 255 = 77
+                          color: Colors.grey.withAlpha(77),
                           blurRadius: 2,
                           offset: const Offset(0, 1),
                         ),
@@ -225,6 +245,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                               ),
                               padding: EdgeInsets.all(spacing16),
                               child: TextField(
+                                controller: _controller,
                                 decoration: InputDecoration(
                                   hintText: "Send message...",
                                   border: InputBorder.none,
@@ -279,94 +300,167 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
                                     // Handle the selected prompt
                                     if (result != null) {
-                                      setState(() {
-                                        // Update the text field with the prompt format
-                                        _controller.text = result['prompt'];
+                                      // Clear any previous placeholder controllers
+                                      _placeholderControllers.clear();
 
-                                        // You might want to show a bottom sheet or modal with the prompt format
+                                      // Extract placeholders from the prompt
+                                      final placeholders = _extractPlaceholders(
+                                          result['prompt']);
+
+                                      // Create controllers for each placeholder
+                                      for (final placeholder in placeholders) {
+                                        _placeholderControllers[placeholder] =
+                                            TextEditingController();
+                                      }
+
+                                      // Show the prompt UI
+                                      if (placeholders.isNotEmpty) {
                                         showModalBottomSheet(
                                           context: context,
+                                          isScrollControlled: true,
                                           backgroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.vertical(
                                                 top: Radius.circular(20)),
                                           ),
-                                          builder: (context) => Container(
-                                            padding: EdgeInsets.all(16),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  result['title'],
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 24,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                SizedBox(height: 16),
-                                                Text(
-                                                  result['prompt'],
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 16,
-                                                    color: Colors.grey[600],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 16),
-                                                TextField(
-                                                  controller: _controller,
-                                                  maxLines: 4,
-                                                  decoration: InputDecoration(
-                                                    filled: true,
-                                                    fillColor: Colors.grey[100],
-                                                    border: OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12),
-                                                      borderSide:
-                                                          BorderSide.none,
+                                          builder: (context) => Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: MediaQuery.of(context)
+                                                  .viewInsets
+                                                  .bottom,
+                                            ),
+                                            child: Container(
+                                              padding: EdgeInsets.all(16),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    result['title'],
+                                                    style: TextStyle(
+                                                      fontSize: 24,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
-                                                ),
-                                                SizedBox(height: 16),
-                                                SizedBox(
-                                                  width: double.infinity,
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      Navigator.pop(context);
-                                                      _sendMessage();
-                                                    },
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                      backgroundColor:
-                                                          Colors.green,
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              vertical: 16),
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    result['prompt'],
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 16),
+                                                  ...placeholders
+                                                      .map((placeholder) {
+                                                    return Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          placeholder,
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                          ),
+                                                        ),
+                                                        SizedBox(height: 8),
+                                                        TextField(
+                                                          controller:
+                                                              _placeholderControllers[
+                                                                  placeholder],
+                                                          decoration:
+                                                              InputDecoration(
+                                                            hintText:
+                                                                placeholder,
+                                                            filled: true,
+                                                            fillColor: Colors
+                                                                .grey[100],
+                                                            border:
+                                                                OutlineInputBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          12),
+                                                              borderSide:
+                                                                  BorderSide
+                                                                      .none,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(height: 16),
+                                                      ],
+                                                    );
+                                                  }).toList(),
+                                                  SizedBox(
+                                                    width: double.infinity,
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        // Replace placeholders with user input
+                                                        final replacements =
+                                                            <String, String>{};
+                                                        _placeholderControllers
+                                                            .forEach(
+                                                                (placeholder,
+                                                                    controller) {
+                                                          replacements[
+                                                                  placeholder] =
+                                                              controller.text
+                                                                      .isNotEmpty
+                                                                  ? controller
+                                                                      .text
+                                                                  : placeholder; // Use placeholder as fallback
+                                                        });
+
+                                                        final finalPrompt =
+                                                            _replacePlaceholders(
+                                                                result[
+                                                                    'prompt'],
+                                                                replacements);
+
+                                                        // Set the message and send
+                                                        _controller.text =
+                                                            finalPrompt;
+                                                        Navigator.pop(context);
+                                                        _sendMessage();
+                                                      },
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            Colors.green,
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                                vertical: 16),
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(12),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Send',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
                                                       ),
                                                     ),
-                                                    child: Text(
-                                                      'Send',
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
-                                      });
+                                      } else {
+                                        // No placeholders, just set the prompt directly
+                                        _controller.text = result['prompt'];
+                                      }
                                     }
                                   },
                                   child: InkWell(
@@ -380,10 +474,13 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                     ),
                                   ),
                                 ),
-                                ImageHelper.loadFromAsset(
-                                  AssetPath.icSend,
-                                  width: spacing16,
-                                  height: spacing16,
+                                GestureDetector(
+                                  onTap: _sendMessage,
+                                  child: ImageHelper.loadFromAsset(
+                                    AssetPath.icSend,
+                                    width: spacing16,
+                                    height: spacing16,
+                                  ),
                                 ),
                               ],
                             ),
