@@ -17,12 +17,25 @@ class AssetPath {
     'assets/images/avatar/chat_avatar_8.png',
     'assets/images/avatar/chat_avatar_9.png',
   ];
+  static const String icSend = 'assets/icons/ic_send.svg';
+
+  // Ai models
+  static const Map<String, String> aiModels = {
+    "gpt4o_mini": "assets/images/ai_models/gpt4o_mini.png",
+    "gpt4o": "assets/images/ai_models/gpt4o.png",
+    "gemini_15_flash": "assets/images/ai_models/gemini_15_flash.png",
+    "gemini_15_pro": "assets/images/ai_models/gemini_15_pro.png",
+    "claude_3_haiku": "assets/images/ai_models/claude_3_haiku.png",
+    "claude_35_sonet": "assets/images/ai_models/claude_35_sonet.png",
+    "deepseek_chat": "assets/images/ai_models/deepseek_chat.png",
+  };
 
   // Others
   static const String noDataIcon = 'assets/icons/no_data.svg';
   static const String icoErrorToast = 'assets/icons/ic_error_toast.svg';
   static const String icoWhiteTick = 'assets/icons/white_tick.svg';
   static const String icoWhiteExclamation = 'assets/icons/white_exclamation.svg';
+  static const String icoPromptLibrary = 'assets/icons/ic_prompt_library.svg';
 
   // Assets for bottom nav bar
   static const String chatBeforeNavIcon = 'assets/icons/nav_bar/chat_before.svg';
