@@ -1,5 +1,6 @@
 import 'package:eco_chat_bot/routes.dart';
 import 'package:eco_chat_bot/src/helpers/local_storage_helper.dart';
+import 'package:eco_chat_bot/src/pages/general/views/home.dart';
 import 'package:eco_chat_bot/src/pages/general/home.dart';
 import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 
@@ -22,6 +23,6 @@ class MyApp extends StatelessWidget {
         title: 'Flutter Demo',
         debugShowCheckedModeBanner: false,
         routes: routes,
-        home: const PromptLibrary()); //const WelcomeScreen());
+        home: const HomeScreen());
   }
 }

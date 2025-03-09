@@ -1,4 +1,4 @@
-import 'package:eco_chat_bot/src/pages/chat/chat_list.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_list.dart';
 import 'package:eco_chat_bot/src/widgets/layouts/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 

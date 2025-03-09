@@ -24,6 +24,7 @@ const spacing24 = 24.0;
 const spacing28 = 28.0;
 const spacing30 = 30.0;
 const spacing32 = 32.0;
+const spacing36 = 36.0;
 const spacing40 = 40.0;
 const spacing44 = 44.0;
 const spacing48 = 48.0;
@@ -37,7 +38,10 @@ const spacing80 = 80.0;
 const radius8 = 8.0;
 const radius12 = 12.0;
 const radius16 = 16.0;
+const radius20 = 20.0;
 const radius24 = 24.0;
+const radius32 = 32.0;
+const radius40 = 40.0;
 
 // Font family
 const poppinsFont = 'Poppins';
@@ -67,7 +71,3 @@ const iconAppToast22 = 22.0;
 // Bottom navigation height
 const bottomNavHeightAndroid = 70.0;
 const bottomNavHeightIOS = 100.0;
-
-
-
-
