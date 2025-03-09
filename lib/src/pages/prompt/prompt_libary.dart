@@ -96,6 +96,9 @@ class _PromptLibraryState extends State<PromptLibrary>
 
   // Show confirmation dialog before deleting a prompt
   void _showDeleteConfirmation(int index, bool isCustom) {
+    // Only allow deletion of custom prompts
+    if (!isCustom) return;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -125,13 +128,7 @@ class _PromptLibraryState extends State<PromptLibrary>
             TextButton(
               onPressed: () {
                 setState(() {
-                  if (isCustom) {
-                    _customPrompts.removeAt(index);
-                  } else {
-                    // For built-in prompts, you might want to handle differently
-                    // Maybe just hide them instead of removing
-                    _prompts.removeAt(index);
-                  }
+                  _customPrompts.removeAt(index);
                 });
                 Navigator.pop(context);
               },
@@ -196,11 +193,12 @@ class _PromptLibraryState extends State<PromptLibrary>
                 onPressed: () => _editPrompt(index, isCustom),
               ),
 
-            // Delete button
-            IconButton(
-              icon: Icon(Icons.delete, size: 20),
-              onPressed: () => _showDeleteConfirmation(index, isCustom),
-            ),
+            // Delete button (only for custom prompts)
+            if (isCustom)
+              IconButton(
+                icon: Icon(Icons.delete, size: 20),
+                onPressed: () => _showDeleteConfirmation(index, isCustom),
+              ),
 
             // Favorite button
             GestureDetector(
