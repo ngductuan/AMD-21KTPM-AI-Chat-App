@@ -36,18 +36,27 @@ class AssetPath {
   static const String noDataIcon = 'assets/icons/no_data.svg';
   static const String icoErrorToast = 'assets/icons/ic_error_toast.svg';
   static const String icoWhiteTick = 'assets/icons/white_tick.svg';
-  static const String icoWhiteExclamation = 'assets/icons/white_exclamation.svg';
+  static const String icoWhiteExclamation =
+      'assets/icons/white_exclamation.svg';
   static const String icoPromptLibrary = 'assets/icons/ic_prompt_library.svg';
 
   // Assets for bottom nav bar
-  static const String chatBeforeNavIcon = 'assets/icons/nav_bar/chat_before.svg';
+  static const String chatBeforeNavIcon =
+      'assets/icons/nav_bar/chat_before.svg';
   static const String chatAfterNavIcon = 'assets/icons/nav_bar/chat_after.svg';
-  static const String searchBeforeNavIcon = 'assets/icons/nav_bar/search_before.svg';
-  static const String searchAfterNavIcon = 'assets/icons/nav_bar/search_after.svg';
+  static const String searchBeforeNavIcon =
+      'assets/icons/nav_bar/search_before.svg';
+  static const String searchAfterNavIcon =
+      'assets/icons/nav_bar/search_after.svg';
   static const String addBeforeNavIcon = 'assets/icons/nav_bar/add_before.svg';
   static const String addAfterNavIcon = 'assets/icons/nav_bar/add_after.svg';
-  static const String bellBeforeNavIcon = 'assets/icons/nav_bar/bell_before.svg';
+  static const String bellBeforeNavIcon =
+      'assets/icons/nav_bar/bell_before.svg';
   static const String bellAfterNavIcon = 'assets/icons/nav_bar/bell_after.svg';
   static const String meBeforeNavIcon = 'assets/icons/nav_bar/me_before.svg';
   static const String meAfterNavIcon = 'assets/icons/nav_bar/me_after.svg';
+
+  //Asset for the star icon
+  static const String black_star = 'assets/icons/black_star.svg';
+  static const String yellow_star = 'assets/icons/yellow_star.svg';
 }
