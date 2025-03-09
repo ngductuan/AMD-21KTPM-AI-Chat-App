@@ -141,6 +141,31 @@ class _PromptLibraryState extends State<PromptLibrary>
         : _buildEmptyState();
   }
 
+  Widget _MyPromptList() {
+    return _customPrompts.isNotEmpty
+        ? ListView.builder(
+            itemCount: _customPrompts.length,
+            itemBuilder: (context, index) =>
+                _buildPromptItem(_customPrompts[index]),
+          )
+        : _buildEmptyState();
+  }
+
+  Widget _FavPromptList() {
+    final List<Map<String, dynamic>> FavPrompts = [
+      ..._prompts,
+      ..._customPrompts
+    ].where((p) => p['isFavorite'] == true).toList();
+
+    return FavPrompts.isNotEmpty
+        ? ListView.builder(
+            itemCount: FavPrompts.length,
+            itemBuilder: (context, index) =>
+                _buildPromptItem(FavPrompts[index]),
+          )
+        : _buildEmptyState();
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -311,6 +336,8 @@ class _PromptLibraryState extends State<PromptLibrary>
 
   @override
   Widget build(BuildContext context) {
+    final String searchText = _searchController.text.toLowerCase();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -360,22 +387,61 @@ class _PromptLibraryState extends State<PromptLibrary>
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Public tab
+          // Public tab - with search
           _prompts.isNotEmpty
               ? ListView.builder(
-                  itemCount: _prompts.length,
-                  itemBuilder: (context, index) =>
-                      _buildPromptItem(_prompts[index]),
+                  itemCount: _prompts
+                      .where((p) =>
+                          p['title'].toLowerCase().contains(searchText) ||
+                          p['description'].toLowerCase().contains(searchText))
+                      .length,
+                  itemBuilder: (context, index) => _buildPromptItem(_prompts
+                      .where((p) =>
+                          p['title'].toLowerCase().contains(searchText) ||
+                          p['description'].toLowerCase().contains(searchText))
+                      .toList()[index]),
                 )
               : _buildEmptyState(),
-          // My prompt tab
-          _buildPromptList(true),
-          // Favorite tab
-          _buildPromptList(false),
+          // My prompt tab - with search
+          _customPrompts.isNotEmpty
+              ? ListView.builder(
+                  itemCount: _customPrompts
+                      .where((p) =>
+                          p['title'].toLowerCase().contains(searchText) ||
+                          p['description'].toLowerCase().contains(searchText))
+                      .length,
+                  itemBuilder: (context, index) => _buildPromptItem(
+                      _customPrompts
+                          .where((p) =>
+                              p['title'].toLowerCase().contains(searchText) ||
+                              p['description']
+                                  .toLowerCase()
+                                  .contains(searchText))
+                          .toList()[index]),
+                )
+              : _buildEmptyState(),
+          // Favorite tab - with search
+          (() {
+            final List<Map<String, dynamic>> favPrompts = [
+              ..._prompts,
+              ..._customPrompts
+            ]
+                .where((p) => p['isFavorite'] == true)
+                .where((p) =>
+                    p['title'].toLowerCase().contains(searchText) ||
+                    p['description'].toLowerCase().contains(searchText))
+                .toList();
+
+            return favPrompts.isNotEmpty
+                ? ListView.builder(
+                    itemCount: favPrompts.length,
+                    itemBuilder: (context, index) =>
+                        _buildPromptItem(favPrompts[index]),
+                  )
+                : _buildEmptyState();
+          })(),
         ],
       ),
-
-      // Add new prompt button
       floatingActionButton: FloatingActionButton(
         onPressed: _showNewPromptDialog,
         child: const Icon(Icons.add),
