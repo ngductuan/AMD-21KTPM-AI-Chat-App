@@ -1,7 +1,10 @@
+import 'package:another_flushbar/flushbar.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/widgets/animations/typing_indicator.dart';
+import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ChatThreadScreen extends StatefulWidget {
   const ChatThreadScreen({super.key});
@@ -101,18 +104,25 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     }
 
                     return Align(
-                      alignment: message['isBot'] ? Alignment.centerLeft : Alignment.centerRight,
+                      alignment: message['isBot']
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
                       child: Container(
                         padding: EdgeInsets.all(spacing8),
-                        margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
+                        margin: EdgeInsets.symmetric(
+                            vertical: spacing6, horizontal: spacing8),
                         decoration: BoxDecoration(
-                          color: message['isBot'] ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
+                          color: message['isBot']
+                              ? ColorConst.textWhiteColor
+                              : ColorConst.textHighlightColor,
                           borderRadius: BorderRadius.circular(radius12),
                         ),
                         child: Text(
                           message['text'],
                           style: TextStyle(
-                              color: message['isBot'] ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
+                              color: message['isBot']
+                                  ? ColorConst.textBlackColor
+                                  : ColorConst.textWhiteColor),
                         ),
                       ),
                     );
@@ -129,7 +139,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: spacing8, vertical: spacing4),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(radius16),
                           color: ColorConst.backgroundWhiteColor,
@@ -138,10 +149,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           underline: SizedBox.shrink(),
                           isDense: true,
                           isExpanded: false,
-                          icon: const Icon(Icons.arrow_drop_down, color: Colors.black), // Default Flutter icon
+                          icon: const Icon(Icons.arrow_drop_down,
+                              color: Colors.black), // Default Flutter icon
                           dropdownColor: ColorConst.backgroundWhiteColor,
                           value: aiModels[activeAiModel]["value"],
-                          items: aiModels.map<DropdownMenuItem<String>>((model) {
+                          items:
+                              aiModels.map<DropdownMenuItem<String>>((model) {
                             return DropdownMenuItem<String>(
                               value: model["value"],
                               child: Row(
@@ -162,7 +175,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           }).toList(),
                           onChanged: (value) {
                             setState(() {
-                              activeAiModel = aiModels.indexWhere((element) => element["value"] == value);
+                              activeAiModel = aiModels.indexWhere(
+                                  (element) => element["value"] == value);
                             });
                           },
                         ),
@@ -170,10 +184,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                       Row(
                         spacing: spacing16,
                         children: [
-                          const Icon(Icons.camera_enhance_outlined, color: ColorConst.backgroundBlackColor),
-                          const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
-                          const Icon(Icons.history_outlined, color: ColorConst.backgroundBlackColor),
-                          const Icon(Icons.add_circle_outline, color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.camera_enhance_outlined,
+                              color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.image,
+                              color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.history_outlined,
+                              color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.add_circle_outline,
+                              color: ColorConst.backgroundBlackColor),
                         ],
                       )
                     ],
@@ -210,13 +228,15 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 decoration: InputDecoration(
                                   hintText: "Send message...",
                                   border: InputBorder.none,
-                                  hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
+                                  hintStyle: AppFontStyles.poppinsRegular(
+                                      color: ColorConst.textLightGrayColor),
                                 ),
                               ),
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: spacing16, vertical: spacing12),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: spacing16, vertical: spacing12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(radius20),
@@ -227,10 +247,138 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                ImageHelper.loadFromAsset(
-                                  AssetPath.icoPromptLibrary,
-                                  width: spacing16,
-                                  height: spacing16,
+                                GestureDetector(
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      PageRouteBuilder(
+                                        transitionDuration:
+                                            const Duration(milliseconds: 500),
+                                        pageBuilder: (context, animation,
+                                                secondaryAnimation) =>
+                                            const PromptLibrary(),
+                                        transitionsBuilder: (context, animation,
+                                            secondaryAnimation, child) {
+                                          const begin = Offset(1.0, 0.0);
+                                          const end = Offset.zero;
+                                          const curve = Curves.easeInOut;
+
+                                          var tween =
+                                              Tween(begin: begin, end: end)
+                                                  .chain(
+                                            CurveTween(curve: curve),
+                                          );
+
+                                          return SlideTransition(
+                                            position: animation.drive(tween),
+                                            child: child,
+                                          );
+                                        },
+                                      ),
+                                    );
+
+                                    // Handle the selected prompt
+                                    if (result != null) {
+                                      setState(() {
+                                        // Update the text field with the prompt format
+                                        _controller.text = result['prompt'];
+
+                                        // You might want to show a bottom sheet or modal with the prompt format
+                                        showModalBottomSheet(
+                                          context: context,
+                                          backgroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                                top: Radius.circular(20)),
+                                          ),
+                                          builder: (context) => Container(
+                                            padding: EdgeInsets.all(16),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  result['title'],
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 16),
+                                                Text(
+                                                  result['prompt'],
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 16,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                                SizedBox(height: 16),
+                                                TextField(
+                                                  controller: _controller,
+                                                  maxLines: 4,
+                                                  decoration: InputDecoration(
+                                                    filled: true,
+                                                    fillColor: Colors.grey[100],
+                                                    border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      borderSide:
+                                                          BorderSide.none,
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(height: 16),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                      _sendMessage();
+                                                    },
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      backgroundColor:
+                                                          Colors.green,
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              vertical: 16),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      'Send',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      });
+                                    }
+                                  },
+                                  child: InkWell(
+                                    borderRadius:
+                                        BorderRadius.circular(spacing10),
+                                    splashColor: Colors.grey.withOpacity(0.2),
+                                    child: ImageHelper.loadFromAsset(
+                                      AssetPath.icoPromptLibrary,
+                                      width: spacing16,
+                                      height: spacing16,
+                                    ),
+                                  ),
                                 ),
                                 ImageHelper.loadFromAsset(
                                   AssetPath.icSend,

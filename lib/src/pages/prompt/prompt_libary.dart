@@ -20,24 +20,28 @@ class _PromptLibraryState extends State<PromptLibrary>
   // Sample data - replace with your actual data model
   final List<Map<String, dynamic>> _prompts = [
     {
-      'title': 'Grammar corrector',
-      'description': 'Improve your spelling',
+      'title': 'Grammar Corrector',
+      'description': 'Fix grammar mistakes and improve spelling.',
       'isFavorite': true,
+      'prompt': 'Correct this mistake grammar: [text]',
     },
     {
       'title': 'Learn Code Fast',
-      'description': 'Teach you code with understandable knowledge',
+      'description': 'Understand and debug code quickly.',
       'isFavorite': false,
+      'prompt': 'Help me debug this code:\n[code]',
     },
     {
-      'title': 'Story generator',
-      'description': 'Create your own fantasy story!',
+      'title': 'Story Generator',
+      'description': 'Generate creative fantasy stories.',
       'isFavorite': false,
+      'prompt': 'Write a short fantasy story about:\n[story topic]',
     },
     {
       'title': 'Easy Improver',
-      'description': "Improve your content's effectiveness with ease",
+      'description': "Enhance the clarity and effectiveness of content.",
       'isFavorite': false,
+      'prompt': 'Rewrite this to make it more effective:\n[text]',
     },
   ];
 
@@ -92,7 +96,9 @@ class _PromptLibraryState extends State<PromptLibrary>
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
-            horizontal: spacing16, vertical: spacing8),
+          horizontal: spacing16,
+          vertical: spacing8,
+        ),
         title: Text(
           prompt['title'],
           style: GoogleFonts.poppins(
@@ -107,63 +113,44 @@ class _PromptLibraryState extends State<PromptLibrary>
             color: Colors.grey[600],
           ),
         ),
-        trailing: GestureDetector(
-          onTap: () {
-            setState(() {
-              prompt['isFavorite'] = !prompt['isFavorite'];
-            });
-          },
-          child: SvgPicture.asset(
-            prompt['isFavorite'] ? AssetPath.yellow_star : AssetPath.black_star,
-            width: spacing24, // Adjust size if needed
-            height: spacing24,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  prompt['isFavorite'] = !prompt['isFavorite'];
+                });
+              },
+              child: SvgPicture.asset(
+                prompt['isFavorite']
+                    ? AssetPath.yellow_star
+                    : AssetPath.black_star,
+                width: spacing24,
+                height: spacing24,
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.arrow_forward_ios, size: 16),
+              onPressed: () {
+                // Return selected prompt data to chat screen
+                Navigator.pop(context, {
+                  'title': prompt['title'],
+                  'prompt': prompt['prompt'],
+                });
+              },
+            ),
+          ],
         ),
+        onTap: () {
+          // Return selected prompt data to chat screen
+          Navigator.pop(context, {
+            'title': prompt['title'],
+            'prompt': prompt['prompt'],
+          });
+        },
       ),
     );
-  }
-
-  Widget _buildPromptList(bool isCustom) {
-    final String searchText = _searchController.text.toLowerCase();
-    final List<Map<String, dynamic>> filteredPrompts =
-        (isCustom ? _customPrompts : [..._prompts, ..._customPrompts])
-            .where((p) =>
-                p['title'].toLowerCase().contains(searchText) ||
-                p['description'].toLowerCase().contains(searchText))
-            .toList();
-
-    return filteredPrompts.isNotEmpty
-        ? ListView.builder(
-            itemCount: filteredPrompts.length,
-            itemBuilder: (context, index) =>
-                _buildPromptItem(filteredPrompts[index]),
-          )
-        : _buildEmptyState();
-  }
-
-  Widget _MyPromptList() {
-    return _customPrompts.isNotEmpty
-        ? ListView.builder(
-            itemCount: _customPrompts.length,
-            itemBuilder: (context, index) =>
-                _buildPromptItem(_customPrompts[index]),
-          )
-        : _buildEmptyState();
-  }
-
-  Widget _FavPromptList() {
-    final List<Map<String, dynamic>> FavPrompts = [
-      ..._prompts,
-      ..._customPrompts
-    ].where((p) => p['isFavorite'] == true).toList();
-
-    return FavPrompts.isNotEmpty
-        ? ListView.builder(
-            itemCount: FavPrompts.length,
-            itemBuilder: (context, index) =>
-                _buildPromptItem(FavPrompts[index]),
-          )
-        : _buildEmptyState();
   }
 
   Widget _buildEmptyState() {
@@ -248,6 +235,8 @@ class _PromptLibraryState extends State<PromptLibrary>
                         ],
                       ),
                       const SizedBox(height: 4),
+
+                      //Note: Add a note to inform user about the input format
                       Text(
                         'Use square brackets [ ] to specify user input.',
                         style: GoogleFonts.poppins(
@@ -256,6 +245,8 @@ class _PromptLibraryState extends State<PromptLibrary>
                         ),
                       ),
                       const SizedBox(height: spacing8),
+
+                      //Note: Input field for prompt
                       TextField(
                         controller: _promptController,
                         maxLines: 4,
@@ -298,7 +289,8 @@ class _PromptLibraryState extends State<PromptLibrary>
                                 setState(() {
                                   _customPrompts.add({
                                     'title': _nameController.text,
-                                    'description': _promptController.text,
+                                    'description': 'Your own custom prompt',
+                                    'prompt': _promptController.text,
                                     'isFavorite': false,
                                     'isCustom': true,
                                   });
@@ -402,6 +394,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                       .toList()[index]),
                 )
               : _buildEmptyState(),
+
           // My prompt tab - with search
           _customPrompts.isNotEmpty
               ? ListView.builder(
@@ -420,6 +413,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                           .toList()[index]),
                 )
               : _buildEmptyState(),
+
           // Favorite tab - with search
           (() {
             final List<Map<String, dynamic>> favPrompts = [
@@ -442,6 +436,8 @@ class _PromptLibraryState extends State<PromptLibrary>
           })(),
         ],
       ),
+
+      //Add new prompt button
       floatingActionButton: FloatingActionButton(
         onPressed: _showNewPromptDialog,
         child: const Icon(Icons.add),

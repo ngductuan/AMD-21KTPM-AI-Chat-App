@@ -11,6 +11,7 @@ class ImageHelper {
     BoxFit fit = BoxFit.contain,
     Color? tintColor,
     Alignment alignment = Alignment.center,
+    VoidCallback? onTap, // Added onTap parameter
   }) {
     bool isSvg = imageFilePath.toLowerCase().endsWith('.svg');
 
@@ -21,8 +22,7 @@ class ImageHelper {
             height: height,
             fit: fit,
             colorFilter: tintColor != null
-                ? ColorFilter.mode(
-                    tintColor, BlendMode.srcIn)
+                ? ColorFilter.mode(tintColor, BlendMode.srcIn)
                 : null,
             alignment: alignment,
           )
@@ -35,9 +35,20 @@ class ImageHelper {
             alignment: alignment,
           );
 
-    return radius != null && radius != BorderRadius.zero
-        ? ClipRRect(borderRadius: radius, child: imageWidget)
-        : imageWidget;
+    // Apply border radius if provided
+    if (radius != null && radius != BorderRadius.zero) {
+      imageWidget = ClipRRect(borderRadius: radius, child: imageWidget);
+    }
+
+    // Wrap with GestureDetector if onTap is provided
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: imageWidget,
+      );
+    }
+
+    return imageWidget;
   }
 
   // Implement a method for loading images from URLs (CachedNetworkImage)
