@@ -13,6 +13,7 @@ class ImageHelper {
     BoxFit fit = BoxFit.contain,
     Color? tintColor,
     Alignment alignment = Alignment.center,
+    VoidCallback? onPressed
   }) {
     bool isSvg = imageFilePath.toLowerCase().endsWith('.svg');
 
@@ -40,9 +41,19 @@ class ImageHelper {
             ),
     );
 
-    return radius != null && radius != BorderRadius.zero
-        ? ClipRRect(borderRadius: radius, child: imageWidget)
-        : imageWidget;
+    // Apply border radius if needed
+    if (radius != null && radius != BorderRadius.zero) {
+      imageWidget = ClipRRect(
+        borderRadius: radius,
+        child: imageWidget,
+      );
+    }
+
+    // Wrap with GestureDetector if onPressed is provided
+    return GestureDetector(
+      onTap: onPressed,
+      child: imageWidget,
+    );
   }
 
   // Implement a method for loading images from URLs (CachedNetworkImage)

@@ -23,14 +23,17 @@ class AssetPath {
 
   // Ai models
   static const Map<String, String> aiModels = {
-    "gpt4o_mini": "assets/images/ai_models/gpt4o_mini.png",
-    "gpt4o": "assets/images/ai_models/gpt4o.png",
-    "gemini_15_flash": "assets/images/ai_models/gemini_15_flash.png",
-    "gemini_15_pro": "assets/images/ai_models/gemini_15_pro.png",
-    "claude_3_haiku": "assets/images/ai_models/claude_3_haiku.png",
-    "claude_35_sonet": "assets/images/ai_models/claude_35_sonet.png",
-    "deepseek_chat": "assets/images/ai_models/deepseek_chat.png",
+    "gpt4o_mini": "assets/images/ai_models/gpt4o_mini.svg",
+    "gpt4o": "assets/images/ai_models/gpt4o.svg",
+    "gemini_15_flash": "assets/images/ai_models/gemini_15_flash.svg",
+    "gemini_15_pro": "assets/images/ai_models/gemini_15_pro.svg",
+    "claude_3_haiku": "assets/images/ai_models/claude_3_haiku.svg",
+    "claude_35_sonet": "assets/images/ai_models/claude_35_sonet.svg",
+    "deepseek_chat": "assets/images/ai_models/deepseek_chat.svg",
   };
+
+  // Explore
+  static const String icClear = 'assets/icons/ic_clear.svg';
 
   // Others
   static const String noDataIcon = 'assets/icons/no_data.svg';
@@ -38,6 +41,7 @@ class AssetPath {
   static const String icoWhiteTick = 'assets/icons/white_tick.svg';
   static const String icoWhiteExclamation = 'assets/icons/white_exclamation.svg';
   static const String icoPromptLibrary = 'assets/icons/ic_prompt_library.svg';
+  static const String icoDefaultImage = 'assets/icons/ic_default.svg';
 
   // Assets for bottom nav bar
   static const String chatBeforeNavIcon = 'assets/icons/nav_bar/chat_before.svg';

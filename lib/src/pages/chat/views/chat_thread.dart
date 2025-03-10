@@ -1,4 +1,5 @@
 import 'package:eco_chat_bot/src/constants/enum.dart';
+import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/widgets/animations/typing_indicator.dart';
@@ -15,19 +16,34 @@ class ChatThreadScreen extends StatefulWidget {
 
 class _ChatThreadScreenState extends State<ChatThreadScreen> {
   bool isTyping = true;
-  int activeAiModel = 0;
+  int activeAiModelIndex = 0;
 
   final TextEditingController _controller = TextEditingController();
 
-  final List<Map<String, String>> aiModels = [
-    {"value": "gpt4o_mini", "display": "GPT-4o mini"},
-    {"value": "gpt4o", "display": "GPT-4o"},
-    {"value": "gemini_15_flash", "display": "Gemini 1.5 Flash"},
-    {"value": "gemini_15_pro", "display": "Gemini 1.5 Pro"},
-    {"value": "claude_3_haiku", "display": "Claude 3 Haiku"},
-    {"value": "claude_35_sonet", "display": "Claude 3.5 Sonet"},
-    {"value": "deepseek_chat", "display": "Deepseek Chat"},
-  ];
+  @override
+  void initState() {
+    super.initState();
+
+    // Delay fetching arguments to ensure context is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map?;
+      if (args != null) {
+        String? botValue = args['botValue'];
+
+        setState(() {
+          activeAiModelIndex =
+              botValue != null ? MockData.aiModels.indexWhere((element) => element["value"] == botValue) : 0;
+
+          // If not found, fallback to index 0
+          if (activeAiModelIndex == -1) {
+            activeAiModelIndex = 0;
+          }
+        });
+
+        print("Initialized activeAiModelIndex = $activeAiModelIndex");
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,18 +69,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       ]);
     }
 
-    // void _sendMessage() {
-    //   if (_controller.text.isNotEmpty) {
-    //     setState(() {
-    //       _messages.add({'text': _controller.text, 'isBot': false});
-    //       _controller.clear();
-    //     });
-    //   }
-    // }
-
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: spacing48,
+        leadingWidth: spacing44,
         elevation: 1,
         shadowColor: ColorConst.backgroundLightGrayColor,
         backgroundColor: ColorConst.backgroundWhiteColor,
@@ -164,8 +171,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           isExpanded: false,
                           icon: const Icon(Icons.arrow_drop_down, color: Colors.black), // Default Flutter icon
                           dropdownColor: ColorConst.backgroundWhiteColor,
-                          value: aiModels[activeAiModel]["value"],
-                          items: aiModels.map<DropdownMenuItem<String>>((model) {
+                          value: MockData.aiModels[activeAiModelIndex]["value"],
+                          items: MockData.aiModels.map<DropdownMenuItem<String>>((model) {
                             return DropdownMenuItem<String>(
                               value: model["value"],
                               child: Row(
@@ -186,7 +193,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           }).toList(),
                           onChanged: (value) {
                             setState(() {
-                              activeAiModel = aiModels.indexWhere((element) => element["value"] == value);
+                              activeAiModelIndex = MockData.aiModels.indexWhere((element) => element["value"] == value);
+                              print(activeAiModelIndex);
+                              print(MockData.aiModels[activeAiModelIndex]["value"]);
                             });
                           },
                         ),
