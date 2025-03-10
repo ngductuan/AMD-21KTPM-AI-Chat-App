@@ -1,4 +1,5 @@
 import 'package:eco_chat_bot/src/pages/chat/views/chat_list.dart';
+import 'package:eco_chat_bot/src/pages/profile/views/profile.dart';
 import 'package:eco_chat_bot/src/widgets/layouts/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 
@@ -19,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const Center(child: Text('Explore')),
     const Center(child: Text('Create')),
     const Center(child: Text('Message')),
-    const Center(child: Text('Me'))
+    ProfilePage(),
   ];
 
   void onTabChanged(int page) {
