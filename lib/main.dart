@@ -1,6 +1,7 @@
 import 'package:eco_chat_bot/routes.dart';
 import 'package:eco_chat_bot/src/helpers/local_storage_helper.dart';
 import 'package:eco_chat_bot/src/pages/general/views/home.dart';
+import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,6 +19,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo', debugShowCheckedModeBanner: false, routes: routes, home: const HomeScreen());
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        routes: routes,
+        home: const HomeScreen());
   }
 }

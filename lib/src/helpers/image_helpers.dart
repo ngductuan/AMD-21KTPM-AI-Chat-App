@@ -13,10 +13,10 @@ class ImageHelper {
     BoxFit fit = BoxFit.contain,
     Color? tintColor,
     Alignment alignment = Alignment.center,
-    VoidCallback? onPressed
+    VoidCallback? onTap, // Added onTap parameter
   }) {
     bool isSvg = imageFilePath.toLowerCase().endsWith('.svg');
-
+    
     Widget imageWidget = SizedBox(
       width: width != null ? width.clamp(0, maxSizeImageUploadChat) : maxSizeImageUploadChat,
       child: isSvg
@@ -41,19 +41,21 @@ class ImageHelper {
             ),
     );
 
-    // Apply border radius if needed
+
+    // Apply border radius if provided
     if (radius != null && radius != BorderRadius.zero) {
-      imageWidget = ClipRRect(
-        borderRadius: radius,
+      imageWidget = ClipRRect(borderRadius: radius, child: imageWidget);
+    }
+
+    // Wrap with GestureDetector if onTap is provided
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
         child: imageWidget,
       );
     }
 
-    // Wrap with GestureDetector if onPressed is provided
-    return GestureDetector(
-      onTap: onPressed,
-      child: imageWidget,
-    );
+    return imageWidget;
   }
 
   // Implement a method for loading images from URLs (CachedNetworkImage)
