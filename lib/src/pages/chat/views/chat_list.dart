@@ -37,6 +37,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
     //     },
     //   );
     // });
+
+    // Future.delayed(Duration(milliseconds: 500), () {
+    //   Navigator.of(context).pushNamed(
+    //     ExploreScreen.routeName,
+    //   );
+    // });
   }
 
   // Dummy chat data
