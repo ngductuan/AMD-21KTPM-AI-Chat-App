@@ -43,7 +43,8 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       position: RelativeRect.fromRect(
         tapPosition &
-            const Size(40, 40), // Smaller rect for more precise positioning
+            const Size(spacing40,
+                spacing40), // Smaller rect for more precise positioning
         Offset.zero & overlay.size,
       ),
       items: [
@@ -51,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Row(
             children: const [
               Icon(Icons.edit, color: Colors.black),
-              SizedBox(width: 8),
+              SizedBox(width: spacing8),
               Text('Edit Bot'),
             ],
           ),
@@ -62,9 +63,10 @@ class _ProfilePageState extends State<ProfilePage> {
         PopupMenuItem(
           child: Row(
             children: [
-              const Icon(Icons.delete, color: Colors.red),
+              const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
               const SizedBox(width: 8),
-              Text('Remove Bot', style: TextStyle(color: Colors.red)),
+              Text('Remove Bot',
+                  style: TextStyle(color: ColorConst.textRedColor)),
             ],
           ),
           onTap: () {
@@ -100,7 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: const Text(
                       'EcoChatBot',
                       style: TextStyle(
-                        fontSize: 24.0,
+                        fontSize: fontSize24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -110,10 +112,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 2),
+                      border: Border.all(color: Colors.black, width: spacing2),
                     ),
                     child: const Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(spacing8),
                       child: Icon(Icons.settings_outlined),
                     ),
                   ),
@@ -123,13 +125,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
             // Profile section
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              padding: const EdgeInsets.symmetric(vertical: spacing16),
               child: Row(
                 children: [
-                  const SizedBox(width: 20),
+                  const SizedBox(width: spacing20),
                   // Profile image
                   CircleAvatar(
-                    radius: 40,
+                    radius: spacing40,
                     backgroundImage: AssetImage(AssetPath.logoApp),
                     backgroundColor: Colors.lightBlue[100],
                   ),
@@ -141,14 +143,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       Text(
                         'StarrySia',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: fontSize28,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         'ID 845289347',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: fontSize16,
                           color: Colors.grey,
                         ),
                       ),
@@ -161,22 +163,22 @@ class _ProfilePageState extends State<ProfilePage> {
             // Divider
             Container(
               height: 8,
-              color: Colors.grey[200],
+              color: ColorConst.backgroundGreyColor,
             ),
 
             // My bots section
             Expanded(
               child: Container(
-                color: Colors.grey[200],
+                color: ColorConst.backgroundGreyColor,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Padding(
-                      padding: EdgeInsets.all(20.0),
+                      padding: EdgeInsets.all(spacing20),
                       child: Text(
                         'My bots',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: fontSize24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
