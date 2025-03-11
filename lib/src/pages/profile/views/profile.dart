@@ -163,13 +163,13 @@ class _ProfilePageState extends State<ProfilePage> {
             // Divider
             Container(
               height: 8,
-              color: ColorConst.backgroundGreyColor,
+              color: ColorConst.BackgroundGreyColor,
             ),
 
             // My bots section
             Expanded(
               child: Container(
-                color: ColorConst.backgroundGreyColor,
+                color: ColorConst.BackgroundGreyColor,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
