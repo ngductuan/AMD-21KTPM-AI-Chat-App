@@ -32,6 +32,12 @@ class AssetPath {
     "deepseek_chat": "assets/images/ai_models/deepseek_chat.svg",
   };
 
+  static const Map<String, String> selfAiModels = {
+    "creative_writingse": 'assets/images/avatar/chat_avatar_6.png',
+    "doctorsage": 'assets/images/avatar/chat_avatar_4.png',
+    "photo_createe": 'assets/images/avatar/chat_avatar_8.png',
+  };
+
   // Explore
   static const String icClear = 'assets/icons/ic_clear.svg';
 

@@ -1,7 +1,9 @@
+import 'package:eco_chat_bot/src/constants/enum.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import '../../../constants/styles.dart';
-import '../../../widgets/explore/ai_bot_item.dart';
+import '../widgets/ai_bot_item.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -42,8 +44,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         shadowColor: ColorConst.backgroundLightGrayColor,
         backgroundColor: ColorConst.backgroundWhiteColor,
         title: Container(
-          padding: const EdgeInsets.symmetric(
-              vertical: spacing8, horizontal: spacing8),
+          padding: const EdgeInsets.symmetric(vertical: spacing8, horizontal: spacing8),
           decoration: BoxDecoration(
             color: ColorConst.backgroundLightGrayColor,
             borderRadius: BorderRadius.circular(radius24),
@@ -61,11 +62,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     decoration: InputDecoration(
                       hintText: "Search for bots",
                       isCollapsed: true,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: padding8),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: padding8),
                       border: InputBorder.none,
-                      hintStyle: AppFontStyles.poppinsRegular(
-                          color: ColorConst.textLightGrayColor),
+                      hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
                     ),
                     onEditingComplete: () {
                       _focusNode.unfocus();
@@ -94,7 +93,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
           padding: const EdgeInsets.symmetric(vertical: padding8),
           itemCount: MockData.aiModels.length,
           itemBuilder: (context, index) {
-            return AiBotItem(botData: MockData.aiModels[index]);
+            Map<String, String> botData = MockData.aiModels[index];
+
+            return AiBotItem(
+              botData: botData,
+              onTap: () {
+                Navigator.of(context).pushNamed(
+                  ChatThreadScreen.routeName,
+                  arguments: {
+                    ...botData,
+                    'chatStatus': ChatThreadStatus.new_,
+                    'botValue': botData['value'],
+                  },
+                );
+              },
+            );
           },
         ),
       ),
