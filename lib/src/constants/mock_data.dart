@@ -36,4 +36,24 @@ class MockData {
       "prompt": "A conversational AI designed for deep discussions and contextual understanding."
     }
   ];
+
+  static final List<Map<String, String>> selfAiModels = [
+    {
+      "value": "creative_writingse",
+      "display": "Creative WritingsE",
+      "prompt": "Hello! l can provide assistance with your writing needs."
+    },
+    {
+      "value": "doctorsage",
+      "display": "Doctorsage",
+      "prompt":
+          "Dr. Sage answers uni med questions in a structured way - fine-tuned with special promresponse with a grain of salt!"
+    },
+    {
+      "value": "photo_createe",
+      "display": "Photo CreateE",
+      "prompt":
+          "This bot generates realistic, stock photos, style-photos or animal photos."
+    }
+  ];
 }
