@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../constants/styles.dart';
-import '../../helpers/image_helpers.dart';
+import '../../../constants/styles.dart';
+import '../../../helpers/image_helpers.dart';
 
 class AiBotItem extends StatelessWidget {
   final Map<String, String> botData;

@@ -3,7 +3,7 @@ import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import '../../../constants/styles.dart';
-import '../../../widgets/explore/ai_bot_item.dart';
+import '../widgets/ai_bot_item.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});

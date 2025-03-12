@@ -1,5 +1,5 @@
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
-import 'package:eco_chat_bot/src/widgets/explore/ai_bot_item.dart';
+import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:flutter/material.dart';
 import '../../../constants/styles.dart';
 
