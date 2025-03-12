@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../constants/styles.dart';
+import 'settings_profile.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -13,11 +14,10 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   int? selectedBotIndex;
 
-  // Bot list data
   final List<Map<String, dynamic>> botList = const [
     {
       "title": "Creative WritingsE",
-      "subtitle": "Hello! l can provide assistance with your writing needs.",
+      "subtitle": "Hello! I can provide assistance with your writing needs.",
       "icon": Icons.auto_awesome,
       "color": Colors.purple
     },
@@ -40,45 +40,41 @@ class _ProfilePageState extends State<ProfilePage> {
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
-
-    showMenu(
-      context: context,
-      position: RelativeRect.fromRect(
-        tapPosition &
-            const Size(spacing40,
-                spacing40), // Smaller rect for more precise positioning
-        Offset.zero & overlay.size,
-      ),
-      items: [
-        PopupMenuItem(
-          child: Row(
-            children: const [
-              Icon(Icons.edit, color: Colors.black),
-              SizedBox(width: spacing8),
-              Text('Edit Bot'),
-            ],
-          ),
-          onTap: () {
-            // Add edit functionality
-          },
+    Future.delayed(Duration.zero, () {
+      showMenu(
+        context: context,
+        position: RelativeRect.fromRect(
+          tapPosition & const Size(spacing40, spacing40),
+          Offset.zero & overlay.size,
         ),
-        PopupMenuItem(
-          child: Row(
-            children: [
-              const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
-              const SizedBox(width: 8),
-              Text('Remove Bot',
-                  style: TextStyle(color: ColorConst.textRedColor)),
-            ],
+        items: [
+          PopupMenuItem(
+            child: Row(
+              children: const [
+                Icon(Icons.edit, color: Colors.black),
+                SizedBox(width: spacing8),
+                Text('Edit Bot'),
+              ],
+            ),
+            onTap: () {},
           ),
-          onTap: () {
-            // Add remove functionality
-          },
-        ),
-      ],
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    );
+          PopupMenuItem(
+            child: Row(
+              children: [
+                const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
+                const SizedBox(width: 8),
+                Text('Remove Bot',
+                    style: AppFontStyles.poppinsTextBold(
+                        color: ColorConst.textRedColor)),
+              ],
+            ),
+            onTap: () {},
+          ),
+        ],
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      );
+    });
   }
 
   @override
@@ -87,16 +83,14 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // App bar
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // App name with gradient text
                   ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
+                    shaderCallback: (bounds) => const LinearGradient(
                       colors: [Colors.blue, Colors.purple, Colors.red],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
@@ -104,104 +98,90 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: const Text(
                       'EcoChatBot',
                       style: TextStyle(
-                        fontSize: fontSize24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                   ),
-                  // Settings icon
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.black, width: spacing2),
                     ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(spacing8),
-                      child: Icon(Icons.settings_outlined),
+                    child: Padding(
+                      padding: const EdgeInsets.all(spacing8),
+                      child: IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SettingsScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.settings_outlined),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Profile section
             Padding(
               padding: const EdgeInsets.symmetric(vertical: spacing16),
               child: Row(
                 children: [
                   const SizedBox(width: spacing20),
-                  // Profile image
                   CircleAvatar(
                     radius: spacing40,
                     backgroundImage: AssetImage(AssetPath.logoApp),
                     backgroundColor: Colors.lightBlue[100],
                   ),
                   const SizedBox(width: 20),
-                  // Profile info
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'StarrySia',
-                        style: TextStyle(
-                          fontSize: fontSize28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'ID 845289347',
-                        style: TextStyle(
-                          fontSize: fontSize16,
-                          color: Colors.grey,
-                        ),
-                      ),
+                    children: [
+                      Text('StarrySia',
+                          style: AppFontStyles.poppinsTitleBold(
+                              fontSize: fontSize28)),
+                      Text('ID 845289347',
+                          style: AppFontStyles.poppinsRegular(
+                              fontSize: fontSize16, color: Colors.grey)),
                     ],
                   ),
                 ],
               ),
             ),
-
-            // Divider
             Container(
               height: 8,
               color: ColorConst.BackgroundGreyColor,
             ),
-
-            // My bots section
             Expanded(
               child: Container(
                 color: ColorConst.BackgroundGreyColor,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.all(spacing20),
+                    Padding(
+                      padding: const EdgeInsets.all(spacing20),
                       child: Text(
                         'My bots',
-                        style: TextStyle(
-                          fontSize: fontSize24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppFontStyles.poppinsTitleBold(
+                            fontSize: fontSize24),
                       ),
                     ),
-                    // Dynamically render bot list
                     ...List.generate(botList.length, (index) {
                       final bot = botList[index];
                       return GestureDetector(
                         onTapUp: (TapUpDetails details) {
-                          setState(() {
-                            selectedBotIndex = index;
-                          });
+                          setState(() => selectedBotIndex = index);
                           _showBotMenu(context, index, details.globalPosition);
                         },
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 10.0),
                           child: _buildBotItem(
-                            bot["title"] as String,
-                            bot["subtitle"] as String,
-                            bot["color"] as Color,
-                            bot["icon"] as IconData,
+                            bot["title"],
+                            bot["subtitle"],
+                            bot["color"],
+                            bot["icon"],
                             isSelected: selectedBotIndex == index,
                           ),
                         ),
@@ -234,7 +214,6 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            // Bot icon
             Container(
               width: 50,
               height: 50,
@@ -251,24 +230,16 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(width: 16),
-            // Bot info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(title,
+                      style: AppFontStyles.poppinsTitleBold(fontSize: 18)),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                    ),
+                    style: AppFontStyles.poppinsRegular(
+                        fontSize: 14, color: Colors.grey[500]!),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                   ),
