@@ -1,7 +1,6 @@
 import 'package:dotted_border/dotted_border.dart';
-import 'package:eco_chat_bot/src/constants/colors.dart';
-import 'package:eco_chat_bot/src/constants/dimensions.dart';
-import 'package:eco_chat_bot/src/constants/font_styles.dart';
+import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/select_knowledge_source_popup.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:flutter/material.dart';
 
@@ -34,7 +33,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
                   children: [
                     Text(
                       'Create Your Own Bot',
-                      style: AppFontStyles.poppinsTitleBold(fontSize: fontSize16),
+                      style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
                     ),
                     SizedBox(
                       width: spacing32,
@@ -50,17 +49,17 @@ class _CreateBotModalState extends State<CreateBotModal> {
                   ],
                 ),
 
-                SizedBox(height: spacing16),
+                SizedBox(height: spacing24),
 
                 // Name Field
                 _buildTextField('Name', 'Enter a name for your bot', required: true),
 
-                SizedBox(height: spacing16),
+                SizedBox(height: spacing24),
 
                 // Instructions Field
-                _buildTextField('Instructions (Optional)', 'Enter instructions for the bot', maxLines: 3),
+                _buildTextField('Instructions (Optional)', 'Enter instructions for the bot', maxLines: 6),
 
-                SizedBox(height: spacing16),
+                SizedBox(height: spacing24),
 
                 // Knowledge Base Section
                 Column(
@@ -72,7 +71,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
                       'Enhance your bot’s responses by adding custom knowledge',
                       style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
                     ),
-                    SizedBox(height: spacing12),
+                    SizedBox(height: spacing20),
                     Center(
                       child: DottedBorder(
                         strokeWidth: 1,
@@ -93,7 +92,8 @@ class _CreateBotModalState extends State<CreateBotModal> {
                               ),
                             ),
                             onPressed: () {
-                              // Your onPressed logic
+                              // Open the SelectKnowledgeSourcePopup
+                              SelectKnowledgeSourcePopup.build(context);
                             },
                             child: Text(
                               "+ Add knowledge source",
@@ -106,7 +106,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
                   ],
                 ),
 
-                SizedBox(height: spacing40),
+                SizedBox(height: spacing60),
 
                 // Buttons Row
                 Row(
@@ -133,9 +133,9 @@ class _CreateBotModalState extends State<CreateBotModal> {
         ),
       ),
     );
+    // Helper function for input fields
   }
 
-  // Helper function for input fields
   Widget _buildTextField(String label, String hint, {int maxLines = 1, bool required = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +152,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
             ],
           ),
         ),
-        SizedBox(height: 5),
+        SizedBox(height: spacing12),
         TextField(
           maxLines: maxLines,
           decoration: InputDecoration(

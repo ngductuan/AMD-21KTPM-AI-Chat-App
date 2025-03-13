@@ -38,8 +38,19 @@ class AssetPath {
     "photo_createe": 'assets/images/avatar/chat_avatar_8.png',
   };
 
+  static const Map<String, String> knowledgeSource = {
+    "local_file": 'assets/icons/ic_local_file.png',
+    "website":  'assets/icons/ic_website.png',
+    "google_drive": 'assets/icons/ic_google_drive.png',
+    "slack": 'assets/icons/ic_slack.png',
+    "confluence": 'assets/icons/ic_confluence.png',
+  };
+
   // Explore
   static const String icClear = 'assets/icons/ic_clear.svg';
+
+  // Knowledge source
+  static const String icLocalFile = 'assets/icons/ic_local_file.png';
 
   // Others
   static const String noDataIcon = 'assets/icons/no_data.svg';
