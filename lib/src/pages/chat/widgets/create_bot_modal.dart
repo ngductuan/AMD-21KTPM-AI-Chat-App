@@ -76,26 +76,29 @@ class _CreateBotModalState extends State<CreateBotModal> {
                     Center(
                       child: DottedBorder(
                         strokeWidth: 1,
-                        dashPattern: [8, 4], // Dashed pattern
+                        dashPattern: [4, 2], // Dashed pattern
                         borderType: BorderType.RRect, // Rounded rectangle
                         radius: Radius.circular(radius12), // Border radius
                         color: ColorConst.textHighlightColor,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            // overlayColor: Colors.transparent,
-                            padding: EdgeInsets.symmetric(horizontal: padding32),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(radius12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: spacing32,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              overlayColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(radius12),
+                              ),
                             ),
-                          ),
-                          onPressed: () {
-                            // Your onPressed logic
-                          },
-                          child: Text(
-                            "+ Add knowledge source",
-                            style: AppFontStyles.poppinsRegular(),
+                            onPressed: () {
+                              // Your onPressed logic
+                            },
+                            child: Text(
+                              "+ Add knowledge source",
+                              style: AppFontStyles.poppinsTextBold(),
+                            ),
                           ),
                         ),
                       ),

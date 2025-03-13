@@ -43,43 +43,23 @@ class _ChatListScreenState extends State<ChatListScreen> {
     //     ExploreScreen.routeName,
     //   );
     // });
+
+    Future.delayed(Duration(milliseconds: 500), () {
+      Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+    });
   }
 
   // Dummy chat data
   final List<Map<String, String>> chatData = [
-    {
-      "title": "Give me some example about Docker...",
-      "subtitle": "Dr. Sage answers uni med questions in a..."
-    },
-    {
-      "title": "Ask for flutter",
-      "subtitle": "Hello! I can provide assistance with your..."
-    },
-    {
-      "title": "How to code fast for homework...",
-      "subtitle": "Generate photo-realistic pictures with Re..."
-    },
-    {
-      "title": "Why does it use scss instead of css?",
-      "subtitle": "I will help you learn anything you need h..."
-    },
-    {
-      "title": "Translate english to vietnamese",
-      "subtitle": "Describe the image you want to create."
-    },
-    {
-      "title": "Generate for me a 2D picture",
-      "subtitle": "This bot generates realistic, stock photo..."
-    },
+    {"title": "Give me some example about Docker...", "subtitle": "Dr. Sage answers uni med questions in a..."},
+    {"title": "Ask for flutter", "subtitle": "Hello! I can provide assistance with your..."},
+    {"title": "How to code fast for homework...", "subtitle": "Generate photo-realistic pictures with Re..."},
+    {"title": "Why does it use scss instead of css?", "subtitle": "I will help you learn anything you need h..."},
+    {"title": "Translate english to vietnamese", "subtitle": "Describe the image you want to create."},
+    {"title": "Generate for me a 2D picture", "subtitle": "This bot generates realistic, stock photo..."},
     {"title": "Propose for me a statement", "subtitle": "Expert in Psychology"},
-    {
-      "title": "What pharmacy have been closed near...",
-      "subtitle": "Dr. Sage answers uni med questions in a..."
-    },
-    {
-      "title": "How much cost is it for water?",
-      "subtitle": "Your very own therapist with relationship..."
-    },
+    {"title": "What pharmacy have been closed near...", "subtitle": "Dr. Sage answers uni med questions in a..."},
+    {"title": "How much cost is it for water?", "subtitle": "Your very own therapist with relationship..."},
   ];
 
   @override
@@ -106,8 +86,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
               itemCount: chatData.length,
               itemBuilder: (context, index) {
                 // Avatar path
-                String avatarPath = AssetPath.chatThreadAvatarList[
-                    index % AssetPath.chatThreadAvatarList.length];
+                String avatarPath = AssetPath.chatThreadAvatarList[index % AssetPath.chatThreadAvatarList.length];
 
                 return ListTile(
                   leading: ImageHelper.loadFromAsset(
@@ -124,8 +103,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                   subtitle: Text(
                     chatData[index]["subtitle"]!,
-                    style: AppFontStyles.poppinsRegular(
-                        color: ColorConst.textGrayColor, fontSize: fontSize12),
+                    style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor, fontSize: fontSize12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -172,11 +150,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
         offset: const Offset(0, spacing48),
         onSelected: (value) {
           if (value == 1) {
-            Navigator.of(context).pushNamed(ChatThreadScreen.routeName,
-                arguments: {'chatStatus': ChatThreadStatus.new_});
-          } else if (value == 2) {
             Navigator.of(context)
-                .push(AnimationModal.fadeInModal(CreateBotModal()));
+                .pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
+          } else if (value == 2) {
+            Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
           }
         },
         itemBuilder: (context) => [
