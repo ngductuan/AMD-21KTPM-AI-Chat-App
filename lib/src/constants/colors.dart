@@ -42,5 +42,6 @@ class ColorConst {
   static const textRedColor = Color(0xFFFF3B30);
 
   static const grayOverlayColor = Color(0xFFAEAEB2);
+  static const blueColor = Color(0xFF3b82f6);
   static const bluePastelColor = Color(0xFFF0F8FF);
 }

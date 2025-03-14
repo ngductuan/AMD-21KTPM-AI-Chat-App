@@ -51,6 +51,7 @@ class AssetPath {
 
   // Knowledge source
   static const String icLocalFile = 'assets/icons/ic_local_file.png';
+  static const String icUpload = 'assets/icons/ic_upload.svg';
 
   // Others
   static const String noDataIcon = 'assets/icons/no_data.svg';
