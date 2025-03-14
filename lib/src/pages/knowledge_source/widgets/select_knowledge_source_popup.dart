@@ -1,6 +1,8 @@
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
+import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/import_web_source_popup.dart';
+import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/local_knowledge_source_popup.dart';
 import 'package:flutter/material.dart';
 
 class SelectKnowledgeSourcePopup {
@@ -71,7 +73,15 @@ class SelectKnowledgeSourcePopup {
 
                               return GestureDetector(
                                 onTap: () {
+                                  // Trigger callback
                                   print('Selected: ${dataItem["display"]}');
+
+                                  overlayEntry?.remove();
+                                  if (dataItem["value"] == "local_file") {
+                                    LocalKnowledgeSourcePopup.build(context);
+                                  } else if (dataItem["value"] == "website") {
+                                    ImportWebSourcePopup.build(context);
+                                  }
                                 },
                                 child: Container(
                                   padding: EdgeInsets.all(spacing12),
@@ -96,7 +106,6 @@ class SelectKnowledgeSourcePopup {
                                           avatarPath,
                                           width: spacing16,
                                           height: spacing16,
-                                          // radius: BorderRadius.circular(radius32),
                                         ),
                                       ),
                                     ),

@@ -2,6 +2,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/select_knowledge_source_popup.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
+import 'package:eco_chat_bot/src/widgets/input_form_field.dart';
 import 'package:flutter/material.dart';
 
 class CreateBotModal extends StatefulWidget {
@@ -52,12 +53,12 @@ class _CreateBotModalState extends State<CreateBotModal> {
                 SizedBox(height: spacing24),
 
                 // Name Field
-                _buildTextField('Name', 'Enter a name for your bot', required: true),
+                InputFormField.build('Name', 'Enter a name for your bot', required: true),
 
                 SizedBox(height: spacing24),
 
                 // Instructions Field
-                _buildTextField('Instructions (Optional)', 'Enter instructions for the bot', maxLines: 6),
+                InputFormField.build('Instructions (Optional)', 'Enter instructions for the bot', maxLines: 6),
 
                 SizedBox(height: spacing24),
 
@@ -132,36 +133,6 @@ class _CreateBotModalState extends State<CreateBotModal> {
           ),
         ),
       ),
-    );
-    // Helper function for input fields
-  }
-
-  Widget _buildTextField(String label, String hint, {int maxLines = 1, bool required = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RichText(
-          text: TextSpan(
-            text: label,
-            style: AppFontStyles.poppinsTextBold(),
-            children: [
-              TextSpan(
-                text: required == true ? ' *' : '',
-                style: AppFontStyles.poppinsTextBold(color: ColorConst.textRedColor),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: spacing12),
-        TextField(
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
-            contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
-          ),
-        ),
-      ],
     );
   }
 }
