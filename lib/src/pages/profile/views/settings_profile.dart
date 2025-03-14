@@ -1,3 +1,7 @@
+import 'package:eco_chat_bot/src/constants/dimensions.dart';
+import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -96,6 +100,7 @@ class SettingsScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
+        backgroundColor: ColorConst.backgroundWhiteColor,
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -137,58 +142,23 @@ class SettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.blue),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
+                  GradientFormButton(
+                    text: 'Cancel',
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    isActiveButton: false,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.blue, Colors.purple, Colors.pink],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Handle subscription purchase
-                          Navigator.of(context).pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text(
-                          'Confirm',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: spacing12),
+                    child: GradientFormButton(
+                      text: 'Create',
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      isActiveButton: true,
                     ),
                   ),
                 ],
@@ -206,8 +176,8 @@ class SettingsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 30,
-          height: 30,
+          width: spacing24,
+          height: spacing24,
           decoration: const BoxDecoration(
             color: Colors.green,
             shape: BoxShape.circle,
@@ -215,7 +185,7 @@ class SettingsScreen extends StatelessWidget {
           child: const Icon(
             Icons.check,
             color: Colors.white,
-            size: 20,
+            size: spacing20,
           ),
         ),
         const SizedBox(width: 12),
@@ -236,6 +206,7 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: ColorConst.backgroundWhiteColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -246,17 +217,14 @@ class SettingsScreen extends StatelessWidget {
             children: [
               const Text(
                 'Creator:',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ColorConst.blueColor),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               const Text(
                 'Nguyễn Gia Bảo',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: spacing18,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -264,31 +232,18 @@ class SettingsScreen extends StatelessWidget {
               const Text(
                 'Nguyễn Đức Tuấn',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: spacing18,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.blue),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
+              GradientFormButton(
+                text: 'Cancel',
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                isActiveButton: false,
               ),
             ],
           ),
@@ -318,90 +273,105 @@ class SettingsScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // First group of settings
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
+      body: Padding(
+        padding: const EdgeInsets.all(spacing16),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                children: [
+                  // First group of settings
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSettingItem(
+                          icon: Icons.brightness_6,
+                          iconColor: Colors.purple,
+                          title: 'Theme',
+                          trailing: 'Light mode',
+                          onTap: () {
+                            AppToast(
+                              context: context,
+                              message: 'Coming soon!',
+                              mode: AppToastMode.info,
+                            ).show(context);
+                          },
+                        ),
+                        Divider(
+                          height: 1,
+                          color: Colors.grey.withOpacity(0.3),
+                        ),
+                        _buildSettingItem(
+                          icon: Icons.workspace_premium,
+                          iconColor: Colors.pink,
+                          title: 'Upgrade account',
+                          onTap: () => _showUpgradeModal(context),
+                        ),
+                        Divider(
+                          height: 1,
+                          color: Colors.grey.withOpacity(0.3),
+                        ),
+                        _buildSettingItem(
+                          icon: Icons.info_outline,
+                          iconColor: Colors.blue,
+                          title: 'About us',
+                          onTap: () => _showAboutUsModal(context),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      _buildSettingItem(
-                        icon: Icons.brightness_6,
-                        iconColor: Colors.purple,
-                        title: 'Theme',
-                        trailing: 'Light mode',
-                        onTap: () {},
-                      ),
-                      const Divider(height: 1),
-                      _buildSettingItem(
-                        icon: Icons.workspace_premium,
-                        iconColor: Colors.pink,
-                        title: 'Upgrade account',
-                        onTap: () => _showUpgradeModal(context),
-                      ),
-                      const Divider(height: 1),
-                      _buildSettingItem(
-                        icon: Icons.info_outline,
-                        iconColor: Colors.blue,
-                        title: 'About us',
-                        onTap: () => _showAboutUsModal(context),
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  // Logout section
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: _buildSettingItem(
+                      icon: Icons.logout,
+                      iconColor: Colors.orange,
+                      title: 'Log out',
+                      onTap: () async {
+                        final shouldLogout = await _showLogoutDialog(context);
+                        if (shouldLogout == true) {
+                          _logout(context);
+                        }
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Logout section
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: _buildSettingItem(
-                    icon: Icons.logout,
-                    iconColor: Colors.orange,
-                    title: 'Log out',
-                    onTap: () async {
-                      final shouldLogout = await _showLogoutDialog(context);
-                      if (shouldLogout == true) {
-                        _logout(context);
-                      }
-                    },
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          // Version and credit
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: const [
-                Text(
-                  'Version: 2.3.4',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+            // Version and credit
+            Padding(
+              padding: const EdgeInsets.all(spacing16),
+              child: Column(
+                children: const [
+                  Text(
+                    'Version: 2.3.4',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Design by @EcoTeam',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+                  SizedBox(height: 4),
+                  Text(
+                    'Design by @EcoTeam',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: spacing24),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

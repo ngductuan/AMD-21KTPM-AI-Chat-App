@@ -19,7 +19,7 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   font_awesome_flutter: ^10.6.0
-  fluttertoast: ^8.2.4
+  fluttertoast: ^8.2.12
   # firebase_core: ^2.24.2
   # google_sign_in: ^6.1.6
   # firebase_auth: ^4.16.0

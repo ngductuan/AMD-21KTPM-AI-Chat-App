@@ -32,6 +32,8 @@ const spacing52 = 52.0;
 const spacing56 = 56.0;
 const spacing60 = 60.0;
 const spacing64 = 64.0;
+const spacing68 = 68.0;
+const spacing72 = 72.0;
 const spacing80 = 80.0;
 
 // Border Radius
