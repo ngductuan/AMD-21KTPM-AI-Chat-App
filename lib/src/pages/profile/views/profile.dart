@@ -106,19 +106,25 @@ class _ProfilePageState extends State<ProfilePage> {
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: spacing2),
+                      border: Border.all(
+                          color: Colors.black, width: 1), // Reduce width
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(spacing8),
+                      padding: const EdgeInsets.all(
+                          4), // Adjust padding to fit the smaller border
                       child: IconButton(
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const SettingsScreen()),
+                              builder: (context) => const SettingsScreen(),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.settings_outlined),
+                        iconSize: 18, // Keep the icon size smaller
+                        constraints:
+                            const BoxConstraints(minWidth: 32, minHeight: 32),
                       ),
                     ),
                   ),
