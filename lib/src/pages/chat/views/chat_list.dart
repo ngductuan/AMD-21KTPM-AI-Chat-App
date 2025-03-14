@@ -22,33 +22,6 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   int listCount = 1;
 
-  @override
-  void initState() {
-    super.initState();
-    // Auto show modal after the screen is built
-    // Future.delayed(Duration(milliseconds: 500), () {
-    //   // Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
-    //   Navigator.of(context).pushNamed(
-    //     ChatThreadScreen.routeName,
-    //     arguments: {
-    //       ...chatData[0],
-    //       'avatarPath': 'assets/images/avatar/chat_avatar_1.png',
-    //       'chatStatus': ChatThreadStatus.existing,
-    //     },
-    //   );
-    // });
-
-    // Future.delayed(Duration(milliseconds: 500), () {
-    //   Navigator.of(context).pushNamed(
-    //     ExploreScreen.routeName,
-    //   );
-    // });
-
-    Future.delayed(Duration(milliseconds: 500), () {
-      Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
-    });
-  }
-
   // Dummy chat data
   final List<Map<String, String>> chatData = [
     {"title": "Give me some example about Docker...", "subtitle": "Dr. Sage answers uni med questions in a..."},

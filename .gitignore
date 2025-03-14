@@ -49,3 +49,4 @@ app.*.map.json
 # Other
 .env*
 .DS_Store
+*.txt
