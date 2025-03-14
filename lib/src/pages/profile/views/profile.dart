@@ -2,6 +2,7 @@ import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
+import 'settings_profile.dart';
 import 'package:flutter/material.dart';
 import '../../../constants/styles.dart';
 
@@ -18,12 +19,15 @@ class _ProfilePageState extends State<ProfilePage> {
   int? selectedBotIndex;
 
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
       position: RelativeRect.fromRect(
-        tapPosition & const Size(spacing40, spacing40), // Smaller rect for more precise positioning
+        tapPosition &
+            const Size(spacing40,
+                spacing40), // Smaller rect for more precise positioning
         Offset.zero & overlay.size,
       ),
       items: [
@@ -37,7 +41,8 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           onTap: () {
             // Add edit functionality
-            Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+            Navigator.of(context)
+                .push(AnimationModal.fadeInModal(CreateBotModal()));
           },
         ),
         PopupMenuItem(
@@ -45,7 +50,8 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
               const SizedBox(width: spacing8),
-              Text('Remove Bot', style: TextStyle(color: ColorConst.textRedColor)),
+              Text('Remove Bot',
+                  style: TextStyle(color: ColorConst.textRedColor)),
             ],
           ),
           onTap: () {
@@ -54,7 +60,8 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ],
       elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
     );
   }
 
@@ -75,13 +82,18 @@ class _ProfilePageState extends State<ProfilePage> {
           ).createShader(bounds),
           child: Text(
             'EcoChatBot',
-            style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize24, color: ColorConst.textWhiteColor),
+            style: AppFontStyles.poppinsTitleSemiBold(
+                fontSize: fontSize24, color: ColorConst.textWhiteColor),
           ),
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.settings_outlined),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
           ),
         ],
       ),
@@ -107,11 +119,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       Text(
                         'StarrySia',
-                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize20),
+                        style: AppFontStyles.poppinsTitleSemiBold(
+                            fontSize: fontSize20),
                       ),
                       Text(
                         'ID 845289347',
-                        style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
+                        style: AppFontStyles.poppinsRegular(
+                            fontSize: fontSize14,
+                            color: ColorConst.textGrayColor),
                       ),
                     ],
                   ),
@@ -130,7 +145,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: EdgeInsets.all(spacing20),
                       child: Text(
                         'My bots',
-                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize18),
+                        style: AppFontStyles.poppinsTitleSemiBold(
+                            fontSize: fontSize18),
                       ),
                     ),
 
@@ -142,7 +158,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             setState(() {
                               selectedBotIndex = index;
                             });
-                            _showBotMenu(context, index, details.globalPosition);
+                            _showBotMenu(
+                                context, index, details.globalPosition);
                           },
                           child: AiBotItem(
                             botData: MockData.selfAiModels[index],
