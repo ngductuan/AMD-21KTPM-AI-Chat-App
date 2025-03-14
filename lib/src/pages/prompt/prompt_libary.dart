@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/widgets/no_data_gadget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,8 +11,7 @@ class PromptLibrary extends StatefulWidget {
   State<PromptLibrary> createState() => _PromptLibraryState();
 }
 
-class _PromptLibraryState extends State<PromptLibrary>
-    with SingleTickerProviderStateMixin {
+class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
@@ -71,7 +71,7 @@ class _PromptLibraryState extends State<PromptLibrary>
     return Container(
       margin: const EdgeInsets.all(spacing16),
       decoration: BoxDecoration(
-        color: ColorConst.grayOverlayColor,
+        color: ColorConst.backgroundLightGrayColor,
         borderRadius: BorderRadius.circular(spacing30),
       ),
       child: TextField(
@@ -87,8 +87,7 @@ class _PromptLibraryState extends State<PromptLibrary>
           ),
           prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: spacing20, vertical: spacing12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: spacing20, vertical: spacing12),
         ),
       ),
     );
@@ -160,15 +159,13 @@ class _PromptLibraryState extends State<PromptLibrary>
     _showPromptDialog();
   }
 
-  Widget _buildPromptItem(
-      Map<String, dynamic> prompt, int index, bool isCustom) {
+  Widget _buildPromptItem(Map<String, dynamic> prompt, int index, bool isCustom) {
     return Container(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: spacing16, vertical: spacing8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: spacing16, vertical: spacing8),
         title: Text(
           prompt['title'],
           style: GoogleFonts.poppins(
@@ -208,9 +205,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                 });
               },
               child: SvgPicture.asset(
-                prompt['isFavorite']
-                    ? AssetPath.yellow_star
-                    : AssetPath.black_star,
+                prompt['isFavorite'] ? AssetPath.yellow_star : AssetPath.black_star,
                 width: spacing24,
                 height: spacing24,
               ),
@@ -245,10 +240,8 @@ class _PromptLibraryState extends State<PromptLibrary>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(
-            AssetPath.noDataIcon,
+          NoDataGadget(
             width: 100,
-            height: 100,
           )
         ],
       ),
@@ -260,6 +253,7 @@ class _PromptLibraryState extends State<PromptLibrary>
       context: context,
       builder: (BuildContext context) {
         return Dialog(
+          backgroundColor: ColorConst.backgroundWhiteColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(spacing20),
           ),
@@ -290,15 +284,14 @@ class _PromptLibraryState extends State<PromptLibrary>
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      SizedBox(height: spacing12),
                       TextField(
                         controller: _nameController,
                         decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(spacing12),
-                            borderSide: BorderSide.none,
-                          ),
+                          hintText: 'Enter name',
+                          hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
+                          contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
                         ),
                       ),
                       const SizedBox(height: spacing24),
@@ -338,17 +331,11 @@ class _PromptLibraryState extends State<PromptLibrary>
                         controller: _promptController,
                         maxLines: 4,
                         decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey[100],
                           hintText:
                               'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(spacing12),
-                            borderSide: BorderSide.none,
-                          ),
+                          hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
+                          contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
                         ),
                       ),
                       const SizedBox(height: spacing24),
@@ -373,8 +360,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                           const SizedBox(width: spacing16),
                           ElevatedButton(
                             onPressed: () {
-                              if (_nameController.text.isNotEmpty &&
-                                  _promptController.text.isNotEmpty) {
+                              if (_nameController.text.isNotEmpty && _promptController.text.isNotEmpty) {
                                 setState(() {
                                   if (_isEditing) {
                                     // Update existing prompt
@@ -383,16 +369,13 @@ class _PromptLibraryState extends State<PromptLibrary>
                                       'description': 'Your own custom prompt',
                                       'prompt': _promptController.text,
                                       'isFavorite': _isCustomPrompt
-                                          ? _customPrompts[_editingIndex]
-                                              ['isFavorite']
-                                          : _prompts[_editingIndex]
-                                              ['isFavorite'],
+                                          ? _customPrompts[_editingIndex]['isFavorite']
+                                          : _prompts[_editingIndex]['isFavorite'],
                                       'isCustom': true,
                                     };
 
                                     if (_isCustomPrompt) {
-                                      _customPrompts[_editingIndex] =
-                                          promptData;
+                                      _customPrompts[_editingIndex] = promptData;
                                     } else {
                                       _prompts[_editingIndex] = promptData;
                                     }
@@ -416,7 +399,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[400],
+                              backgroundColor: ColorConst.textHighlightColor,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(spacing20),
                               ),
@@ -455,37 +438,40 @@ class _PromptLibraryState extends State<PromptLibrary>
           child: Column(
             children: [
               _buildSearchBar(),
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.black,
-                indicator: ShapeDecoration(
-                  color: Colors.blue[400],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: spacing16),
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.black,
+                  indicator: ShapeDecoration(
+                    color: ColorConst.textHighlightColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  tabs: [
+                    Tab(
+                      child: Text(
+                        'Public',
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ),
+                    Tab(
+                      child: Text(
+                        'My prompt',
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ),
+                    Tab(
+                      child: Text(
+                        'Favorite',
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ),
+                  ],
                 ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                tabs: [
-                  Tab(
-                    child: Text(
-                      'Public',
-                      style: GoogleFonts.poppins(),
-                    ),
-                  ),
-                  Tab(
-                    child: Text(
-                      'My prompt',
-                      style: GoogleFonts.poppins(),
-                    ),
-                  ),
-                  Tab(
-                    child: Text(
-                      'Favorite',
-                      style: GoogleFonts.poppins(),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -508,10 +494,8 @@ class _PromptLibraryState extends State<PromptLibrary>
                             p['title'].toLowerCase().contains(searchText) ||
                             p['description'].toLowerCase().contains(searchText))
                         .toList();
-                    final originalIndex =
-                        _prompts.indexOf(filteredPrompts[index]);
-                    return _buildPromptItem(
-                        filteredPrompts[index], originalIndex, false);
+                    final originalIndex = _prompts.indexOf(filteredPrompts[index]);
+                    return _buildPromptItem(filteredPrompts[index], originalIndex, false);
                   },
                 )
               : _buildEmptyState(),
@@ -530,10 +514,8 @@ class _PromptLibraryState extends State<PromptLibrary>
                             p['title'].toLowerCase().contains(searchText) ||
                             p['description'].toLowerCase().contains(searchText))
                         .toList();
-                    final originalIndex =
-                        _customPrompts.indexOf(filteredPrompts[index]);
-                    return _buildPromptItem(
-                        filteredPrompts[index], originalIndex, true);
+                    final originalIndex = _customPrompts.indexOf(filteredPrompts[index]);
+                    return _buildPromptItem(filteredPrompts[index], originalIndex, true);
                   },
                 )
               : _buildEmptyState(),
@@ -546,9 +528,7 @@ class _PromptLibraryState extends State<PromptLibrary>
             for (int i = 0; i < _prompts.length; i++) {
               if (_prompts[i]['isFavorite'] == true &&
                   (_prompts[i]['title'].toLowerCase().contains(searchText) ||
-                      _prompts[i]['description']
-                          .toLowerCase()
-                          .contains(searchText))) {
+                      _prompts[i]['description'].toLowerCase().contains(searchText))) {
                 favPrompts.add({
                   ..._prompts[i],
                   'originalIndex': i,
@@ -560,12 +540,8 @@ class _PromptLibraryState extends State<PromptLibrary>
             // Add custom prompts with their original indices
             for (int i = 0; i < _customPrompts.length; i++) {
               if (_customPrompts[i]['isFavorite'] == true &&
-                  (_customPrompts[i]['title']
-                          .toLowerCase()
-                          .contains(searchText) ||
-                      _customPrompts[i]['description']
-                          .toLowerCase()
-                          .contains(searchText))) {
+                  (_customPrompts[i]['title'].toLowerCase().contains(searchText) ||
+                      _customPrompts[i]['description'].toLowerCase().contains(searchText))) {
                 favPrompts.add({
                   ..._customPrompts[i],
                   'originalIndex': i,
@@ -605,8 +581,11 @@ class _PromptLibraryState extends State<PromptLibrary>
           _promptController.clear();
           _showPromptDialog();
         },
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.blue[400],
+        backgroundColor: ColorConst.textHighlightColor,
+        child: Icon(
+          Icons.add,
+          color: ColorConst.backgroundWhiteColor,
+        ),
       ),
     );
   }

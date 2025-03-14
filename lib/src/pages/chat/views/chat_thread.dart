@@ -256,11 +256,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 ),
                                 color: Colors.transparent,
                               ),
-                              padding: EdgeInsets.all(spacing16),
+                              padding: EdgeInsets.only(left: spacing16, right: spacing16, top: spacing12),
                               child: TextField(
                                 controller: _controller,
+                                maxLines: null,
                                 decoration: InputDecoration(
-                                  hintText: "Send message...",
+                                  hintText: "Ask me anything...",
                                   border: InputBorder.none,
                                   hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
                                 ),
@@ -268,7 +269,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: spacing16, vertical: spacing12),
+                            padding: EdgeInsets.only(left: spacing16, right: spacing16, bottom: spacing12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(radius20),
