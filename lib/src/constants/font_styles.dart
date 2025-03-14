@@ -13,6 +13,14 @@ class AppFontStyles {
     );
   }
 
+  static TextStyle poppinsTitleSemiBold({double? fontSize, Color color = ColorConst.textBlackColor}) {
+    return GoogleFonts.poppins(
+      fontSize: fontSize ?? globalFontSize,
+      fontWeight: FontWeight.w600,
+      color: color,
+    );
+  }
+
   static TextStyle poppinsTitleBold(
       {double? fontSize, FontWeight fontWeight = FontWeight.bold, Color color = ColorConst.textBlackColor}) {
     return GoogleFonts.poppins(
