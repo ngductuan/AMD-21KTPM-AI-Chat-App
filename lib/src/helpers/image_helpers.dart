@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '../constants/styles.dart';
 
 class ImageHelper {
   // Load local images
@@ -8,40 +10,53 @@ class ImageHelper {
     double? width,
     double? height,
     BorderRadius? radius,
-    BoxFit? fit,
+    BoxFit fit = BoxFit.contain,
     Color? tintColor,
-    Alignment? alignment,
+    Alignment alignment = Alignment.center,
+    VoidCallback? onTap, // Added onTap parameter
   }) {
-    if (imageFilePath.toLowerCase().endsWith('svg')) {
-      return ClipRRect(
-        borderRadius: radius ?? BorderRadius.zero,
-        child: SvgPicture.asset(
-          imageFilePath,
-          width: width,
-          height: height,
-          fit: fit ?? BoxFit.contain,
-          // colorFilter: tintColor != null
-          //     ? ColorFilter.mode(tintColor, BlendMode.srcIn)
-          //     : null,
-          // colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
-          color: tintColor,
-          alignment: alignment ?? Alignment.center,
-        ),
-      );
-    } else {
-      return ClipRRect(
-        borderRadius: radius ?? BorderRadius.zero,
-        child: Image.asset(
-          imageFilePath,
-          width: width,
-          height: height,
-          fit: fit ?? BoxFit.contain,
-          color: tintColor,
-          alignment: alignment ?? Alignment.center,
-        ),
+    bool isSvg = imageFilePath.toLowerCase().endsWith('.svg');
+    
+    Widget imageWidget = SizedBox(
+      width: width != null ? width.clamp(0, maxSizeImageUploadChat) : maxSizeImageUploadChat,
+      child: isSvg
+          ? SvgPicture.asset(
+              imageFilePath,
+              width: width,
+              height: height,
+              fit: fit,
+              colorFilter: tintColor != null
+                  ? ColorFilter.mode(
+                      tintColor, BlendMode.srcIn)
+                  : null,
+              alignment: alignment,
+            )
+          : Image.asset(
+              imageFilePath,
+              width: width,
+              height: height,
+              fit: fit,
+              color: tintColor,
+              alignment: alignment,
+            ),
+    );
+
+
+    // Apply border radius if provided
+    if (radius != null && radius != BorderRadius.zero) {
+      imageWidget = ClipRRect(borderRadius: radius, child: imageWidget);
+    }
+
+    // Wrap with GestureDetector if onTap is provided
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: imageWidget,
       );
     }
+
+    return imageWidget;
   }
 
-  // Load images from url (CachedNetworkImage)
+  // Implement a method for loading images from URLs (CachedNetworkImage)
 }

@@ -7,6 +7,7 @@ const padding24 = 24.0;
 const padding32 = 32.0;
 const padding40 = 40.0;
 const padding48 = 48.0;
+
 // Spacings
 const spacing1 = 1.0;
 const spacing2 = 2.0;
@@ -21,51 +22,34 @@ const spacing18 = 18.0;
 const spacing20 = 20.0;
 const spacing24 = 24.0;
 const spacing28 = 28.0;
+const spacing30 = 30.0;
 const spacing32 = 32.0;
+const spacing36 = 36.0;
 const spacing40 = 40.0;
 const spacing44 = 44.0;
 const spacing48 = 48.0;
-const spacing50 = 50.0;
 const spacing52 = 52.0;
 const spacing56 = 56.0;
 const spacing60 = 60.0;
 const spacing64 = 64.0;
+const spacing68 = 68.0;
+const spacing72 = 72.0;
 const spacing80 = 80.0;
+
 // Border Radius
 const radius8 = 8.0;
 const radius12 = 12.0;
 const radius16 = 16.0;
+const radius20 = 20.0;
 const radius24 = 24.0;
-
-// Elevation
-
-// Icon size
-const iconBottomNav26 = 26.0;
-
-// Bottom navigation height
-const bottomNavHeightAndroid = 70.0;
-const bottomNavHeightIOS = 100.0; //93.0
-
-// Global appbar height
-const appBarHeightAndBottomAndRejoinGlobal = 160.0;
-const appBarHeightAndBottomGlobal = 100.0;
-const appBarHeightGlobal = 50.0;
-
-// Specific appbar height
-const appBarHeightSearchTopic = 80.0;
-
-// Apptoast
-const iconAppToast22 = 22.0;
-
-// Difference between DongLe (small) and NotoSans (big)
-const differenceFont = 14.0;
-// const differenceFont = 0;
+const radius32 = 32.0;
+const radius40 = 40.0;
 
 // Font family
-const noToSansFont = 'NotoSans';
-const dongLeFont = 'Dongle';
+const poppinsFont = 'Poppins';
+const mercadilloFont = 'Mercadillo';
 
-// Font size for DongLe font
+// Font size
 const fontSize16 = 16.0;
 const fontSize18 = 18.0;
 const fontSize12 = 12.0;
@@ -75,6 +59,20 @@ const fontSize22 = 22.0;
 const fontSize24 = 24.0;
 const fontSize26 = 26.0;
 const fontSize28 = 28.0;
+const fontSize30 = 30.0;
+const fontSize32 = 32.0;
+const fontSize34 = 34.0;
+const fontSize36 = 36.0;
 
-// Example
-// const BorderRadius kDefaultBorderRadius = BorderRadius.all(Radius.circular(8));
+// Navigation bar
+const iconBottomNav26 = 26.0;
+
+// AppToast
+const iconAppToast22 = 22.0;
+
+// Bottom navigation height
+const bottomNavHeightAndroid = 70.0;
+const bottomNavHeightIOS = 100.0;
+
+// Image upload chat
+const maxSizeImageUploadChat = 200.0;

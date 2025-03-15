@@ -1,23 +1,45 @@
+import 'package:eco_chat_bot/src/constants/enum.dart';
+import 'package:eco_chat_bot/src/pages/ai_bot/views/explore.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_list.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
+import 'package:eco_chat_bot/src/pages/profile/views/profile.dart';
+import 'package:eco_chat_bot/src/widgets/layouts/bottom_nav_bar.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 
-class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-  static String routeName = '/home_view';
+  static const String routeName = '/home';
 
   @override
-  State<HomeView> createState() => _HomeViewState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final tabs = [
-    const Center(child: Text('Account')),
-    const Center(child: Text('Setting'))
+    ChatListScreen(),
+    ExploreScreen(),
+    const Center(child: Text('Create')),
+    const Center(child: Text('Message')),
+    ProfilePage(),
   ];
 
   void onTabChanged(int page) {
+    if (page == 2) {
+      Navigator.of(context).pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
+      return;
+    } else if (page == 3) {
+      AppToast(
+        context: context,
+        message: 'Coming soon!',
+        mode: AppToastMode.info,
+      ).show(context);
+      return;
+    }
+
     setState(() {
       _currentIndex = page;
     });
@@ -27,7 +49,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: tabs[_currentIndex],
-      // bottomNavigationBar: AppBottomNavBar(onTabChanged: onTabChanged),
+      bottomNavigationBar: AppBottomNavBar(onTabChanged: onTabChanged),
     );
   }
 }
