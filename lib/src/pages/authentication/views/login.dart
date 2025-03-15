@@ -34,16 +34,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: ColorConst.backgroundPastelColor,
-              ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: ColorConst.backgroundPastelColor,
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -128,8 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const VerificationEmailScreen(),
+                                    builder: (context) => const VerificationEmailScreen(),
                                   ),
                                 );
                               },
@@ -156,10 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           buildGradientButton(context, "Login", () {
                             setState(() {
-                              if (_usernameController.text.isEmpty ||
-                                  _passwordController.text.isEmpty) {
-                                _errorMessage =
-                                    'Username or password is incorrect!';
+                              if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+                                _errorMessage = 'Username or password is incorrect!';
                               } else {
                                 _errorMessage = '';
                                 // Handle login logic here
@@ -172,8 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const VerificationCodeScreen(
+                                  builder: (context) => const VerificationCodeScreen(
                                     email: 'test@gmail.com',
                                   ),
                                 ),
@@ -202,23 +197,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.push(
                               context,
                               PageRouteBuilder(
-                                transitionDuration:
-                                    const Duration(milliseconds: 400),
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        const SignUpScreen(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
+                                transitionDuration: const Duration(milliseconds: 400),
+                                pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
+                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                   const begin = Offset(1.0, 0.0);
                                   const end = Offset.zero;
                                   const curve = Curves.easeInOut;
 
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
+                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
                                   var offsetAnimation = animation.drive(tween);
 
-                                  return SlideTransition(
-                                      position: offsetAnimation, child: child);
+                                  return SlideTransition(position: offsetAnimation, child: child);
                                 },
                               ),
                             );
@@ -239,8 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Terms
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                       child: RichText(
                         textAlign: TextAlign.center,
                         text: const TextSpan(
@@ -249,16 +237,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextSpan(text: 'By continuing, you agree to our '),
                             TextSpan(
                               text: 'User Agreement',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                             ),
                             TextSpan(text: ' and\u00A0'),
                             TextSpan(
                               text: 'Privacy Policy',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                             ),
                             TextSpan(text: '.'),
                           ],
