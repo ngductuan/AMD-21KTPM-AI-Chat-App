@@ -5,7 +5,6 @@ import '../../../widgets/gradient_button.dart';
 import 'sign_up.dart';
 import 'login.dart';
 import 'verification_email.dart';
-import 'verification_code.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -87,21 +86,16 @@ class WelcomeScreen extends StatelessWidget {
                         context,
                         PageRouteBuilder(
                           transitionDuration: const Duration(milliseconds: 400),
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const LoginScreen(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
+                          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
                             const begin = Offset(1.0, 0.0);
                             const end = Offset.zero;
                             const curve = Curves.easeInOut;
 
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
                             var offsetAnimation = animation.drive(tween);
 
-                            return SlideTransition(
-                                position: offsetAnimation, child: child);
+                            return SlideTransition(position: offsetAnimation, child: child);
                           },
                         ),
                       );
@@ -112,8 +106,7 @@ class WelcomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const VerificationEmailScreen(),
+                            builder: (context) => const VerificationEmailScreen(),
                           ),
                         );
                       },
@@ -140,21 +133,16 @@ class WelcomeScreen extends StatelessWidget {
                         context,
                         PageRouteBuilder(
                           transitionDuration: const Duration(milliseconds: 400),
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const SignUpScreen(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
+                          pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
                             const begin = Offset(1.0, 0.0);
                             const end = Offset.zero;
                             const curve = Curves.easeInOut;
 
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
                             var offsetAnimation = animation.drive(tween);
 
-                            return SlideTransition(
-                                position: offsetAnimation, child: child);
+                            return SlideTransition(position: offsetAnimation, child: child);
                           },
                         ),
                       );
@@ -174,8 +162,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // Terms text
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                 child: RichText(
                   textAlign: TextAlign.center,
                   text: const TextSpan(
@@ -184,14 +171,12 @@ class WelcomeScreen extends StatelessWidget {
                       TextSpan(text: 'By continuing, you agree to our '),
                       TextSpan(
                         text: 'User Agreement',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.black54),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                       ),
                       TextSpan(text: ' and\u00A0'),
                       TextSpan(
                         text: 'Privacy Policy',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.black54),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                       ),
                       TextSpan(text: '.'),
                     ],

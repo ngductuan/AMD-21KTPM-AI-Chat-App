@@ -1,4 +1,5 @@
 import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/verification_email.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -126,7 +127,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const VerificationEmailScreen(),
+                                  ),
+                                );
+                            },
                             child: Text(
                               'Forgot password?',
                               style: GoogleFonts.poppins(
