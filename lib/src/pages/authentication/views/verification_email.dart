@@ -65,9 +65,7 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ColorConst.backgroundWhiteColor,
       appBar: AppBar(
-        backgroundColor: ColorConst.backgroundWhiteColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: ColorConst.textBlackColor),
