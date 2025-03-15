@@ -1,4 +1,6 @@
 import 'package:eco_chat_bot/src/constants/colors.dart';
+import 'package:eco_chat_bot/src/constants/font_styles.dart';
+import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -28,10 +30,9 @@ Widget buildGradientButton(BuildContext context, String text, VoidCallback onPre
       ),
       child: Text(
         text,
-        style: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+        style: AppFontStyles.poppinsTitleSemiBold(
+          fontSize: fontSize18,
+          color: ColorConst.textWhiteColor,
         ),
       ),
     ),

@@ -1,3 +1,5 @@
+import 'package:eco_chat_bot/src/widgets/gradient_loading_button.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../constants/styles.dart';
@@ -7,8 +9,7 @@ class VerificationEmailScreen extends StatefulWidget {
   const VerificationEmailScreen({Key? key}) : super(key: key);
 
   @override
-  State<VerificationEmailScreen> createState() =>
-      _VerificationEmailScreenState();
+  State<VerificationEmailScreen> createState() => _VerificationEmailScreenState();
 }
 
 class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
@@ -23,12 +24,17 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
     String _email = _emailController.text.trim(); // Trim extra spaces
 
     if (!_isValidEmail(_email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email address'),
-          backgroundColor: ColorConst.backgroundRedColor,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('Please enter a valid email address'),
+      //     backgroundColor: ColorConst.backgroundRedColor,
+      //   ),
+      // );
+      AppToast(
+        context: context,
+        message: 'Please enter a valid email address',
+        mode: AppToastMode.error,
+      ).show(context);
       return;
     }
 
@@ -75,8 +81,7 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
         ),
         actions: [
           IconButton(
-            icon:
-                const Icon(Icons.headphones, color: ColorConst.textBlackColor),
+            icon: const Icon(Icons.headphones, color: ColorConst.textBlackColor),
             onPressed: () {},
           ),
         ],
@@ -122,38 +127,7 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
               ),
             ),
             const SizedBox(height: spacing24),
-            SizedBox(
-              width: double.infinity,
-              height: spacing56,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _handleSendCode,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(spacing30),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: spacing16),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: spacing20,
-                        width: spacing20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              ColorConst.backgroundWhiteColor),
-                        ),
-                      )
-                    : Text(
-                        'Send Verification Code',
-                        style: GoogleFonts.poppins(
-                          color: ColorConst.textWhiteColor,
-                          fontSize: fontSize18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
+            buildGradientLoadingButton(context, 'Send Verification Code', _isLoading, _handleSendCode),
           ],
         ),
       ),

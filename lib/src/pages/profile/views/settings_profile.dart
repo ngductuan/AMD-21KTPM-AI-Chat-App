@@ -19,11 +19,12 @@ class SettingsScreen extends StatelessWidget {
     return showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: ColorConst.backgroundWhiteColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(spacing20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -39,48 +40,23 @@ class SettingsScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.blue),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(color: Colors.blue),
-                      ),
+                    child: GradientFormButton(
+                      text: 'Cancel',
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      isActiveButton: false,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: spacing12),
                   Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.blue, Colors.purple, Colors.pink],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop(true);
-                          _logout(context); // Call the logout function
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: const Text(
-                          'Confirm',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
+                    child: GradientFormButton(
+                      text: 'Confirm',
+                      onPressed: () {
+                        Navigator.of(context).pop(true);
+                        _logout(context); // Call the logout function
+                      },
+                      isActiveButton: true,
                     ),
                   ),
                 ],
@@ -144,17 +120,19 @@ class SettingsScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  GradientFormButton(
-                    text: 'Cancel',
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    isActiveButton: false,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: spacing12),
+                  Expanded(
                     child: GradientFormButton(
-                      text: 'Create',
+                      text: 'Cancel',
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      isActiveButton: false,
+                    ),
+                  ),
+                  SizedBox(width: spacing12),
+                  Expanded(
+                    child: GradientFormButton(
+                      text: 'Upgrade',
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
@@ -240,6 +218,7 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 24),
               GradientFormButton(
                 text: 'Cancel',
+                padding: spacing12,
                 onPressed: () {
                   Navigator.of(context).pop();
                 },

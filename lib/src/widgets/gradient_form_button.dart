@@ -5,18 +5,21 @@ class GradientFormButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isActiveButton;
+  final double padding;
 
   const GradientFormButton({
     super.key,
     required this.text,
     required this.onPressed,
     required this.isActiveButton,
+    this.padding = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: spacing40,
+      padding: padding == 0 ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: padding),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(spacing8),
         gradient: isActiveButton == true ? ColorConst.primaryGradientColor : null,
