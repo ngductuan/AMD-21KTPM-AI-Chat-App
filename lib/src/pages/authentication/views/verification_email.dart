@@ -24,12 +24,6 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen> {
     String _email = _emailController.text.trim(); // Trim extra spaces
 
     if (!_isValidEmail(_email)) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(
-      //     content: Text('Please enter a valid email address'),
-      //     backgroundColor: ColorConst.backgroundRedColor,
-      //   ),
-      // );
       AppToast(
         context: context,
         message: 'Please enter a valid email address',
