@@ -39,12 +39,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 40),
-              
+
                     // Logo
                     Center(
                       child: Container(
@@ -68,9 +69,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ),
                     ),
-              
+
                     const SizedBox(height: 30),
-              
+
                     // Form
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -84,7 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               color: Colors.black,
                             ),
                           ),
-              
+
                           //Error message
                           if (_errorMessage.isNotEmpty) ...[
                             Padding(
@@ -101,29 +102,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ] else ...[
                             SizedBox(height: 10),
                           ],
-              
+
                           InputField(
                             label: 'Username',
                             controller: _usernameController,
                             hintText: 'Enter your username',
+                            keyboardType: TextInputType.text,
                           ),
                           const SizedBox(height: 4),
-              
+
                           InputField(
                             label: 'Email',
                             controller: _emailController,
                             hintText: 'Enter your email',
+                            keyboardType: TextInputType.text,
                           ),
                           const SizedBox(height: 4),
-              
+
                           InputField(
                             label: 'Password',
                             controller: _passwordController,
                             hintText: 'Enter your password',
                             isPassword: true,
+                            keyboardType: TextInputType.text,
                           ),
                           const SizedBox(height: 2),
-              
+
                           // Forgot Password
                           Align(
                             alignment: Alignment.centerRight,
@@ -132,7 +136,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const VerificationEmailScreen(),
+                                    builder: (context) =>
+                                        const VerificationEmailScreen(),
                                   ),
                                 );
                               },
@@ -149,9 +154,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ],
                       ),
                     ),
-              
+
                     const SizedBox(height: 4),
-              
+
                     // Buttons
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -159,8 +164,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         children: [
                           buildGradientButton(context, "Sign up", () {
                             setState(() {
-                              if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-                                _errorMessage = 'Username or password is incorrect!';
+                              if (_usernameController.text.isEmpty ||
+                                  _passwordController.text.isEmpty) {
+                                _errorMessage =
+                                    'Username or password is incorrect!';
                               } else {
                                 _errorMessage = '';
                                 // Handle login logic here
@@ -171,9 +178,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ],
                       ),
                     ),
-              
+
                     const SizedBox(height: 10),
-              
+
                     // Login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -190,17 +197,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             Navigator.push(
                               context,
                               PageRouteBuilder(
-                                transitionDuration: const Duration(milliseconds: 400),
-                                pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                transitionDuration:
+                                    const Duration(milliseconds: 400),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const LoginScreen(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
                                   const begin = Offset(-1.0, 0.0);
                                   const end = Offset.zero;
                                   const curve = Curves.easeInOut;
-              
-                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
                                   var offsetAnimation = animation.drive(tween);
-              
-                                  return SlideTransition(position: offsetAnimation, child: child);
+
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
                                 },
                               ),
                             );
@@ -216,12 +229,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ],
                     ),
-              
+
                     const SizedBox(height: 35),
-              
+
                     // Terms
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0, vertical: 8.0),
                       child: RichText(
                         textAlign: TextAlign.center,
                         text: const TextSpan(
@@ -230,12 +244,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             TextSpan(text: 'By continuing, you agree to our '),
                             TextSpan(
                               text: 'User Agreement',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54),
                             ),
                             TextSpan(text: ' and\u00A0'),
                             TextSpan(
                               text: 'Privacy Policy',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54),
                             ),
                             TextSpan(text: '.'),
                           ],
