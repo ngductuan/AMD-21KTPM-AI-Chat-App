@@ -1,18 +1,70 @@
+import 'dart:convert';
 import 'package:eco_chat_bot/src/constants/dimensions.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
-  Future<void> _logout(BuildContext context) async {
-    // Simulate deleting authentication token or user session
-    print('Clearing user session...');
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
 
-    // Navigate to the login screen and remove all previous routes
-    Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    setState(() {
+      isLoggedIn = token != null;
+    });
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    final refreshToken = prefs.getString('refresh_token');
+
+    final url =
+        Uri.parse('https://auth-api.jarvis.cx/api/v1/auth/sessions/current');
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'X-Stack-Access-Type': 'client',
+      'X-Stack-Project-Id': '45a1e2fd-77ee-4872-9fb7-987b8c119633',
+      'X-Stack-Publishable-Client-Key':
+          'pck_7wjweasxxnfspvr20dvmyd9pjj0p9kp755bxxcm4ae1er',
+      'X-Stack-Refresh-Token': refreshToken ?? '',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final request = http.Request('DELETE', url);
+      request.body = jsonEncode({});
+      request.headers.addAll(headers);
+      final response = await request.send();
+
+      print("🔐 Logout status: ${response.statusCode}");
+      print("🔐 Logout response: ${await response.stream.bytesToString()}");
+    } catch (e) {
+      print("❌ Logout error: $e");
+    }
+
+    await prefs.clear();
+
+    /*if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }*/
   }
 
   Future<bool?> _showLogoutDialog(BuildContext context) {
@@ -20,9 +72,7 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: ColorConst.backgroundWhiteColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(spacing20),
           child: Column(
@@ -30,10 +80,7 @@ class SettingsScreen extends StatelessWidget {
             children: [
               const Text(
                 'Do you want to log out?',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
               Row(
@@ -42,19 +89,16 @@ class SettingsScreen extends StatelessWidget {
                   Expanded(
                     child: GradientFormButton(
                       text: 'Cancel',
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      onPressed: () => Navigator.pop(context),
                       isActiveButton: false,
                     ),
                   ),
-                  SizedBox(width: spacing12),
+                  const SizedBox(width: spacing12),
                   Expanded(
                     child: GradientFormButton(
                       text: 'Confirm',
                       onPressed: () {
                         Navigator.of(context).pop(true);
-                        _logout(context); // Call the logout function
                       },
                       isActiveButton: true,
                     ),
@@ -68,14 +112,11 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // New method for showing the upgrade account modal
   void _showUpgradeModal(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: ColorConst.backgroundWhiteColor,
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -84,58 +125,39 @@ class SettingsScreen extends StatelessWidget {
             children: [
               const Text(
                 'Upgrade PRO account?',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               const Text(
                 'Benefit features',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _buildBenefitItem(
-                'AI Chat Models (GPT-3.5 & GPT-4.0/Turbo & Gemini Pro & Gemini Ultra)',
-              ),
+              _buildBenefitItem('AI Chat Models (GPT-3.5, GPT-4.0, Gemini...)'),
               const SizedBox(height: 12),
               _buildBenefitItem('Unlimited queries per month'),
               const SizedBox(height: 12),
-              _buildBenefitItem('Access to unlimited AI Action Injection'),
+              _buildBenefitItem('Unlimited AI Action Injection'),
               const SizedBox(height: 30),
               const Text(
                 '\$9.99/month',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Expanded(
                     child: GradientFormButton(
                       text: 'Cancel',
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
+                      onPressed: () => Navigator.of(context).pop(),
                       isActiveButton: false,
                     ),
                   ),
-                  SizedBox(width: spacing12),
+                  const SizedBox(width: spacing12),
                   Expanded(
                     child: GradientFormButton(
                       text: 'Upgrade',
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
+                      onPressed: () => Navigator.of(context).pop(),
                       isActiveButton: true,
                     ),
                   ),
@@ -148,7 +170,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // Helper method to build benefit items with checkmark
   Widget _buildBenefitItem(String text) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,38 +177,24 @@ class SettingsScreen extends StatelessWidget {
         Container(
           width: spacing24,
           height: spacing24,
-          decoration: const BoxDecoration(
-            color: Colors.green,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.check,
-            color: Colors.white,
-            size: spacing20,
-          ),
+          decoration:
+              const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+          child: const Icon(Icons.check, color: Colors.white, size: spacing20),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-            ),
-          ),
+          child: Text(text, style: const TextStyle(fontSize: 16)),
         ),
       ],
     );
   }
 
-  // New method for showing the about us modal
   void _showAboutUsModal(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: ColorConst.backgroundWhiteColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -195,39 +202,59 @@ class SettingsScreen extends StatelessWidget {
             children: [
               const Text(
                 'Creator:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ColorConst.blueColor),
-                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: ColorConst.blueColor),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Nguyễn Gia Bảo',
-                style: TextStyle(
-                  fontSize: spacing18,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const Text(
-                'Nguyễn Đức Tuấn',
-                style: TextStyle(
-                  fontSize: spacing18,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              const Text('Nguyễn Gia Bảo',
+                  style: TextStyle(
+                      fontSize: spacing18, fontWeight: FontWeight.bold)),
+              const Text('Nguyễn Đức Tuấn',
+                  style: TextStyle(
+                      fontSize: spacing18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
               GradientFormButton(
                 text: 'Cancel',
                 padding: spacing12,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+                onPressed: () => Navigator.of(context).pop(),
                 isActiveButton: false,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSettingItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? trailing,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: iconColor, size: 24),
+      ),
+      title: Text(title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (trailing != null)
+            Text(trailing,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          Icon(Icons.chevron_right, color: Colors.grey[400]),
+        ],
+      ),
+      onTap: onTap,
     );
   }
 
@@ -245,10 +272,7 @@ class SettingsScreen extends StatelessWidget {
         title: const Text(
           'Settings',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+              color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -259,12 +283,11 @@ class SettingsScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  // First group of settings
+                  // First group
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
                     child: Column(
                       children: [
                         _buildSettingItem(
@@ -272,28 +295,20 @@ class SettingsScreen extends StatelessWidget {
                           iconColor: Colors.purple,
                           title: 'Theme',
                           trailing: 'Light mode',
-                          onTap: () {
-                            AppToast(
-                              context: context,
-                              message: 'Coming soon!',
-                              mode: AppToastMode.info,
-                            ).show(context);
-                          },
+                          onTap: () => AppToast(
+                            context: context,
+                            message: 'Coming soon!',
+                            mode: AppToastMode.info,
+                          ).show(context),
                         ),
-                        Divider(
-                          height: 1,
-                          color: Colors.grey.withOpacity(0.3),
-                        ),
+                        Divider(height: 1, color: Colors.grey.withOpacity(0.3)),
                         _buildSettingItem(
                           icon: Icons.workspace_premium,
                           iconColor: Colors.pink,
                           title: 'Upgrade account',
                           onTap: () => _showUpgradeModal(context),
                         ),
-                        Divider(
-                          height: 1,
-                          color: Colors.grey.withOpacity(0.3),
-                        ),
+                        Divider(height: 1, color: Colors.grey.withOpacity(0.3)),
                         _buildSettingItem(
                           icon: Icons.info_outline,
                           iconColor: Colors.blue,
@@ -304,20 +319,24 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Logout section
+                  // Log out or Login section
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
                     child: _buildSettingItem(
-                      icon: Icons.logout,
+                      icon: isLoggedIn ? Icons.logout : Icons.login,
                       iconColor: Colors.orange,
-                      title: 'Log out',
+                      title: isLoggedIn ? 'Log out' : 'Login',
                       onTap: () async {
-                        final shouldLogout = await _showLogoutDialog(context);
-                        if (shouldLogout == true) {
-                          _logout(context);
+                        if (isLoggedIn) {
+                          final confirm = await _showLogoutDialog(context);
+                          if (confirm == true) {
+                            await _logout(context);
+                          }
+                        } else {
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/login', (route) => false);
                         }
                       },
                     ),
@@ -325,26 +344,15 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Version and credit
             Padding(
               padding: const EdgeInsets.all(spacing16),
               child: Column(
                 children: const [
-                  Text(
-                    'Version: 2.3.4',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
+                  Text('Version: 2.3.4',
+                      style: TextStyle(color: Colors.grey, fontSize: 14)),
                   SizedBox(height: 4),
-                  Text(
-                    'Design by @EcoTeam',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
+                  Text('Design by @EcoTeam',
+                      style: TextStyle(color: Colors.grey, fontSize: 14)),
                   SizedBox(height: spacing24),
                 ],
               ),
@@ -352,54 +360,6 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSettingItem({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    String? trailing,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          icon,
-          color: iconColor,
-          size: 24,
-        ),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (trailing != null)
-            Text(
-              trailing,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          Icon(
-            Icons.chevron_right,
-            color: Colors.grey[400],
-          ),
-        ],
-      ),
-      onTap: onTap,
     );
   }
 }
