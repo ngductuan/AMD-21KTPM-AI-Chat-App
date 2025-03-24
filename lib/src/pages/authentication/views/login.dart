@@ -1,14 +1,17 @@
+import 'dart:convert';
+
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../widgets/input_field.dart';
 import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
-import './verification_code.dart';
 import 'verification_email.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -34,26 +37,78 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithEmail() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please fill in all fields.';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
+    final url =
+        Uri.parse('https://auth-api.jarvis.cx/api/v1/auth/password/sign-in');
+    final headers = {
+      'X-Stack-Access-Type': 'client',
+      'X-Stack-Project-Id': '45a1e2fd-77ee-4872-9fb7-987b8c119633',
+      'X-Stack-Publishable-Client-Key':
+          'pck_7wjweasxxnfspvr20dvmyd9pjj0p9kp755bxxcm4ae1er',
+      'Content-Type': 'application/json',
+    };
+    final body = jsonEncode({
+      'email': email,
+      'password': password,
+    });
+
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      // Chuyển hướng sau khi đăng nhập thành công
-      Navigator.pushReplacementNamed(context, '/home');
-    } on FirebaseAuthException catch (e) {
+      final response = await http.post(url, headers: headers, body: body);
+      final responseJson = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', responseJson['access_token']);
+        await prefs.setString('refresh_token', responseJson['refresh_token']);
+        await prefs.setString('user_id', responseJson['user_id']);
+        await prefs.setString('email', email);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đăng nhập thành công!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          await Future.delayed(const Duration(milliseconds: 800));
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/home', // Hoặc HomeScreen.routeName nếu bạn đã import
+            (route) => false,
+          );
+        }
+      } else {
+        setState(() {
+          _errorMessage =
+              responseJson['error'] ?? 'Login failed. Please try again.';
+        });
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = e.message ?? "Login failed, please try again.";
+        _errorMessage = 'Network error: $e';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -207,11 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           buildGradientButton(
-                            context,
-                            _isLoading ? "Logging in..." : "Login",
-                            (_isLoading ? null : _signInWithEmail)
-                                as VoidCallback,
-                          ),
+                              context, "Login", _signInWithEmail),
                           const SizedBox(height: 16),
                           GoogleSignInButton(
                             onPressed: _signInWithGoogle,

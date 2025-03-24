@@ -2,6 +2,7 @@ import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_profile.dart';
 import 'package:flutter/material.dart';
 import '../../../constants/styles.dart';
@@ -17,6 +18,22 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int? selectedBotIndex;
+  String? userId;
+  String? email;
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('user_id');
+      email = prefs.getString('email');
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
 
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
     final RenderBox overlay =
@@ -118,15 +135,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'StarrySia',
+                        email != null
+                            ? (email!.length > 10
+                                ? '${email!.substring(0, 10)}...'
+                                : email!)
+                            : 'Loading Email...',
                         style: AppFontStyles.poppinsTitleSemiBold(
                             fontSize: fontSize20),
                       ),
                       Text(
-                        'ID 845289347',
+                        userId != null
+                            ? 'ID ${userId!.length > 5 ? '${userId!.substring(0, 5)}...' : userId!}'
+                            : 'Loading ID...',
                         style: AppFontStyles.poppinsRegular(
-                            fontSize: fontSize14,
-                            color: ColorConst.textGrayColor),
+                          fontSize: fontSize14,
+                          color: ColorConst.textGrayColor,
+                        ),
                       ),
                     ],
                   ),
