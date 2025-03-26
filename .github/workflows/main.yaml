@@ -7,17 +7,17 @@ on:
   pull_request:
     branches:
       - feature/chat-ai
-
+ 
 jobs:
   build:
     runs-on: ubuntu-latest # Use the latest Ubuntu runner for Android build
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # Check out the repository's code
+        uses: actions/checkout@v2 # Check out the repository's code
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v3 # Set up Flutter on the runner
+        uses: subosito/flutter-action@v2 # Set up Flutter on the runner
         with:
           flutter-version: "3.29.0" # Specify the Flutter version
 
@@ -41,10 +41,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # Check out the repository's code
+        uses: actions/checkout@v2 # Check out the repository's code
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v3 # Set up Flutter on the runner
+        uses: subosito/flutter-action@v2 # Set up Flutter on the runner
         with:
           flutter-version: "3.29.0" # Specify the Flutter version
 
