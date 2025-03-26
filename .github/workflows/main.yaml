@@ -17,33 +17,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: "zulu"
-          java-version: "17"
+      # - name: Set up Java 17
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: "zulu"
+      #     java-version: "17"
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: "stable"
-          architecture: x64
+      # - name: Set up Flutter
+      #   uses: subosito/flutter-action@v2
+      #   with:
+      #     channel: "stable"
+      #     architecture: x64
 
-      - name: Install dependencies
-        run: flutter pub get
+      # - name: Install dependencies
+      #   run: flutter pub get
 
-      - name: Build APK (Android)
-        run: flutter build apk --release --split-per-abi
+      # - name: Build APK (Android)
+      #   run: flutter build apk --release --split-per-abi
 
-      - name: Build iOS app (no code-signing)
-        run: flutter build ios --release --no-codesign # Build iOS app without code-signing
+      # - name: Build iOS app (no code-signing)
+      #   run: flutter build ios --release --no-codesign # Build iOS app without code-signing
       
-      - name: Generate IPA for iOS
-        run: |
-          xcodebuild -exportArchive \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -exportOptionsPlist ./ios/ExportOptions.plist \
-            -exportPath build/ios/iphoneos/
+      # - name: Generate IPA for iOS
+      #   run: |
+      #     xcodebuild -exportArchive \
+      #       -archivePath build/ios/archive/Runner.xcarchive \
+      #       -exportOptionsPlist ./ios/ExportOptions.plist \
+      #       -exportPath build/ios/iphoneos/
 
       - name: Push to Releases
         uses: ncipollo/release-action@v1
