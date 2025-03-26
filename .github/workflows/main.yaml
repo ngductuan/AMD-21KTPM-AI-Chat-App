@@ -1,0 +1,65 @@
+name: Flutter CI/CD
+
+on:
+  push:
+    branches:
+      - feature/chat-ai
+  pull_request:
+    branches:
+      - feature/chat-ai
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner for Android build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2 # Check out the repository's code
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2 # Set up Flutter on the runner
+        with:
+          flutter-version: "3.29.0" # Specify the Flutter version
+
+      - name: Install dependencies
+        run: flutter pub get # Install Flutter dependencies
+
+      - name: Run Flutter tests
+        run: flutter test # Run tests
+
+      - name: Build APK (Android)
+        run: flutter build apk --release # Build release APK for Android
+
+      - name: Upload Android APK artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk # Path to the built APK
+
+  build_ios:
+    runs-on: macos-latest # Use macOS runner for iOS build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2 # Check out the repository's code
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2 # Set up Flutter on the runner
+        with:
+          flutter-version: "3.29.0" # Specify the Flutter version
+
+      - name: Install dependencies
+        run: flutter pub get # Install Flutter dependencies
+
+      - name: Run Flutter tests
+        run: flutter test # Run tests
+
+      - name: Build iOS app
+        run: flutter build ios --release --no-codesign # Build release iOS app without code-signing
+
+      - name: Upload iOS build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-ios
+          path: build/ios/iphoneos/Runner.app # Path to the built iOS app
+
