@@ -47,7 +47,9 @@ jobs:
 
       - name: Check Token Validity
         run: |
-          curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" https://api.github.com/user
+          curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" https://api.github.com/user \
+            && echo "Token is valid" \
+            || echo "${{vars.TOKEN}} is invalid"
 
       - name: Push to Releases
         uses: ncipollo/release-action@v1
