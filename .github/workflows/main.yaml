@@ -37,6 +37,13 @@ jobs:
 
       - name: Build iOS app (no code-signing)
         run: flutter build ios --release --no-codesign # Build iOS app without code-signing
+      
+      - name: Generate IPA for iOS
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -exportOptionsPlist ./ios/ExportOptions.plist \
+            -exportPath build/ios/iphoneos/
 
       - name: Push to Releases
         uses: ncipollo/release-action@v1
