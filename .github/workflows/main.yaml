@@ -48,6 +48,6 @@ jobs:
       - name: Push to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/apk/release/*,build/ios/iphoneos/Runner.ipa"
+          artifacts: "build/app/outputs/apk/release/*.apk,build/ios/iphoneos/*.ipa"
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.RELEASE_TOKEN }}
