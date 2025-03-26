@@ -53,4 +53,3 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          TOKEN: ${{ secrets.RELEASE_TOKEN }}
