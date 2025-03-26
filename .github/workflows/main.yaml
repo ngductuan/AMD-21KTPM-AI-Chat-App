@@ -45,11 +45,13 @@ jobs:
       #       -exportOptionsPlist ./ios/ExportOptions.plist \
       #       -exportPath build/ios/iphoneos/
 
+      - name: Check Token Validity
+        run: |
+          curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" https://api.github.com/user
+
       - name: Push to Releases
         uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/apk/release/*,build/ios/iphoneos/Runner.ipa"
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.RELEASE_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
