@@ -49,7 +49,7 @@ jobs:
         run: |
           curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" https://api.github.com/user \
             && echo "Token is valid" \
-            && echo "${{vars.TOKEN}} is invalid"
+            && echo "${{vars.TOKEN}} is invalid" \
             && echo "${{secrets.RELEASE_TOKEN}} is invalid"
 
       - name: Push to Releases
