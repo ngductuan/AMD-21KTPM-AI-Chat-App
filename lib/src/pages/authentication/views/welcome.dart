@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
 import 'sign_up.dart';
@@ -10,6 +13,36 @@ class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   static const String routeName = '/welcome';
+
+  Future<void> _signInWithGoogle(BuildContext context) async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Chuyển hướng sau khi đăng nhập thành công
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Google Sign-In failed. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,30 +119,28 @@ class WelcomeScreen extends StatelessWidget {
                         context,
                         PageRouteBuilder(
                           transitionDuration: const Duration(milliseconds: 400),
-                          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const LoginScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
                             const begin = Offset(1.0, 0.0);
                             const end = Offset.zero;
                             const curve = Curves.easeInOut;
 
-                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
                             var offsetAnimation = animation.drive(tween);
 
-                            return SlideTransition(position: offsetAnimation, child: child);
+                            return SlideTransition(
+                                position: offsetAnimation, child: child);
                           },
                         ),
                       );
                     }),
                     const SizedBox(height: 16),
                     GoogleSignInButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const VerificationEmailScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: () => _signInWithGoogle(context),
                     ),
                   ],
                 ),
@@ -133,16 +164,21 @@ class WelcomeScreen extends StatelessWidget {
                         context,
                         PageRouteBuilder(
                           transitionDuration: const Duration(milliseconds: 400),
-                          pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const SignUpScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
                             const begin = Offset(1.0, 0.0);
                             const end = Offset.zero;
                             const curve = Curves.easeInOut;
 
-                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
                             var offsetAnimation = animation.drive(tween);
 
-                            return SlideTransition(position: offsetAnimation, child: child);
+                            return SlideTransition(
+                                position: offsetAnimation, child: child);
                           },
                         ),
                       );
@@ -162,7 +198,8 @@ class WelcomeScreen extends StatelessWidget {
 
               // Terms text
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                 child: RichText(
                   textAlign: TextAlign.center,
                   text: const TextSpan(
@@ -171,12 +208,14 @@ class WelcomeScreen extends StatelessWidget {
                       TextSpan(text: 'By continuing, you agree to our '),
                       TextSpan(
                         text: 'User Agreement',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.black54),
                       ),
                       TextSpan(text: ' and\u00A0'),
                       TextSpan(
                         text: 'Privacy Policy',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.black54),
                       ),
                       TextSpan(text: '.'),
                     ],

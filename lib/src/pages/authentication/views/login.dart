@@ -1,11 +1,17 @@
+import 'dart:convert';
+
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../widgets/input_field.dart';
 import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
-import './verification_code.dart';
 import 'verification_email.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,15 +24,115 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signInWithEmail() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please fill in all fields.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    final url =
+        Uri.parse('https://auth-api.jarvis.cx/api/v1/auth/password/sign-in');
+    final headers = {
+      'X-Stack-Access-Type': 'client',
+      'X-Stack-Project-Id': '45a1e2fd-77ee-4872-9fb7-987b8c119633',
+      'X-Stack-Publishable-Client-Key':
+          'pck_7wjweasxxnfspvr20dvmyd9pjj0p9kp755bxxcm4ae1er',
+      'Content-Type': 'application/json',
+    };
+    final body = jsonEncode({
+      'email': email,
+      'password': password,
+    });
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      final responseJson = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', responseJson['access_token']);
+        await prefs.setString('refresh_token', responseJson['refresh_token']);
+        await prefs.setString('user_id', responseJson['user_id']);
+        await prefs.setString('email', email);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đăng nhập thành công!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          await Future.delayed(const Duration(milliseconds: 800));
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/home', // Hoặc HomeScreen.routeName nếu bạn đã import
+            (route) => false,
+          );
+        }
+      } else {
+        setState(() {
+          _errorMessage =
+              responseJson['error'] ?? 'Login failed. Please try again.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Network error: $e';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Chuyển hướng sau khi đăng nhập thành công
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Google Sign-In failed. Please try again.";
+      });
+    }
   }
 
   @override
@@ -42,7 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -88,8 +195,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
 
-                          //Error message
-                          if (_errorMessage.isNotEmpty) ...[
+                          // Error message
+                          if (_errorMessage.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
@@ -101,14 +208,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
-                          ] else ...[
-                            SizedBox(height: 24),
-                          ],
+
+                          const SizedBox(height: 24),
 
                           InputField(
-                            label: 'Username',
-                            controller: _usernameController,
-                            hintText: 'Enter your username',
+                            label: 'Email',
+                            controller: _emailController,
+                            hintText: 'Enter your email',
+                            keyboardType: TextInputType.emailAddress,
                           ),
                           const SizedBox(height: 16),
 
@@ -117,6 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _passwordController,
                             hintText: 'Enter your password',
                             isPassword: true,
+                            keyboardType: TextInputType.text,
                           ),
 
                           // Forgot Password
@@ -127,7 +235,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const VerificationEmailScreen(),
+                                    builder: (context) =>
+                                        const VerificationEmailScreen(),
                                   ),
                                 );
                               },
@@ -152,28 +261,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: Column(
                         children: [
-                          buildGradientButton(context, "Login", () {
-                            setState(() {
-                              if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-                                _errorMessage = 'Username or password is incorrect!';
-                              } else {
-                                _errorMessage = '';
-                                // Handle login logic here
-                              }
-                            });
-                          }),
+                          buildGradientButton(
+                              context, "Login", _signInWithEmail),
                           const SizedBox(height: 16),
                           GoogleSignInButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const VerificationCodeScreen(
-                                    email: 'test@gmail.com',
-                                  ),
-                                ),
-                              );
-                            },
+                            onPressed: _signInWithGoogle,
                           ),
                         ],
                       ),
@@ -197,17 +289,23 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.push(
                               context,
                               PageRouteBuilder(
-                                transitionDuration: const Duration(milliseconds: 400),
-                                pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                transitionDuration:
+                                    const Duration(milliseconds: 400),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const SignUpScreen(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
                                   const begin = Offset(1.0, 0.0);
                                   const end = Offset.zero;
                                   const curve = Curves.easeInOut;
 
-                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
                                   var offsetAnimation = animation.drive(tween);
 
-                                  return SlideTransition(position: offsetAnimation, child: child);
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
                                 },
                               ),
                             );
@@ -228,7 +326,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Terms
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0, vertical: 8.0),
                       child: RichText(
                         textAlign: TextAlign.center,
                         text: const TextSpan(
@@ -237,12 +336,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextSpan(text: 'By continuing, you agree to our '),
                             TextSpan(
                               text: 'User Agreement',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54),
                             ),
                             TextSpan(text: ' and\u00A0'),
                             TextSpan(
                               text: 'Privacy Policy',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54),
                             ),
                             TextSpan(text: '.'),
                           ],
