@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../widgets/google_signin_button.dart';
 import '../../../widgets/gradient_button.dart';
 import 'sign_up.dart';
 import 'login.dart';
-import 'verification_email.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -29,6 +28,8 @@ class WelcomeScreen extends StatelessWidget {
       await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Chuyển hướng sau khi đăng nhập thành công
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_seen_welcome', true); // Đánh dấu đã vào app
       if (context.mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -194,35 +195,60 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
 
-              // Terms text
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: const TextSpan(
-                    style: TextStyle(color: Colors.black54, fontSize: 14),
-                    children: [
-                      TextSpan(text: 'By continuing, you agree to our '),
-                      TextSpan(
-                        text: 'User Agreement',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.black54),
-                      ),
-                      TextSpan(text: ' and\u00A0'),
-                      TextSpan(
-                        text: 'Privacy Policy',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.black54),
-                      ),
-                      TextSpan(text: '.'),
-                    ],
+              // Guest access button
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool(
+                      'has_seen_welcome', true); // Đánh dấu đã vào app
+
+                  Navigator.pushReplacementNamed(context, '/home');
+                },
+                child: const Text(
+                  'Used as guest',
+                  style: TextStyle(
+                    color: Colors.deepPurple,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+
+              // Terms text luôn nằm sát đáy (cách 20px)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        style: TextStyle(color: Colors.black54, fontSize: 14),
+                        children: [
+                          TextSpan(text: 'By continuing, you agree to our '),
+                          TextSpan(
+                            text: 'User Agreement',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54),
+                          ),
+                          TextSpan(text: ' and\u00A0'),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54),
+                          ),
+                          TextSpan(text: '.'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

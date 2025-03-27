@@ -76,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('refresh_token', responseJson['refresh_token']);
         await prefs.setString('user_id', responseJson['user_id']);
         await prefs.setString('email', email);
+        await prefs.setBool('has_seen_welcome', true); // Đánh dấu đã vào app
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -324,31 +325,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 36),
 
-                    // Terms
+                    // Terms and conditions
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0, vertical: 8.0),
-                      child: RichText(
-                        textAlign: TextAlign.center,
-                        text: const TextSpan(
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                          children: [
-                            TextSpan(text: 'By continuing, you agree to our '),
-                            TextSpan(
-                              text: 'User Agreement',
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: const TextSpan(
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54),
+                                  color: Colors.black54, fontSize: 14),
+                              children: [
+                                TextSpan(
+                                    text: 'By continuing, you agree to our '),
+                                TextSpan(
+                                  text: 'User Agreement',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54),
+                                ),
+                                TextSpan(text: ' and '),
+                                TextSpan(
+                                  text: 'Privacy Policy',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54),
+                                ),
+                                TextSpan(text: '.'),
+                              ],
                             ),
-                            TextSpan(text: ' and\u00A0'),
-                            TextSpan(
-                              text: 'Privacy Policy',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54),
-                            ),
-                            TextSpan(text: '.'),
-                          ],
+                          ),
                         ),
                       ),
                     ),
