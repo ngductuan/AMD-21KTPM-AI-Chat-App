@@ -3,15 +3,12 @@ name: "Build & Release"
 on:
   pull_request:
     branches:
-      - feature/chat-ai
-  push:
-    branches:
-      - feature/chat-ai
+      - main
 
 jobs:
   build:
     name: Build & Release
-    runs-on: macos-latest # Changed to macOS runner for iOS build
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -35,19 +32,9 @@ jobs:
       - name: Build APK (Android)
         run: flutter build apk --release --split-per-abi
 
-      - name: Build iOS app (no code-signing)
-        run: flutter build ios --release --no-codesign # Build iOS app without code-signing
-
-      # - name: Generate IPA for iOS
-      #   run: |
-      #     xcodebuild -exportArchive \
-      #       -archivePath build/ios/archive/Runner.xcarchive \
-      #       -exportOptionsPlist ./ios/ExportOptions.plist \
-      #       -exportPath build/ios/iphoneos/
-
       - name: Push to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/apk/release/*.apk,build/ios/iphoneos/"
+          artifacts: "build/app/outputs/apk/release/*.apk"
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.RELEASE_TOKEN }}
