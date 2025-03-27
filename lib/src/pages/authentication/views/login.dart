@@ -76,6 +76,9 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('refresh_token', responseJson['refresh_token']);
         await prefs.setString('user_id', responseJson['user_id']);
         await prefs.setString('email', email);
+
+        print('User: $responseJson');
+
         await prefs.setBool('has_seen_welcome', true); // Đánh dấu đã vào app
 
         if (mounted) {

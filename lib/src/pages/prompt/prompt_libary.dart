@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:eco_chat_bot/src/widgets/no_data_gadget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,7 +15,8 @@ class PromptLibrary extends StatefulWidget {
   State<PromptLibrary> createState() => _PromptLibraryState();
 }
 
-class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProviderStateMixin {
+class _PromptLibraryState extends State<PromptLibrary>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
@@ -21,41 +26,58 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
   bool _isEditing = false;
   int _editingIndex = -1;
   bool _isCustomPrompt = false;
+  bool _isLoadingPrompts = false;
 
   // Sample data - replace with your actual data model
-  final List<Map<String, dynamic>> _prompts = [
-    {
-      'title': 'Grammar Corrector',
-      'description': 'Fix grammar mistakes and improve spelling.',
-      'isFavorite': true,
-      'prompt': 'Correct this mistake grammar: [text]',
-    },
-    {
-      'title': 'Learn Code Fast',
-      'description': 'Understand and debug code quickly.',
-      'isFavorite': false,
-      'prompt': 'Help me debug this code:\n[code]',
-    },
-    {
-      'title': 'Story Generator',
-      'description': 'Generate creative fantasy stories.',
-      'isFavorite': false,
-      'prompt': 'Write a short fantasy story about:\n[story topic]',
-    },
-    {
-      'title': 'Easy Improver',
-      'description': "Enhance the clarity and effectiveness of content.",
-      'isFavorite': false,
-      'prompt': 'Rewrite this to make it more effective:\n[text]',
-    },
-  ];
+  final List<Map<String, dynamic>> _prompts = [];
 
   final List<Map<String, dynamic>> _customPrompts = [];
+
+  Future<void> fetchPublicPrompts() async {
+    setState(() => _isLoadingPrompts = true); // 👈 Bật loading
+
+    const String url =
+        'https://api.jarvis.cx/api/v1/prompts?query=&isPublic=true&isFavorite=false&limit=10&offset=0';
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    var headers = {
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    try {
+      var response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Response: $data');
+
+        setState(() {
+          _prompts.clear();
+          _prompts.addAll((data['items'] as List).map((item) {
+            return {
+              'title': item['title'],
+              'description': item['description'],
+              'prompt': item['content'],
+              'isFavorite': item['isFavorite'] ?? false,
+              'isCustom': false,
+            };
+          }));
+        });
+      } else {
+        print('API error: ${response.statusCode} - ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Fetch error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingPrompts = false); // 👈 Tắt loading
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    fetchPublicPrompts();
   }
 
   @override
@@ -87,7 +109,8 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
           ),
           prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: spacing20, vertical: spacing12),
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: spacing20, vertical: spacing12),
         ),
       ),
     );
@@ -159,13 +182,15 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
     _showPromptDialog();
   }
 
-  Widget _buildPromptItem(Map<String, dynamic> prompt, int index, bool isCustom) {
+  Widget _buildPromptItem(
+      Map<String, dynamic> prompt, int index, bool isCustom) {
     return Container(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: spacing16, vertical: spacing8),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: spacing16, vertical: spacing8),
         title: Text(
           prompt['title'],
           style: GoogleFonts.poppins(
@@ -205,7 +230,9 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
                 });
               },
               child: SvgPicture.asset(
-                prompt['isFavorite'] ? AssetPath.yellow_star : AssetPath.black_star,
+                prompt['isFavorite']
+                    ? AssetPath.yellow_star
+                    : AssetPath.black_star,
                 width: spacing24,
                 height: spacing24,
               ),
@@ -289,9 +316,12 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
                         controller: _nameController,
                         decoration: InputDecoration(
                           hintText: 'Enter name',
-                          hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
-                          contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
+                          hintStyle: AppFontStyles.poppinsRegular(
+                              color: ColorConst.textLightGrayColor),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(radius8)),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: spacing12, vertical: spacing8),
                         ),
                       ),
                       const SizedBox(height: spacing24),
@@ -333,9 +363,12 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
                         decoration: InputDecoration(
                           hintText:
                               'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
-                          hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
-                          contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
+                          hintStyle: AppFontStyles.poppinsRegular(
+                              color: ColorConst.textLightGrayColor),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(radius8)),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: spacing12, vertical: spacing8),
                         ),
                       ),
                       const SizedBox(height: spacing24),
@@ -360,7 +393,8 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
                           const SizedBox(width: spacing16),
                           ElevatedButton(
                             onPressed: () {
-                              if (_nameController.text.isNotEmpty && _promptController.text.isNotEmpty) {
+                              if (_nameController.text.isNotEmpty &&
+                                  _promptController.text.isNotEmpty) {
                                 setState(() {
                                   if (_isEditing) {
                                     // Update existing prompt
@@ -369,13 +403,16 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
                                       'description': 'Your own custom prompt',
                                       'prompt': _promptController.text,
                                       'isFavorite': _isCustomPrompt
-                                          ? _customPrompts[_editingIndex]['isFavorite']
-                                          : _prompts[_editingIndex]['isFavorite'],
+                                          ? _customPrompts[_editingIndex]
+                                              ['isFavorite']
+                                          : _prompts[_editingIndex]
+                                              ['isFavorite'],
                                       'isCustom': true,
                                     };
 
                                     if (_isCustomPrompt) {
-                                      _customPrompts[_editingIndex] = promptData;
+                                      _customPrompts[_editingIndex] =
+                                          promptData;
                                     } else {
                                       _prompts[_editingIndex] = promptData;
                                     }
@@ -481,24 +518,32 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
         controller: _tabController,
         children: [
           // Public tab - with search
-          _prompts.isNotEmpty
-              ? ListView.builder(
-                  itemCount: _prompts
-                      .where((p) =>
-                          p['title'].toLowerCase().contains(searchText) ||
-                          p['description'].toLowerCase().contains(searchText))
-                      .length,
-                  itemBuilder: (context, index) {
-                    final filteredPrompts = _prompts
-                        .where((p) =>
-                            p['title'].toLowerCase().contains(searchText) ||
-                            p['description'].toLowerCase().contains(searchText))
-                        .toList();
-                    final originalIndex = _prompts.indexOf(filteredPrompts[index]);
-                    return _buildPromptItem(filteredPrompts[index], originalIndex, false);
-                  },
-                )
-              : _buildEmptyState(),
+          _isLoadingPrompts
+              ? Center(child: CircularProgressIndicator())
+              : (_prompts.isNotEmpty
+                  ? ListView.builder(
+                      itemCount: _prompts
+                          .where((p) =>
+                              p['title'].toLowerCase().contains(searchText) ||
+                              p['description']
+                                  .toLowerCase()
+                                  .contains(searchText))
+                          .length,
+                      itemBuilder: (context, index) {
+                        final filteredPrompts = _prompts
+                            .where((p) =>
+                                p['title'].toLowerCase().contains(searchText) ||
+                                p['description']
+                                    .toLowerCase()
+                                    .contains(searchText))
+                            .toList();
+                        final originalIndex =
+                            _prompts.indexOf(filteredPrompts[index]);
+                        return _buildPromptItem(
+                            filteredPrompts[index], originalIndex, false);
+                      },
+                    )
+                  : _buildEmptyState()),
 
           // My prompt tab - with search
           _customPrompts.isNotEmpty
@@ -514,8 +559,10 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
                             p['title'].toLowerCase().contains(searchText) ||
                             p['description'].toLowerCase().contains(searchText))
                         .toList();
-                    final originalIndex = _customPrompts.indexOf(filteredPrompts[index]);
-                    return _buildPromptItem(filteredPrompts[index], originalIndex, true);
+                    final originalIndex =
+                        _customPrompts.indexOf(filteredPrompts[index]);
+                    return _buildPromptItem(
+                        filteredPrompts[index], originalIndex, true);
                   },
                 )
               : _buildEmptyState(),
@@ -528,7 +575,9 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
             for (int i = 0; i < _prompts.length; i++) {
               if (_prompts[i]['isFavorite'] == true &&
                   (_prompts[i]['title'].toLowerCase().contains(searchText) ||
-                      _prompts[i]['description'].toLowerCase().contains(searchText))) {
+                      _prompts[i]['description']
+                          .toLowerCase()
+                          .contains(searchText))) {
                 favPrompts.add({
                   ..._prompts[i],
                   'originalIndex': i,
@@ -540,8 +589,12 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
             // Add custom prompts with their original indices
             for (int i = 0; i < _customPrompts.length; i++) {
               if (_customPrompts[i]['isFavorite'] == true &&
-                  (_customPrompts[i]['title'].toLowerCase().contains(searchText) ||
-                      _customPrompts[i]['description'].toLowerCase().contains(searchText))) {
+                  (_customPrompts[i]['title']
+                          .toLowerCase()
+                          .contains(searchText) ||
+                      _customPrompts[i]['description']
+                          .toLowerCase()
+                          .contains(searchText))) {
                 favPrompts.add({
                   ..._customPrompts[i],
                   'originalIndex': i,
