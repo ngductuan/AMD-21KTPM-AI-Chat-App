@@ -238,17 +238,18 @@ class _PromptLibraryState extends State<PromptLibrary>
               onPressed: () =>
                   _showDeleteConfirmation(_customPrompts.indexOf(prompt)),
             ),
-          IconButton(
-            icon: Icon(
-              prompt['isFavorite'] ? Icons.star : Icons.star_border,
-              color: prompt['isFavorite'] ? Colors.yellow : Colors.grey,
+          if (!isCustom)
+            IconButton(
+              icon: Icon(
+                prompt['isFavorite'] ? Icons.star : Icons.star_border,
+                color: prompt['isFavorite'] ? Colors.yellow : Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  prompt['isFavorite'] = !prompt['isFavorite'];
+                });
+              },
             ),
-            onPressed: () {
-              setState(() {
-                prompt['isFavorite'] = !prompt['isFavorite'];
-              });
-            },
-          ),
         ],
       ),
       onTap: () {
