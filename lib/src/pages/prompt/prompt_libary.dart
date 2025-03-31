@@ -18,6 +18,7 @@ class _PromptLibraryState extends State<PromptLibrary>
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _promptController = TextEditingController();
 
   bool _isEditing = false;
@@ -50,6 +51,7 @@ class _PromptLibraryState extends State<PromptLibrary>
     fetchPublicPrompts();
   }
 
+  // Fetch public prompts from the API
   Future<void> fetchPublicPrompts([String category = 'All']) async {
     setState(() => _isLoadingPrompts = true);
     const String baseUrl = 'https://api.jarvis.cx/api/v1/prompts';
@@ -70,6 +72,7 @@ class _PromptLibraryState extends State<PromptLibrary>
           _prompts.clear();
           _prompts.addAll((data['items'] as List).map((item) {
             return {
+              'id': item['_id'], // Lấy ID để gọi API yêu thích
               'title': item['title'],
               'description': item['description'] ?? '',
               'prompt': item['content'],
@@ -83,21 +86,132 @@ class _PromptLibraryState extends State<PromptLibrary>
     }
   }
 
-  void _addOrEditPrompt() {
+  // Add prompt to favorites
+  Future<void> toggleFavorite(String promptId, bool isFavorite) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null || accessToken.isEmpty) return;
+
+    var headers = {
+      'x-jarvis-guid': '',
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    // Chọn phương thức HTTP dựa trên trạng thái yêu thích
+    final url = 'https://api.jarvis.cx/api/v1/prompts/$promptId/favorite';
+    var request = isFavorite
+        ? http.Request('DELETE', Uri.parse(url)) // Bỏ yêu thích
+        : http.Request('POST', Uri.parse(url)); // Thêm yêu thích
+
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        print(isFavorite
+            ? 'Prompt removed from favorites.'
+            : 'Prompt added to favorites.');
+      } else {
+        print('Error toggling favorite: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Error toggling favorite: $e');
+    }
+  }
+
+  // Fetch favorite prompts from the API
+  Future<void> fetchFavoritePrompts() async {
+    setState(() => _isLoadingPrompts = true);
+    const String url =
+        'https://api.jarvis.cx/api/v1/prompts?query=&isPublic=true&isFavorite=true&limit=20&offset=0';
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null || accessToken.isEmpty) return;
+
+    var headers = {
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _prompts.clear();
+          _prompts.addAll((data['items'] as List).map((item) {
+            return {
+              'id': item['_id'], // Lấy ID để gọi API yêu thích
+              'title': item['title'],
+              'description': item['description'] ?? '',
+              'prompt': item['content'],
+              'isFavorite': item['isFavorite'] ?? false,
+            };
+          }));
+        });
+      }
+    } finally {
+      setState(() => _isLoadingPrompts = false);
+    }
+  }
+
+  // Thêm hoặc chỉnh sửa prompt
+  void _addOrEditPrompt() async {
     final promptData = {
       'title': _nameController.text,
-      'description': 'Custom Prompt',
+      'description': _descriptionController.text,
       'prompt': _promptController.text,
       'isFavorite': false,
     };
-    setState(() {
-      if (_isEditing) {
+
+    if (_isEditing) {
+      setState(() {
         _customPrompts[_editingIndex] = promptData;
-      } else {
-        _customPrompts.add(promptData);
+      });
+      Navigator.pop(context);
+    } else {
+      // Gọi API tạo mới prompt
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString('access_token');
+      if (accessToken == null || accessToken.isEmpty) return;
+
+      var headers = {
+        'x-jarvis-guid': '',
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json'
+      };
+      var url = 'https://api.jarvis.cx/api/v1/prompts';
+      var body = json.encode({
+        "title": _nameController.text,
+        "content": _promptController.text,
+        "description": _descriptionController.text,
+        "isPublic": false
+      });
+
+      try {
+        var request = http.Request('POST', Uri.parse(url));
+        request.body = body;
+        request.headers.addAll(headers);
+
+        http.StreamedResponse response = await request.send();
+
+        // Đọc nội dung từ phản hồi
+        final responseBody = await response.stream.bytesToString();
+
+        if (response.statusCode == 200) {
+          print('Prompt created successfully: $responseBody');
+          setState(() {
+            _customPrompts.add(promptData);
+          });
+          Navigator.pop(context);
+        } else {
+          print('Error creating prompt: ${response.reasonPhrase}');
+          print('Response body: $responseBody');
+        }
+        Navigator.pop(context);
+      } catch (e) {
+        print('Error creating prompt: $e');
       }
-    });
-    Navigator.pop(context);
+    }
   }
 
   void _showPromptDialog() {
@@ -109,10 +223,19 @@ class _PromptLibraryState extends State<PromptLibrary>
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Title
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(labelText: 'Title'),
               ),
+
+              // Description
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+              ),
+
+              // Prompt content
               TextField(
                 controller: _promptController,
                 decoration: InputDecoration(labelText: 'Prompt'),
@@ -248,6 +371,7 @@ class _PromptLibraryState extends State<PromptLibrary>
                 setState(() {
                   prompt['isFavorite'] = !prompt['isFavorite'];
                 });
+                toggleFavorite(prompt['id'], !prompt['isFavorite']);
               },
             ),
         ],
@@ -274,6 +398,15 @@ class _PromptLibraryState extends State<PromptLibrary>
             Tab(text: 'Custom'),
             Tab(text: 'Favorite'),
           ],
+          onTap: (index) {
+            if (index == 0) {
+              fetchPublicPrompts(_selectedCategory);
+            } else if (index == 1) {
+              setState(() {}); // Refresh custom prompts
+            } else if (index == 2) {
+              fetchFavoritePrompts();
+            }
+          },
         ),
       ),
       body: TabBarView(
@@ -300,7 +433,20 @@ class _PromptLibraryState extends State<PromptLibrary>
               return _buildPromptItem(_customPrompts[index], true);
             },
           ),
-          Center(child: Text('Favorite Prompts')),
+          Column(
+            children: [
+              Expanded(
+                child: _isLoadingPrompts
+                    ? Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        itemCount: _prompts.length,
+                        itemBuilder: (context, index) {
+                          return _buildPromptItem(_prompts[index], false);
+                        },
+                      ),
+              ),
+            ],
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
