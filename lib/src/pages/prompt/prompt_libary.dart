@@ -74,12 +74,14 @@ class _PromptLibraryState extends State<PromptLibrary>
   // PUBLIC PROMPTS
   Future<void> fetchPublicPrompts([String category = 'All']) async {
     setState(() => _isLoadingPrompts = true);
-    const String baseUrl = 'https://api.jarvis.cx/api/v1/prompts';
+    const String baseUrl = 'https://api.dev.jarvis.cx/api/v1/prompts';
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
-    if (accessToken == null || accessToken.isEmpty) return;
+    final authHeader = (accessToken == null || accessToken.isEmpty)
+        ? ''
+        : 'Bearer $accessToken';
 
-    var headers = {'Authorization': 'Bearer $accessToken'};
+    var headers = {'Authorization': authHeader};
     final url = category == 'All'
         ? '$baseUrl?query=&isPublic=true&limit=15&offset=0'
         : '$baseUrl?query=$category&isPublic=true&limit=15&offset=0';
@@ -110,7 +112,7 @@ class _PromptLibraryState extends State<PromptLibrary>
   Future<void> fetchFavoritePrompts() async {
     setState(() => _isLoadingPrompts = true);
     const String url =
-        'https://api.jarvis.cx/api/v1/prompts?query=&isPublic=true&isFavorite=true&limit=20&offset=0';
+        'https://api.dev.jarvis.cx/api/v1/prompts?query=&isPublic=true&isFavorite=true&limit=20&offset=0';
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
     if (accessToken == null || accessToken.isEmpty) return;
@@ -145,7 +147,7 @@ class _PromptLibraryState extends State<PromptLibrary>
   Future<void> fetchCustomPrompts() async {
     setState(() => _isLoadingPrompts = true);
     const String url =
-        'https://api.jarvis.cx/api/v1/prompts?query=&isPublic=false&limit=10&offset=0';
+        'https://api.dev.jarvis.cx/api/v1/prompts?query=&isPublic=false&limit=10&offset=0';
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
     if (accessToken == null || accessToken.isEmpty) return;
@@ -183,11 +185,11 @@ class _PromptLibraryState extends State<PromptLibrary>
     if (accessToken == null || accessToken.isEmpty) return;
 
     var headers = {
-      'x-jarvis-guid': '',
+      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
       'Authorization': 'Bearer $accessToken',
     };
 
-    final url = 'https://api.jarvis.cx/api/v1/prompts/$promptId/favorite';
+    final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$promptId/favorite';
     var request = isCurrentlyFavorite
         ? http.Request('DELETE', Uri.parse(url))
         : http.Request('POST', Uri.parse(url));
@@ -215,7 +217,7 @@ class _PromptLibraryState extends State<PromptLibrary>
     if (accessToken == null || accessToken.isEmpty) return;
 
     var headers = {
-      'x-jarvis-guid': '',
+      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
       'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
     };
@@ -232,7 +234,7 @@ class _PromptLibraryState extends State<PromptLibrary>
       // CHỈNH SỬA (PATCH)
       if (_editingPromptId == null) return;
 
-      final url = 'https://api.jarvis.cx/api/v1/prompts/$_editingPromptId';
+      final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$_editingPromptId';
       try {
         final request = http.Request('PATCH', Uri.parse(url));
         request.body = json.encode(bodyData);
@@ -267,7 +269,7 @@ class _PromptLibraryState extends State<PromptLibrary>
       }
     } else {
       // TẠO MỚI (POST)
-      final url = 'https://api.jarvis.cx/api/v1/prompts';
+      final url = 'https://api.dev.jarvis.cx/api/v1/prompts';
       try {
         final response = await http.post(
           Uri.parse(url),
@@ -308,13 +310,13 @@ class _PromptLibraryState extends State<PromptLibrary>
     if (accessToken == null || accessToken.isEmpty) return;
 
     var headers = {
-      'x-jarvis-guid': '',
+      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
       'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
     };
 
     try {
-      final url = 'https://api.jarvis.cx/api/v1/prompts/$promptId';
+      final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$promptId';
       final response = await http.delete(Uri.parse(url), headers: headers);
 
       if (response.statusCode == 200) {

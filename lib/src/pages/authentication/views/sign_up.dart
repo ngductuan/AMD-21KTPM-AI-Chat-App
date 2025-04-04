@@ -54,14 +54,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    final url =
-        Uri.parse('${ApiBase.authUrl}/api/v1/auth/password/sign-up');
+    final url = Uri.parse('${ApiBase.authUrl}/api/v1/auth/password/sign-up');
 
     final body = jsonEncode({
       "email": email,
       "password": password,
-      "verification_callback_url":
-          ApiBase.verificationCallbackUrl,
+      "verification_callback_url": ApiBase.verificationCallbackUrl,
     });
 
     try {
@@ -76,9 +74,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         final responseJson = jsonDecode(responseBody);
 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(LocalStorageKey.accessToken, responseJson[LocalStorageKey.accessToken]);
-        await prefs.setString(LocalStorageKey.refreshToken, responseJson[LocalStorageKey.refreshToken]);
-        await prefs.setString(LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
+        await prefs.setString(LocalStorageKey.accessToken,
+            responseJson[LocalStorageKey.accessToken]);
+        await prefs.setString(LocalStorageKey.refreshToken,
+            responseJson[LocalStorageKey.refreshToken]);
+        await prefs.setString(
+            LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
         await prefs.setString(LocalStorageKey.email, email);
 
         if (mounted) {
@@ -94,7 +95,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           );
 
-          await prefs.setBool(LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
+          await prefs.setBool(
+              LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
           Future.delayed(const Duration(milliseconds: 800), () {
             Navigator.pushNamedAndRemoveUntil(
               context,
