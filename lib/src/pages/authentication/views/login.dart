@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:eco_chat_bot/src/constants/api/api_base.dart';
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
 import 'package:flutter/material.dart';
@@ -53,30 +55,24 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     final url =
-        Uri.parse('https://auth-api.jarvis.cx/api/v1/auth/password/sign-in');
-    final headers = {
-      'X-Stack-Access-Type': 'client',
-      'X-Stack-Project-Id': '45a1e2fd-77ee-4872-9fb7-987b8c119633',
-      'X-Stack-Publishable-Client-Key':
-          'pck_7wjweasxxnfspvr20dvmyd9pjj0p9kp755bxxcm4ae1er',
-      'Content-Type': 'application/json',
-    };
+        Uri.parse('${ApiBase.authUrl}/api/v1/auth/password/sign-in');
+
     final body = jsonEncode({
       'email': email,
       'password': password,
     });
 
     try {
-      final response = await http.post(url, headers: headers, body: body);
+      final response = await http.post(url, headers: ApiBase.headerAuth, body: body);
       final responseJson = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', responseJson['access_token']);
-        await prefs.setString('refresh_token', responseJson['refresh_token']);
-        await prefs.setString('user_id', responseJson['user_id']);
-        await prefs.setString('email', email);
-        await prefs.setBool('has_seen_welcome', true); // Đánh dấu đã vào app
+        await prefs.setString(LocalStorageKey.accessToken, responseJson[LocalStorageKey.accessToken]);
+        await prefs.setString(LocalStorageKey.refreshToken, responseJson[LocalStorageKey.refreshToken]);
+        await prefs.setString(LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
+        await prefs.setString(LocalStorageKey.email, email);
+        await prefs.setBool(LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

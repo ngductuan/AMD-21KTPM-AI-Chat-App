@@ -1,4 +1,5 @@
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
@@ -24,8 +25,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userId = prefs.getString('user_id');
-      email = prefs.getString('email');
+      userId = prefs.getString(LocalStorageKey.userId);
+      email = prefs.getString(LocalStorageKey.email);
     });
   }
 
