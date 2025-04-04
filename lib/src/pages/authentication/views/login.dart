@@ -54,8 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = '';
     });
 
-    final url =
-        Uri.parse('${ApiBase.authUrl}/api/v1/auth/password/sign-in');
+    final url = Uri.parse('${ApiBase.authUrl}/api/v1/auth/password/sign-in');
 
     final body = jsonEncode({
       'email': email,
@@ -63,16 +62,21 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await http.post(url, headers: ApiBase.headerAuth, body: body);
+      final response =
+          await http.post(url, headers: ApiBase.headerAuth, body: body);
       final responseJson = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(LocalStorageKey.accessToken, responseJson[LocalStorageKey.accessToken]);
-        await prefs.setString(LocalStorageKey.refreshToken, responseJson[LocalStorageKey.refreshToken]);
-        await prefs.setString(LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
+        await prefs.setString(LocalStorageKey.accessToken,
+            responseJson[LocalStorageKey.accessToken]);
+        await prefs.setString(LocalStorageKey.refreshToken,
+            responseJson[LocalStorageKey.refreshToken]);
+        await prefs.setString(
+            LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
         await prefs.setString(LocalStorageKey.email, email);
-        await prefs.setBool(LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
+        await prefs.setBool(
+            LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

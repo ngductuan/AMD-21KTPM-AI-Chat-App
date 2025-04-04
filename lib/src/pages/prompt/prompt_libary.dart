@@ -1,8 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:eco_chat_bot/src/widgets/no_data_gadget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../constants/styles.dart';
 
 class PromptLibrary extends StatefulWidget {
   const PromptLibrary({Key? key}) : super(key: key);
@@ -11,132 +13,428 @@ class PromptLibrary extends StatefulWidget {
   State<PromptLibrary> createState() => _PromptLibraryState();
 }
 
-class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProviderStateMixin {
+class _PromptLibraryState extends State<PromptLibrary>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _promptController = TextEditingController();
 
-  // Track if we're editing an existing prompt
   bool _isEditing = false;
+  String? _editingPromptId;
   int _editingIndex = -1;
-  bool _isCustomPrompt = false;
+  bool _isLoadingPrompts = false;
 
-  // Sample data - replace with your actual data model
-  final List<Map<String, dynamic>> _prompts = [
-    {
-      'title': 'Grammar Corrector',
-      'description': 'Fix grammar mistakes and improve spelling.',
-      'isFavorite': true,
-      'prompt': 'Correct this mistake grammar: [text]',
-    },
-    {
-      'title': 'Learn Code Fast',
-      'description': 'Understand and debug code quickly.',
-      'isFavorite': false,
-      'prompt': 'Help me debug this code:\n[code]',
-    },
-    {
-      'title': 'Story Generator',
-      'description': 'Generate creative fantasy stories.',
-      'isFavorite': false,
-      'prompt': 'Write a short fantasy story about:\n[story topic]',
-    },
-    {
-      'title': 'Easy Improver',
-      'description': "Enhance the clarity and effectiveness of content.",
-      'isFavorite': false,
-      'prompt': 'Rewrite this to make it more effective:\n[text]',
-    },
-  ];
+  // Danh sách prompt Public hoặc Favorite
+  final List<Map<String, dynamic>> _prompts = [];
 
+  // Danh sách prompt Custom (riêng tư)
   final List<Map<String, dynamic>> _customPrompts = [];
+
+  // Danh sách category cho Public Prompt
+  String _selectedCategory = 'All';
+  final List<String> _categories = [
+    'All',
+    'Marketing',
+    'Business',
+    'SEO',
+    'Writing',
+    'Coding',
+    'Career',
+    'Chatbot',
+    'Education',
+    'Fun',
+    'Productivity',
+    'Other'
+  ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    // Mặc định load prompt public ban đầu
+    fetchPublicPrompts();
+
+    // Lắng nghe sự kiện thay đổi tab
+    _tabController.addListener(() {
+      if (_tabController.index == 0) {
+        fetchPublicPrompts(_selectedCategory);
+      } else if (_tabController.index == 1) {
+        _searchController.clear(); // Xoá search khi chuyển tab
+        fetchCustomPrompts();
+      } else if (_tabController.index == 2) {
+        _searchController.clear(); // Xoá search khi chuyển tab
+        fetchFavoritePrompts();
+      }
+    });
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _searchController.dispose();
-    _nameController.dispose();
-    _promptController.dispose();
-    super.dispose();
+  // PUBLIC PROMPTS
+  Future<void> fetchPublicPrompts([String category = 'All']) async {
+    setState(() => _isLoadingPrompts = true);
+    const String baseUrl = 'https://api.dev.jarvis.cx/api/v1/prompts';
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    final authHeader = (accessToken == null || accessToken.isEmpty)
+        ? ''
+        : 'Bearer $accessToken';
+
+    var headers = {'Authorization': authHeader};
+    final url = category == 'All'
+        ? '$baseUrl?query=&isPublic=true&limit=15&offset=0'
+        : '$baseUrl?query=$category&isPublic=true&limit=15&offset=0';
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _prompts.clear();
+          _prompts.addAll((data['items'] as List).map((item) {
+            return {
+              'id': item['_id'],
+              'title': item['title'],
+              'description': item['description'] ?? '',
+              'prompt': item['content'],
+              'isFavorite': item['isFavorite'] ?? false,
+            };
+          }));
+        });
+      }
+    } finally {
+      setState(() => _isLoadingPrompts = false);
+    }
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.all(spacing16),
-      decoration: BoxDecoration(
-        color: ColorConst.backgroundLightGrayColor,
-        borderRadius: BorderRadius.circular(spacing30),
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          setState(() {}); // Refresh UI to filter search results
-        },
-        decoration: InputDecoration(
-          hintText: 'Search',
-          hintStyle: GoogleFonts.poppins(
-            color: Colors.grey[500],
-            fontSize: fontSize16,
-          ),
-          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: spacing20, vertical: spacing12),
-        ),
-      ),
-    );
+  // FAVORITE PROMPTS
+  Future<void> fetchFavoritePrompts() async {
+    setState(() => _isLoadingPrompts = true);
+    const String url =
+        'https://api.dev.jarvis.cx/api/v1/prompts?query=&isPublic=true&isFavorite=true&limit=20&offset=0';
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null || accessToken.isEmpty) return;
+
+    var headers = {
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _prompts.clear();
+          _prompts.addAll((data['items'] as List).map((item) {
+            return {
+              'id': item['_id'],
+              'title': item['title'],
+              'description': item['description'] ?? '',
+              'prompt': item['content'],
+              'isFavorite': item['isFavorite'] ?? false,
+            };
+          }));
+        });
+      }
+    } finally {
+      setState(() => _isLoadingPrompts = false);
+    }
   }
 
-  // Show confirmation dialog before deleting a prompt
-  void _showDeleteConfirmation(int index, bool isCustom) {
-    // Only allow deletion of custom prompts
-    if (!isCustom) return;
+  // CUSTOM PROMPTS
+  Future<void> fetchCustomPrompts() async {
+    setState(() => _isLoadingPrompts = true);
+    const String url =
+        'https://api.dev.jarvis.cx/api/v1/prompts?query=&isPublic=false&limit=10&offset=0';
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null || accessToken.isEmpty) return;
 
+    var headers = {
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _customPrompts.clear();
+          _customPrompts.addAll((data['items'] as List).map((item) {
+            return {
+              'id': item['_id'],
+              'title': item['title'],
+              'description': item['description'] ?? '',
+              'prompt': item['content'],
+              'isFavorite': item['isFavorite'] ?? false,
+            };
+          }));
+        });
+      }
+    } finally {
+      setState(() => _isLoadingPrompts = false);
+    }
+  }
+
+  // TOGGLE FAVORITE
+  Future<void> toggleFavorite(String promptId, bool isCurrentlyFavorite) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null || accessToken.isEmpty) return;
+
+    var headers = {
+      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$promptId/favorite';
+    var request = isCurrentlyFavorite
+        ? http.Request('DELETE', Uri.parse(url))
+        : http.Request('POST', Uri.parse(url));
+
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        print(isCurrentlyFavorite
+            ? 'Prompt removed from favorites.'
+            : 'Prompt added to favorites.');
+      } else {
+        print('Error toggling favorite: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Error toggling favorite: $e');
+    }
+  }
+
+  // THÊM HOẶC CHỈNH SỬA CUSTOM PROMPT
+  Future<void> _addOrEditPrompt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null || accessToken.isEmpty) return;
+
+    var headers = {
+      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    // Thông tin body gửi lên
+    final bodyData = {
+      "title": _nameController.text,
+      "content": _promptController.text,
+      "description": _descriptionController.text,
+      "isPublic": false
+    };
+
+    if (_isEditing) {
+      // CHỈNH SỬA (PATCH)
+      if (_editingPromptId == null) return;
+
+      final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$_editingPromptId';
+      try {
+        final request = http.Request('PATCH', Uri.parse(url));
+        request.body = json.encode(bodyData);
+        request.headers.addAll(headers);
+
+        final response = await request.send();
+        if (response.statusCode == 200) {
+          final responseBody = await response.stream.bytesToString();
+          final updatedData = jsonDecode(responseBody);
+
+          // Tìm prompt cũ trong _customPrompts và update
+          final indexToUpdate = _customPrompts.indexWhere(
+            (p) => p['id'] == _editingPromptId,
+          );
+          if (indexToUpdate != -1) {
+            setState(() {
+              _customPrompts[indexToUpdate] = {
+                'id': updatedData['_id'],
+                'title': updatedData['title'] ?? '',
+                'description': updatedData['description'] ?? '',
+                'prompt': updatedData['content'] ?? '',
+                'isFavorite': updatedData['isFavorite'] ?? false,
+              };
+            });
+          }
+          print('Prompt updated successfully.');
+        } else {
+          print('Error updating prompt: ${response.reasonPhrase}');
+        }
+      } catch (e) {
+        print('Error updating prompt: $e');
+      }
+    } else {
+      // TẠO MỚI (POST)
+      final url = 'https://api.dev.jarvis.cx/api/v1/prompts';
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: headers,
+          body: json.encode(bodyData),
+        );
+
+        if (response.statusCode == 200) {
+          final newPrompt = jsonDecode(response.body);
+
+          // Thêm ngay vào danh sách custom local
+          setState(() {
+            _customPrompts.add({
+              'id': newPrompt['_id'],
+              'title': newPrompt['title'] ?? '',
+              'description': newPrompt['description'] ?? '',
+              'prompt': newPrompt['content'] ?? '',
+              'isFavorite': newPrompt['isFavorite'] ?? false,
+            });
+          });
+
+          print('Prompt created successfully.');
+        } else {
+          print('Error creating prompt: ${response.reasonPhrase}');
+        }
+      } catch (e) {
+        print('Error creating prompt: $e');
+      }
+    }
+
+    Navigator.pop(context);
+  }
+
+  // XOÁ CUSTOM PROMPT
+  Future<void> _deleteCustomPrompt(String promptId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null || accessToken.isEmpty) return;
+
+    var headers = {
+      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$promptId';
+      final response = await http.delete(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        // Xoá luôn trong danh sách local
+        setState(() {
+          _customPrompts.removeWhere((p) => p['id'] == promptId);
+        });
+        print('Prompt deleted successfully.');
+      } else {
+        print('Error deleting prompt: ${response.reasonPhrase}');
+        print('Response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error deleting prompt: $e');
+    }
+  }
+
+  // HIỂN THỊ DIALOG THÊM/SỬA (cập nhật UI, thêm gợi ý, hint,...)
+  void _showPromptDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        // Sử dụng SingleChildScrollView để tránh tràn nội dung khi bàn phím hiển thị
         return AlertDialog(
-          title: Text(
-            'Delete Prompt',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-            ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
           ),
-          content: Text(
-            'Are you sure you want to delete this prompt?',
-            style: GoogleFonts.poppins(),
+          title: Text(
+            _isEditing ? 'Edit Prompt' : 'New Prompt',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Title',
+                    hintText: 'Enter prompt title...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+
+                // Description
+                TextField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    hintText: 'Short description for your prompt...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+
+                // Phần hướng dẫn hiển thị gợi ý
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  margin: const EdgeInsets.only(bottom: 16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text(
+                    'Use square brackets [ ] to specify user input in Prompt!\n',
+                    style: TextStyle(
+                      color: Colors.blue.shade900,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ),
+
+                // Prompt content
+                TextField(
+                  controller: _promptController,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    labelText: 'Prompt',
+                    hintText:
+                        'E.g. "Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]"',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.poppins(
-                  color: Colors.grey[600],
-                ),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey.shade700,
               ),
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
             ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _customPrompts.removeAt(index);
-                });
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Delete',
-                style: GoogleFonts.poppins(
-                  color: Colors.red,
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
+              child: Text(_isEditing ? 'Update' : 'Add'),
+              onPressed: _addOrEditPrompt,
             ),
           ],
         );
@@ -144,448 +442,278 @@ class _PromptLibraryState extends State<PromptLibrary> with SingleTickerProvider
     );
   }
 
-  // Edit an existing prompt
-  void _editPrompt(int index, bool isCustom) {
-    final prompt = isCustom ? _customPrompts[index] : _prompts[index];
+  // HIỂN THỊ DIALOG XÁC NHẬN XÓA
+  void _showDeleteConfirmation(int index) {
+    final prompt = _customPrompts[index];
+    final promptId = prompt['id'];
 
-    setState(() {
-      _isEditing = true;
-      _editingIndex = index;
-      _isCustomPrompt = isCustom;
-      _nameController.text = prompt['title'];
-      _promptController.text = prompt['prompt'];
-    });
-
-    _showPromptDialog();
-  }
-
-  Widget _buildPromptItem(Map<String, dynamic> prompt, int index, bool isCustom) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: spacing16, vertical: spacing8),
-        title: Text(
-          prompt['title'],
-          style: GoogleFonts.poppins(
-            fontSize: fontSize18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(
-          prompt['description'],
-          style: GoogleFonts.poppins(
-            fontSize: fontSize14,
-            color: Colors.grey[600],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Edit button (only for custom prompts)
-            if (isCustom)
-              IconButton(
-                icon: Icon(Icons.edit, size: 20),
-                onPressed: () => _editPrompt(index, isCustom),
-              ),
-
-            // Delete button (only for custom prompts)
-            if (isCustom)
-              IconButton(
-                icon: Icon(Icons.delete, size: 20),
-                onPressed: () => _showDeleteConfirmation(index, isCustom),
-              ),
-
-            // Favorite button
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  prompt['isFavorite'] = !prompt['isFavorite'];
-                });
-              },
-              child: SvgPicture.asset(
-                prompt['isFavorite'] ? AssetPath.yellow_star : AssetPath.black_star,
-                width: spacing24,
-                height: spacing24,
-              ),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Prompt'),
+          content: const Text('Are you sure you want to delete this prompt?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-
-            // Select button
-            IconButton(
-              icon: Icon(Icons.arrow_forward_ios, size: 16),
+            ElevatedButton(
               onPressed: () {
-                // Return selected prompt data to chat screen
-                Navigator.pop(context, {
-                  'title': prompt['title'],
-                  'prompt': prompt['prompt'],
-                });
+                Navigator.pop(context); // Đóng dialog trước
+                _deleteCustomPrompt(promptId);
               },
+              child: const Text('Delete'),
             ),
           ],
-        ),
-        onTap: () {
-          // Return selected prompt data to chat screen
-          Navigator.pop(context, {
-            'title': prompt['title'],
-            'prompt': prompt['prompt'],
-          });
-        },
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  // UI HIỂN THỊ SEARCH VÀ CATEGORY (CHO PUBLIC)
+  Widget _buildSearchAndCategoryBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
         children: [
-          NoDataGadget(
-            width: 100,
-          )
+          // Search bar
+          Expanded(
+            flex: 7,
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {});
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Category select
+          Expanded(
+            flex: 4,
+            child: DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              items: _categories.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedCategory = newValue!;
+                  fetchPublicPrompts(_selectedCategory);
+                });
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  void _showPromptDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: ColorConst.backgroundWhiteColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(spacing20),
+  // UI HIỂN THỊ SEARCH CHO CUSTOM PROMPT
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
           ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(spacing24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isEditing ? 'Edit prompt' : 'New prompt',
-                        style: GoogleFonts.poppins(
-                          fontSize: fontSize24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Name',
-                        style: GoogleFonts.poppins(
-                          fontSize: fontSize16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: spacing12),
-                      TextField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          hintText: 'Enter name',
-                          hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
-                          contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
-                        ),
-                      ),
-                      const SizedBox(height: spacing24),
-                      Row(
-                        children: [
-                          Text(
-                            'Prompt',
-                            style: GoogleFonts.poppins(
-                              fontSize: fontSize16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: spacing4),
-                          Text(
-                            '*',
-                            style: GoogleFonts.poppins(
-                              fontSize: fontSize16,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
+        ),
+        onChanged: (value) {
+          setState(() {});
+        },
+      ),
+    );
+  }
 
-                      //Note: Add a note to inform user about the input format
-                      Text(
-                        'Use square brackets [ ] to specify user input.',
-                        style: GoogleFonts.poppins(
-                          fontSize: fontSize12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: spacing8),
+  // BUILD TILE HIỂN THỊ PROMPT
+  Widget _buildPromptItem(Map<String, dynamic> prompt, bool isCustom) {
+    return ListTile(
+      title: Text(prompt['title'] ?? ''),
+      subtitle: Text(prompt['description'] ?? ''),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Với custom prompt: hiển thị nút Edit/Delete
+          if (isCustom) ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                _isEditing = true;
+                _editingPromptId = prompt['id']; // Lưu lại ID để update
+                _editingIndex = _customPrompts.indexOf(prompt);
 
-                      //Note: Input field for prompt
-                      TextField(
-                        controller: _promptController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText:
-                              'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
-                          hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius8)),
-                          contentPadding: EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
-                        ),
-                      ),
-                      const SizedBox(height: spacing24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _nameController.clear();
-                              _promptController.clear();
-                              _isEditing = false;
-                              _editingIndex = -1;
-                            },
-                            child: Text(
-                              'Cancel',
-                              style: GoogleFonts.poppins(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: spacing16),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (_nameController.text.isNotEmpty && _promptController.text.isNotEmpty) {
-                                setState(() {
-                                  if (_isEditing) {
-                                    // Update existing prompt
-                                    final promptData = {
-                                      'title': _nameController.text,
-                                      'description': 'Your own custom prompt',
-                                      'prompt': _promptController.text,
-                                      'isFavorite': _isCustomPrompt
-                                          ? _customPrompts[_editingIndex]['isFavorite']
-                                          : _prompts[_editingIndex]['isFavorite'],
-                                      'isCustom': true,
-                                    };
+                // Điền dữ liệu vào TextField
+                _nameController.text = prompt['title'] ?? '';
+                _descriptionController.text = prompt['description'] ?? '';
+                _promptController.text = prompt['prompt'] ?? '';
 
-                                    if (_isCustomPrompt) {
-                                      _customPrompts[_editingIndex] = promptData;
-                                    } else {
-                                      _prompts[_editingIndex] = promptData;
-                                    }
-
-                                    _isEditing = false;
-                                    _editingIndex = -1;
-                                  } else {
-                                    // Create new prompt
-                                    _customPrompts.add({
-                                      'title': _nameController.text,
-                                      'description': 'Your own custom prompt',
-                                      'prompt': _promptController.text,
-                                      'isFavorite': false,
-                                      'isCustom': true,
-                                    });
-                                  }
-                                });
-                                Navigator.pop(context);
-                                _nameController.clear();
-                                _promptController.clear();
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorConst.textHighlightColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(spacing20),
-                              ),
-                            ),
-                            child: Text(
-                              _isEditing ? 'Update' : 'Create',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
+                _showPromptDialog();
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () =>
+                  _showDeleteConfirmation(_customPrompts.indexOf(prompt)),
+            ),
+          ],
+          // Với prompt public/favorite: hiển thị nút favorite
+          if (!isCustom)
+            IconButton(
+              icon: Icon(
+                prompt['isFavorite'] ? Icons.star : Icons.star_border,
+                color: prompt['isFavorite'] ? Colors.yellow : Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  prompt['isFavorite'] = !prompt['isFavorite'];
+                });
+                toggleFavorite(prompt['id'], !prompt['isFavorite']);
+              },
+            ),
+        ],
+      ),
+      onTap: () {
+        // Khi bấm vào prompt thì trả kết quả về, tuỳ logic của bạn
+        Navigator.pop(context, {
+          'title': prompt['title'],
+          'prompt': prompt['prompt'],
+        });
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final String searchText = _searchController.text.toLowerCase();
+    final searchText = _searchController.text.toLowerCase();
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100),
-          child: Column(
-            children: [
-              _buildSearchBar(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: spacing16),
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.black,
-                  indicator: ShapeDecoration(
-                    color: ColorConst.textHighlightColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  tabs: [
-                    Tab(
-                      child: Text(
-                        'Public',
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ),
-                    Tab(
-                      child: Text(
-                        'My prompt',
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ),
-                    Tab(
-                      child: Text(
-                        'Favorite',
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        title: const Text('Prompt Library'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Public'),
+            Tab(text: 'Custom'),
+            Tab(text: 'Favorite'),
+          ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Public tab - with search
-          _prompts.isNotEmpty
-              ? ListView.builder(
-                  itemCount: _prompts
-                      .where((p) =>
-                          p['title'].toLowerCase().contains(searchText) ||
-                          p['description'].toLowerCase().contains(searchText))
-                      .length,
-                  itemBuilder: (context, index) {
-                    final filteredPrompts = _prompts
-                        .where((p) =>
-                            p['title'].toLowerCase().contains(searchText) ||
-                            p['description'].toLowerCase().contains(searchText))
-                        .toList();
-                    final originalIndex = _prompts.indexOf(filteredPrompts[index]);
-                    return _buildPromptItem(filteredPrompts[index], originalIndex, false);
-                  },
-                )
-              : _buildEmptyState(),
-
-          // My prompt tab - with search
-          _customPrompts.isNotEmpty
-              ? ListView.builder(
-                  itemCount: _customPrompts
-                      .where((p) =>
-                          p['title'].toLowerCase().contains(searchText) ||
-                          p['description'].toLowerCase().contains(searchText))
-                      .length,
-                  itemBuilder: (context, index) {
-                    final filteredPrompts = _customPrompts
-                        .where((p) =>
-                            p['title'].toLowerCase().contains(searchText) ||
-                            p['description'].toLowerCase().contains(searchText))
-                        .toList();
-                    final originalIndex = _customPrompts.indexOf(filteredPrompts[index]);
-                    return _buildPromptItem(filteredPrompts[index], originalIndex, true);
-                  },
-                )
-              : _buildEmptyState(),
-
-          // Favorite tab - with search
-          (() {
-            final List<Map<String, dynamic>> favPrompts = [];
-
-            // Add public prompts with their original indices
-            for (int i = 0; i < _prompts.length; i++) {
-              if (_prompts[i]['isFavorite'] == true &&
-                  (_prompts[i]['title'].toLowerCase().contains(searchText) ||
-                      _prompts[i]['description'].toLowerCase().contains(searchText))) {
-                favPrompts.add({
-                  ..._prompts[i],
-                  'originalIndex': i,
-                  'isCustom': false,
-                });
-              }
-            }
-
-            // Add custom prompts with their original indices
-            for (int i = 0; i < _customPrompts.length; i++) {
-              if (_customPrompts[i]['isFavorite'] == true &&
-                  (_customPrompts[i]['title'].toLowerCase().contains(searchText) ||
-                      _customPrompts[i]['description'].toLowerCase().contains(searchText))) {
-                favPrompts.add({
-                  ..._customPrompts[i],
-                  'originalIndex': i,
-                  'isCustom': true,
-                });
-              }
-            }
-
-            return favPrompts.isNotEmpty
-                ? ListView.builder(
-                    itemCount: favPrompts.length,
-                    itemBuilder: (context, index) {
-                      final prompt = favPrompts[index];
-                      return _buildPromptItem(
-                        {
-                          'title': prompt['title'],
-                          'description': prompt['description'],
-                          'prompt': prompt['prompt'],
-                          'isFavorite': prompt['isFavorite'],
+          // TAB PUBLIC
+          Column(
+            children: [
+              _buildSearchAndCategoryBar(),
+              Expanded(
+                child: _isLoadingPrompts
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        itemCount: _prompts.length,
+                        itemBuilder: (context, index) {
+                          final prompt = _prompts[index];
+                          // Lọc theo từ khoá tìm kiếm (nếu cần)
+                          if (searchText.isNotEmpty) {
+                            if (!(prompt['title'] ?? '')
+                                .toLowerCase()
+                                .contains(searchText)) {
+                              return const SizedBox.shrink();
+                            }
+                          }
+                          return _buildPromptItem(prompt, false);
                         },
-                        prompt['originalIndex'],
-                        prompt['isCustom'],
-                      );
-                    },
-                  )
-                : _buildEmptyState();
-          })(),
+                      ),
+              ),
+            ],
+          ),
+
+          // TAB CUSTOM
+          Column(
+            children: [
+              _buildSearchBar(),
+              Expanded(
+                child: _isLoadingPrompts
+                    ? const Center(child: CircularProgressIndicator())
+                    : _customPrompts.isEmpty
+                        ? const NoDataGadget()
+                        : ListView.builder(
+                            itemCount: _customPrompts.length,
+                            itemBuilder: (context, index) {
+                              final prompt = _customPrompts[index];
+                              // Lọc theo từ khoá tìm kiếm (nếu cần)
+                              if (searchText.isNotEmpty) {
+                                if (!(prompt['title'] ?? '')
+                                    .toLowerCase()
+                                    .contains(searchText)) {
+                                  return const SizedBox.shrink();
+                                }
+                              }
+                              return _buildPromptItem(prompt, true);
+                            },
+                          ),
+              ),
+            ],
+          ),
+
+          // TAB FAVORITE
+          Column(
+            children: [
+              Expanded(
+                child: _isLoadingPrompts
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        itemCount: _prompts.length,
+                        itemBuilder: (context, index) {
+                          final prompt = _prompts[index];
+                          // Nếu tab Favorite, ta hiển thị prompt đã đánh dấu isFavorite
+                          if (searchText.isNotEmpty) {
+                            if (!(prompt['title'] ?? '')
+                                .toLowerCase()
+                                .contains(searchText)) {
+                              return const SizedBox.shrink();
+                            }
+                          }
+                          return _buildPromptItem(prompt, false);
+                        },
+                      ),
+              ),
+            ],
+          ),
         ],
       ),
-
-      //Add new prompt button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          // Chuẩn bị thêm mới Custom Prompt
           _isEditing = false;
-          _editingIndex = -1;
+          _editingPromptId = null;
+
           _nameController.clear();
+          _descriptionController.clear();
           _promptController.clear();
+
           _showPromptDialog();
         },
-        backgroundColor: ColorConst.textHighlightColor,
-        child: Icon(
-          Icons.add,
-          color: ColorConst.backgroundWhiteColor,
-        ),
+        child: const Icon(Icons.add),
       ),
     );
   }
