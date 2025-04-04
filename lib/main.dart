@@ -1,4 +1,6 @@
+import 'package:eco_chat_bot/firebase_options.dart';
 import 'package:eco_chat_bot/routes.dart';
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:eco_chat_bot/src/helpers/local_storage_helper.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/welcome.dart';
@@ -10,19 +12,36 @@ import 'package:shared_preferences/shared_preferences.dart'; // <-- Thêm dòng 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
 
-  // Local storage
-  await Hive.initFlutter();
-  await LocalStorageHelper.initLocalStorageHelper();
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  // Kiểm tra xem đã từng vào app chưa
-  final prefs = await SharedPreferences.getInstance();
-  final hasSeenWelcome = prefs.getBool('has_seen_welcome') ?? false;
+    // Local storage
+    await Hive.initFlutter();
+    await LocalStorageHelper.initLocalStorageHelper();
 
-  runApp(MyApp(
-      initialScreen:
-          hasSeenWelcome ? const HomeScreen() : const WelcomeScreen()));
+    // Check if user has seen welcome screen
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenWelcome = prefs.getBool(LocalStorageKey.hasSeenWelcome) ?? false;
+
+    runApp(MyApp(
+      initialScreen: hasSeenWelcome ? const HomeScreen() : const WelcomeScreen(),
+    ));
+  } catch (e) {
+    // Handle initialization errors
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Failed to initialize app: $e'),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {

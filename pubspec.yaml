@@ -42,6 +42,12 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_icons:
+  image_path: "assets/logo/eco_chat_bot-logo.png"
+  android: true
+  ios: true
 
 flutter:
   uses-material-design: true
@@ -54,6 +60,7 @@ flutter:
     - assets/images/
     - assets/images/avatar/
     - assets/images/ai_models/
+    - assets/logo/eco_chat_bot-logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
