@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:eco_chat_bot/src/constants/api/api_base.dart';
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -53,26 +55,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     final url =
-        Uri.parse('https://auth-api.jarvis.cx/api/v1/auth/password/sign-up');
-
-    final headers = {
-      'X-Stack-Access-Type': 'client',
-      'X-Stack-Project-Id': '45a1e2fd-77ee-4872-9fb7-987b8c119633',
-      'X-Stack-Publishable-Client-Key':
-          'pck_7wjweasxxnfspvr20dvmyd9pjj0p9kp755bxxcm4ae1er',
-      'Content-Type': 'application/json',
-    };
+        Uri.parse('${ApiBase.authUrl}/api/v1/auth/password/sign-up');
 
     final body = jsonEncode({
       "email": email,
       "password": password,
       "verification_callback_url":
-          "https://auth.dev.jarvis.cx/handler/email-verification?after_auth_return_to=%2Fauth%2Fsignin%3Fclient_id%3Djarvis_chat%26redirect%3Dhttps%253A%252F%252Fchat.dev.jarvis.cx%252Fauth%252Foauth%252Fsuccess"
+          ApiBase.verificationCallbackUrl,
     });
 
     try {
       var request = http.Request('POST', url);
-      request.headers.addAll(headers);
+      request.headers.addAll(ApiBase.headerAuth);
       request.body = body;
 
       http.StreamedResponse response = await request.send();
@@ -82,10 +76,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         final responseJson = jsonDecode(responseBody);
 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', responseJson['access_token']);
-        await prefs.setString('refresh_token', responseJson['refresh_token']);
-        await prefs.setString('email', email);
-        await prefs.setString('user_id', responseJson['user_id']);
+        await prefs.setString(LocalStorageKey.accessToken, responseJson[LocalStorageKey.accessToken]);
+        await prefs.setString(LocalStorageKey.refreshToken, responseJson[LocalStorageKey.refreshToken]);
+        await prefs.setString(LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
+        await prefs.setString(LocalStorageKey.email, email);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -100,7 +94,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           );
 
-          await prefs.setBool('has_seen_welcome', true); // Đánh dấu đã vào app
+          await prefs.setBool(LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
           Future.delayed(const Duration(milliseconds: 800), () {
             Navigator.pushNamedAndRemoveUntil(
               context,
