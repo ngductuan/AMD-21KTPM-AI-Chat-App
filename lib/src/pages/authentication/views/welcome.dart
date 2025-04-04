@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +30,7 @@ class WelcomeScreen extends StatelessWidget {
 
       // Chuyển hướng sau khi đăng nhập thành công
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('has_seen_welcome', true); // Đánh dấu đã vào app
+      await prefs.setBool(LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
       if (context.mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -202,7 +203,7 @@ class WelcomeScreen extends StatelessWidget {
                 onPressed: () async {
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setBool(
-                      'has_seen_welcome', true); // Đánh dấu đã vào app
+                      LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
 
                   Navigator.pushReplacementNamed(context, '/home');
                 },

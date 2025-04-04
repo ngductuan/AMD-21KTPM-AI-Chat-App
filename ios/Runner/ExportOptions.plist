@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>method</key>
+    <string>development</string> <!-- Development distribution -->
+
+    <key>uploadBitcode</key>
+    <false/> <!-- Bitcode is not needed for development builds -->
+
+    <key>uploadSymbols</key>
+    <false/> <!-- Symbols are not required for development distribution -->
+  </dict>
+</plist>
