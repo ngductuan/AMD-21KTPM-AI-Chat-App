@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "337890217212",
+    "project_id": "amd-21ktpm-ai-chat-app",
+    "storage_bucket": "amd-21ktpm-ai-chat-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:337890217212:android:bfef4b805f37662afb9b79",
+        "android_client_info": {
+          "package_name": "com.example.eco_chat_bot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgf5kvVGurfqTmTPMjYnprJIL74lnwft0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

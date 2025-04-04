@@ -13,6 +13,7 @@ class InputField extends StatefulWidget {
     required this.controller,
     required this.hintText,
     this.isPassword = false,
+    required TextInputType keyboardType,
   }) : super(key: key);
 
   @override
