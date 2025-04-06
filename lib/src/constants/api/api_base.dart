@@ -33,32 +33,40 @@ class ApiBase {
     final prefs = await SharedPreferences.getInstance();
     final refreshToken = prefs.getString(LocalStorageKey.refreshToken);
 
-    // Giả sử API refresh được gọi tại endpoint dưới đây
-    final url = Uri.parse('$authUrl/api/v1/auth/refresh');
-    final response = await http.post(
-      url,
-      headers: {
-        'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'refreshToken': refreshToken}),
-    );
+    // Endpoint mới cho refresh token
+    final url = Uri.parse('$authUrl/api/v1/auth/sessions/current/refresh');
+
+    // Header theo yêu cầu
+    final headers = {
+      'X-Stack-Access-Type': 'client',
+      'X-Stack-Project-Id': 'a914f06b-5e46-4966-8693-80e4b9f4f409',
+      'X-Stack-Publishable-Client-Key':
+          'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
+      'X-Stack-Refresh-Token': refreshToken ?? '',
+    };
+
+    // Tạo request POST
+    final request = http.Request('POST', url);
+    request.headers.addAll(headers);
+
+    // Gửi request và chuyển đổi response từ stream thành http.Response
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200) {
       final responseJson = jsonDecode(response.body);
-      final newAccessToken = responseJson[LocalStorageKey.accessToken];
-      final newRefreshToken = responseJson[LocalStorageKey.refreshToken];
+      final newAccessToken = responseJson['access_token'];
 
-      // Cập nhật lại token và thời gian hết hạn (5 phút hoặc lấy từ API nếu có)
-      final currentTime = DateTime.now();
-      final newExpiryTime = currentTime.add(Duration(minutes: 5));
+      // Giả định access token có hiệu lực 5 phút (có thể thay đổi tùy API)
+      final newExpiryTime = DateTime.now().add(Duration(minutes: 5));
 
+      // Cập nhật access token và thời gian hết hạn
       await prefs.setString(LocalStorageKey.accessToken, newAccessToken);
-      await prefs.setString(LocalStorageKey.refreshToken, newRefreshToken);
       await prefs.setString(
           LocalStorageKey.accessTokenExpiry, newExpiryTime.toIso8601String());
+      print('Access token refreshed successfully');
     } else {
-      throw Exception('Failed to refresh token');
+      throw Exception('Failed to refresh token: ${response.reasonPhrase}');
     }
   }
 
@@ -67,7 +75,9 @@ class ApiBase {
     final prefs = await SharedPreferences.getInstance();
     if (isAccessTokenExpired(prefs)) {
       await refreshAccessToken();
+      print('Access token expired, refreshed successfully');
     }
+    print('Access token is valid');
     final accessToken = prefs.getString(LocalStorageKey.accessToken);
     return {
       'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
