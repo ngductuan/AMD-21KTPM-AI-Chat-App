@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:eco_chat_bot/src/widgets/no_data_gadget.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/constants/api/api_base.dart';
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 
 class PromptLibrary extends StatefulWidget {
   const PromptLibrary({Key? key}) : super(key: key);
@@ -23,12 +24,10 @@ class _PromptLibraryState extends State<PromptLibrary>
 
   bool _isEditing = false;
   String? _editingPromptId;
-  int _editingIndex = -1;
   bool _isLoadingPrompts = false;
 
   // Danh sách prompt Public hoặc Favorite
   final List<Map<String, dynamic>> _prompts = [];
-
   // Danh sách prompt Custom (riêng tư)
   final List<Map<String, dynamic>> _customPrompts = [];
 
@@ -48,6 +47,8 @@ class _PromptLibraryState extends State<PromptLibrary>
     'Productivity',
     'Other'
   ];
+
+  final ApiBase api = ApiBase();
 
   @override
   void initState() {
@@ -71,38 +72,50 @@ class _PromptLibraryState extends State<PromptLibrary>
     });
   }
 
+  // Hàm tạo URL chung cho tất cả loại prompt
+  Uri _buildPromptUrl(
+      {required bool isPublic, bool isFavorite = false, String category = ''}) {
+    final baseUrl = Uri.parse('${ApiBase.jarvisUrl}/api/v1/prompts');
+    final queryParams = {
+      'query': category == 'All' ? '' : category,
+      'isPublic': isPublic ? 'true' : 'false',
+      'isFavorite': isFavorite ? 'true' : 'false',
+      'limit': '15',
+      'offset': '0',
+    };
+    return baseUrl.replace(queryParameters: queryParams);
+  }
+
   // PUBLIC PROMPTS
   Future<void> fetchPublicPrompts([String category = 'All']) async {
     setState(() => _isLoadingPrompts = true);
-    const String baseUrl = 'https://api.dev.jarvis.cx/api/v1/prompts';
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('access_token');
-    final authHeader = (accessToken == null || accessToken.isEmpty)
-        ? ''
-        : 'Bearer $accessToken';
-
-    var headers = {'Authorization': authHeader};
-    final url = category == 'All'
-        ? '$baseUrl?query=&isPublic=true&limit=15&offset=0'
-        : '$baseUrl?query=$category&isPublic=true&limit=15&offset=0';
-
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await api.authenticatedGet(
+        _buildPromptUrl(isPublic: true, isFavorite: false, category: category),
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _prompts.clear();
-          _prompts.addAll((data['items'] as List).map((item) {
-            return {
-              'id': item['_id'],
-              'title': item['title'],
-              'description': item['description'] ?? '',
-              'prompt': item['content'],
-              'isFavorite': item['isFavorite'] ?? false,
-            };
-          }));
+          _prompts
+            ..clear()
+            ..addAll((data['items'] as List).map((item) {
+              return {
+                'id': item['_id'],
+                'title': item['title'],
+                'description': item['description'] ?? '',
+                'prompt': item['content'],
+                'isFavorite': item['isFavorite'] ?? false,
+              };
+            }));
         });
+      } else {
+        print(
+            'Error fetching prompts: ${response.statusCode} - ${response.reasonPhrase}');
+        _showErrorSnackbar('Failed to load prompts. Please try again.');
       }
+    } catch (e) {
+      print('Error: $e');
+      _showErrorSnackbar('An unexpected error occurred.');
     } finally {
       setState(() => _isLoadingPrompts = false);
     }
@@ -111,33 +124,35 @@ class _PromptLibraryState extends State<PromptLibrary>
   // FAVORITE PROMPTS
   Future<void> fetchFavoritePrompts() async {
     setState(() => _isLoadingPrompts = true);
-    const String url =
-        'https://api.dev.jarvis.cx/api/v1/prompts?query=&isPublic=true&isFavorite=true&limit=20&offset=0';
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('access_token');
-    if (accessToken == null || accessToken.isEmpty) return;
-
-    var headers = {
-      'Authorization': 'Bearer $accessToken',
-    };
-
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await api.authenticatedGet(
+        _buildPromptUrl(isPublic: true, isFavorite: true, category: 'All'),
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _prompts.clear();
-          _prompts.addAll((data['items'] as List).map((item) {
-            return {
-              'id': item['_id'],
-              'title': item['title'],
-              'description': item['description'] ?? '',
-              'prompt': item['content'],
-              'isFavorite': item['isFavorite'] ?? false,
-            };
-          }));
+          _prompts
+            ..clear()
+            ..addAll((data['items'] as List).map((item) {
+              return {
+                'id': item['_id'],
+                'title': item['title'],
+                'description': item['description'] ?? '',
+                'prompt': item['content'],
+                'isFavorite': item['isFavorite'] ?? false,
+              };
+            }));
         });
+      } else {
+        print(
+            'Error fetching favorite prompts: ${response.statusCode} - ${response.reasonPhrase}');
+        _showErrorSnackbar(
+            'Failed to load favorite prompts. Please try again.');
       }
+    } catch (e) {
+      print('Error: $e');
+      _showErrorSnackbar(
+          'An unexpected error occurred while loading favorites.');
     } finally {
       setState(() => _isLoadingPrompts = false);
     }
@@ -146,33 +161,33 @@ class _PromptLibraryState extends State<PromptLibrary>
   // CUSTOM PROMPTS
   Future<void> fetchCustomPrompts() async {
     setState(() => _isLoadingPrompts = true);
-    const String url =
-        'https://api.dev.jarvis.cx/api/v1/prompts?query=&isPublic=false&limit=10&offset=0';
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('access_token');
-    if (accessToken == null || accessToken.isEmpty) return;
-
-    var headers = {
-      'Authorization': 'Bearer $accessToken',
-    };
-
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await api.authenticatedGet(
+        _buildPromptUrl(isPublic: false, category: 'All'),
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _customPrompts.clear();
-          _customPrompts.addAll((data['items'] as List).map((item) {
-            return {
-              'id': item['_id'],
-              'title': item['title'],
-              'description': item['description'] ?? '',
-              'prompt': item['content'],
-              'isFavorite': item['isFavorite'] ?? false,
-            };
-          }));
+          _customPrompts
+            ..clear()
+            ..addAll((data['items'] as List).map((item) {
+              return {
+                'id': item['_id'],
+                'title': item['title'],
+                'description': item['description'] ?? '',
+                'prompt': item['content'],
+                'isFavorite': item['isFavorite'] ?? false,
+              };
+            }));
         });
+      } else {
+        print(
+            'Error fetching custom prompts: ${response.statusCode} - ${response.reasonPhrase}');
+        _showErrorSnackbar('Failed to load custom prompts. Please try again.');
       }
+    } catch (e) {
+      print('Error: $e');
+      _showErrorSnackbar('An unexpected error occurred while loading customs.');
     } finally {
       setState(() => _isLoadingPrompts = false);
     }
@@ -187,58 +202,80 @@ class _PromptLibraryState extends State<PromptLibrary>
     var headers = {
       'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
       'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
     };
 
-    final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$promptId/favorite';
-    var request = isCurrentlyFavorite
-        ? http.Request('DELETE', Uri.parse(url))
-        : http.Request('POST', Uri.parse(url));
-
-    request.headers.addAll(headers);
+    // Hàm tạo URL yêu thích
+    Uri _buildFavoriteUrl(String promptId) {
+      return Uri.parse(
+          '${ApiBase.jarvisUrl}/api/v1/prompts/$promptId/favorite');
+    }
 
     try {
-      http.StreamedResponse response = await request.send();
-      if (response.statusCode == 200) {
-        print(isCurrentlyFavorite
-            ? 'Prompt removed from favorites.'
-            : 'Prompt added to favorites.');
-      } else {
-        print('Error toggling favorite: ${response.reasonPhrase}');
-      }
+      final response = isCurrentlyFavorite
+          ? await http.post(_buildFavoriteUrl(promptId), headers: headers)
+          : await http.delete(_buildFavoriteUrl(promptId), headers: headers);
+
+      final message = isCurrentlyFavorite
+          ? 'Added to favorites.'
+          : 'Removed from favorites.';
+      print(message);
+      _showSuccessSnackbar(message);
     } catch (e) {
       print('Error toggling favorite: $e');
+      _showErrorSnackbar('An unexpected error occurred.');
     }
+  }
+
+  // Hàm hiển thị thông báo thành công
+  void _showSuccessSnackbar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppFontStyles.poppinsRegular(color: ColorConst.textWhiteColor),
+        ),
+        backgroundColor: ColorConst.blueColor,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // Hàm hiển thị lỗi qua Snackbar
+  void _showErrorSnackbar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppFontStyles.poppinsRegular(color: ColorConst.textWhiteColor),
+        ),
+        backgroundColor: ColorConst.backgroundRedColor,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   // THÊM HOẶC CHỈNH SỬA CUSTOM PROMPT
   Future<void> _addOrEditPrompt() async {
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('access_token');
-    if (accessToken == null || accessToken.isEmpty) return;
+    try {
+      // Thông tin body gửi lên
+      final bodyData = {
+        "title": _nameController.text,
+        "content": _promptController.text,
+        "description": _descriptionController.text,
+        "isPublic": false
+      };
 
-    var headers = {
-      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    };
-
-    // Thông tin body gửi lên
-    final bodyData = {
-      "title": _nameController.text,
-      "content": _promptController.text,
-      "description": _descriptionController.text,
-      "isPublic": false
-    };
-
-    if (_isEditing) {
-      // CHỈNH SỬA (PATCH)
-      if (_editingPromptId == null) return;
-
-      final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$_editingPromptId';
-      try {
+      if (_isEditing) {
+        // CHỈNH SỬA (PATCH)
+        if (_editingPromptId == null) return;
+        final url =
+            'https://api.dev.jarvis.cx/api/v1/prompts/$_editingPromptId';
         final request = http.Request('PATCH', Uri.parse(url));
         request.body = json.encode(bodyData);
-        request.headers.addAll(headers);
+        request.headers.addAll(await api.getAuthHeaders());
 
         final response = await request.send();
         if (response.statusCode == 200) {
@@ -264,22 +301,17 @@ class _PromptLibraryState extends State<PromptLibrary>
         } else {
           print('Error updating prompt: ${response.reasonPhrase}');
         }
-      } catch (e) {
-        print('Error updating prompt: $e');
-      }
-    } else {
-      // TẠO MỚI (POST)
-      final url = 'https://api.dev.jarvis.cx/api/v1/prompts';
-      try {
+      } else {
+        // TẠO MỚI (POST)
+        final url = 'https://api.dev.jarvis.cx/api/v1/prompts';
         final response = await http.post(
           Uri.parse(url),
-          headers: headers,
+          headers: await api.getAuthHeaders(),
           body: json.encode(bodyData),
         );
 
         if (response.statusCode == 200) {
           final newPrompt = jsonDecode(response.body);
-
           // Thêm ngay vào danh sách custom local
           setState(() {
             _customPrompts.add({
@@ -290,34 +322,22 @@ class _PromptLibraryState extends State<PromptLibrary>
               'isFavorite': newPrompt['isFavorite'] ?? false,
             });
           });
-
           print('Prompt created successfully.');
         } else {
           print('Error creating prompt: ${response.reasonPhrase}');
         }
-      } catch (e) {
-        print('Error creating prompt: $e');
       }
+    } catch (e) {
+      print('Error in add/edit prompt: $e');
     }
-
     Navigator.pop(context);
   }
 
   // XOÁ CUSTOM PROMPT
   Future<void> _deleteCustomPrompt(String promptId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('access_token');
-    if (accessToken == null || accessToken.isEmpty) return;
-
-    var headers = {
-      'x-jarvis-guid': 'c18d173d-bb4e-49f9-b4d8-f9a302bf89ff',
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    };
-
     try {
       final url = 'https://api.dev.jarvis.cx/api/v1/prompts/$promptId';
-      final response = await http.delete(Uri.parse(url), headers: headers);
+      final response = await api.authenticatedDelete(Uri.parse(url));
 
       if (response.statusCode == 200) {
         // Xoá luôn trong danh sách local
@@ -528,77 +548,98 @@ class _PromptLibraryState extends State<PromptLibrary>
   // UI HIỂN THỊ SEARCH CHO CUSTOM PROMPT
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(16.0),
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
           hintText: 'Search...',
           prefixIcon: const Icon(Icons.search),
+          filled: true,
+          fillColor: ColorConst.backgroundGrayColor,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(12.0),
+            borderSide: BorderSide.none,
           ),
         ),
-        onChanged: (value) {
-          setState(() {});
-        },
+        onChanged: (value) => setState(() {}),
       ),
     );
   }
 
   // BUILD TILE HIỂN THỊ PROMPT
   Widget _buildPromptItem(Map<String, dynamic> prompt, bool isCustom) {
-    return ListTile(
-      title: Text(prompt['title'] ?? ''),
-      subtitle: Text(prompt['description'] ?? ''),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Với custom prompt: hiển thị nút Edit/Delete
-          if (isCustom) ...[
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                _isEditing = true;
-                _editingPromptId = prompt['id']; // Lưu lại ID để update
-                _editingIndex = _customPrompts.indexOf(prompt);
-
-                // Điền dữ liệu vào TextField
-                _nameController.text = prompt['title'] ?? '';
-                _descriptionController.text = prompt['description'] ?? '';
-                _promptController.text = prompt['prompt'] ?? '';
-
-                _showPromptDialog();
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () =>
-                  _showDeleteConfirmation(_customPrompts.indexOf(prompt)),
-            ),
-          ],
-          // Với prompt public/favorite: hiển thị nút favorite
-          if (!isCustom)
-            IconButton(
-              icon: Icon(
-                prompt['isFavorite'] ? Icons.star : Icons.star_border,
-                color: prompt['isFavorite'] ? Colors.yellow : Colors.grey,
-              ),
-              onPressed: () {
-                setState(() {
-                  prompt['isFavorite'] = !prompt['isFavorite'];
-                });
-                toggleFavorite(prompt['id'], !prompt['isFavorite']);
-              },
-            ),
-        ],
+    return Card(
+      margin:
+          const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(spacing16),
       ),
-      onTap: () {
-        // Khi bấm vào prompt thì trả kết quả về, tuỳ logic của bạn
-        Navigator.pop(context, {
-          'title': prompt['title'],
-          'prompt': prompt['prompt'],
-        });
-      },
+      elevation: 4,
+      child: ListTile(
+        title: Text(
+          prompt['title'] ?? 'No Title',
+          style: AppFontStyles.poppinsTitleBold(
+            color: ColorConst.textBlackColor,
+            fontSize: spacing16,
+          ),
+        ),
+        subtitle: Text(
+          prompt['description'] ?? 'No Description',
+          style: AppFontStyles.poppinsRegular(
+            color: ColorConst.textGrayColor,
+            fontSize: spacing14,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Nếu là Custom Prompt, hiển thị nút chỉnh sửa và xóa
+            if (isCustom) ...[
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: () {
+                  _isEditing = true;
+                  _editingPromptId = prompt['id']; // Lưu lại ID để update
+
+                  // Điền dữ liệu vào TextField
+                  _nameController.text = prompt['title'] ?? '';
+                  _descriptionController.text = prompt['description'] ?? '';
+                  _promptController.text = prompt['prompt'] ?? '';
+
+                  _showPromptDialog();
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () =>
+                    _showDeleteConfirmation(_customPrompts.indexOf(prompt)),
+              ),
+            ],
+
+            // Nếu là Public/Favorite Prompt, hiển thị nút yêu thích
+            if (!isCustom)
+              IconButton(
+                icon: Icon(
+                  prompt['isFavorite'] ? Icons.star : Icons.star_border,
+                  color: prompt['isFavorite'] ? Colors.yellow : Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    prompt['isFavorite'] = !prompt['isFavorite'];
+                  });
+                  toggleFavorite(prompt['id'], prompt['isFavorite']);
+                },
+              ),
+          ],
+        ),
+        onTap: () {
+          // Khi bấm vào prompt thì trả kết quả về
+          Navigator.pop(context, {
+            'title': prompt['title'],
+            'prompt': prompt['prompt'],
+          });
+        },
+      ),
     );
   }
 
@@ -608,7 +649,8 @@ class _PromptLibraryState extends State<PromptLibrary>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Prompt Library'),
+        title: Text('Prompt Library',
+            style: AppFontStyles.poppinsTitleBold(fontSize: fontSize20)),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -628,21 +670,23 @@ class _PromptLibraryState extends State<PromptLibrary>
               Expanded(
                 child: _isLoadingPrompts
                     ? const Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                        itemCount: _prompts.length,
-                        itemBuilder: (context, index) {
-                          final prompt = _prompts[index];
-                          // Lọc theo từ khoá tìm kiếm (nếu cần)
-                          if (searchText.isNotEmpty) {
-                            if (!(prompt['title'] ?? '')
-                                .toLowerCase()
-                                .contains(searchText)) {
-                              return const SizedBox.shrink();
-                            }
-                          }
-                          return _buildPromptItem(prompt, false);
-                        },
-                      ),
+                    : _prompts.isEmpty
+                        ? const Center(child: Text("No prompts available"))
+                        : ListView.builder(
+                            itemCount: _prompts.length,
+                            itemBuilder: (context, index) {
+                              final prompt = _prompts[index];
+                              // Lọc theo từ khoá tìm kiếm (nếu cần)
+                              if (searchText.isNotEmpty) {
+                                if (!(prompt['title'] ?? '')
+                                    .toLowerCase()
+                                    .contains(searchText)) {
+                                  return const SizedBox.shrink();
+                                }
+                              }
+                              return _buildPromptItem(prompt, false);
+                            },
+                          ),
               ),
             ],
           ),
@@ -654,23 +698,25 @@ class _PromptLibraryState extends State<PromptLibrary>
               Expanded(
                 child: _isLoadingPrompts
                     ? const Center(child: CircularProgressIndicator())
-                    : _customPrompts.isEmpty
-                        ? const NoDataGadget()
-                        : ListView.builder(
-                            itemCount: _customPrompts.length,
-                            itemBuilder: (context, index) {
-                              final prompt = _customPrompts[index];
-                              // Lọc theo từ khoá tìm kiếm (nếu cần)
-                              if (searchText.isNotEmpty) {
-                                if (!(prompt['title'] ?? '')
-                                    .toLowerCase()
-                                    .contains(searchText)) {
-                                  return const SizedBox.shrink();
-                                }
-                              }
-                              return _buildPromptItem(prompt, true);
-                            },
-                          ),
+                    : _prompts.isEmpty
+                        ? const Center(child: Text("No prompts available"))
+                        : _customPrompts.isEmpty
+                            ? const NoDataGadget()
+                            : ListView.builder(
+                                itemCount: _customPrompts.length,
+                                itemBuilder: (context, index) {
+                                  final prompt = _customPrompts[index];
+                                  // Lọc theo từ khoá tìm kiếm (nếu cần)
+                                  if (searchText.isNotEmpty) {
+                                    if (!(prompt['title'] ?? '')
+                                        .toLowerCase()
+                                        .contains(searchText)) {
+                                      return const SizedBox.shrink();
+                                    }
+                                  }
+                                  return _buildPromptItem(prompt, true);
+                                },
+                              ),
               ),
             ],
           ),
@@ -681,21 +727,23 @@ class _PromptLibraryState extends State<PromptLibrary>
               Expanded(
                 child: _isLoadingPrompts
                     ? const Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                        itemCount: _prompts.length,
-                        itemBuilder: (context, index) {
-                          final prompt = _prompts[index];
-                          // Nếu tab Favorite, ta hiển thị prompt đã đánh dấu isFavorite
-                          if (searchText.isNotEmpty) {
-                            if (!(prompt['title'] ?? '')
-                                .toLowerCase()
-                                .contains(searchText)) {
-                              return const SizedBox.shrink();
-                            }
-                          }
-                          return _buildPromptItem(prompt, false);
-                        },
-                      ),
+                    : _prompts.isEmpty
+                        ? const Center(child: Text("No prompts available"))
+                        : ListView.builder(
+                            itemCount: _prompts.length,
+                            itemBuilder: (context, index) {
+                              final prompt = _prompts[index];
+                              // Nếu tab Favorite, ta hiển thị prompt đã đánh dấu isFavorite
+                              if (searchText.isNotEmpty) {
+                                if (!(prompt['title'] ?? '')
+                                    .toLowerCase()
+                                    .contains(searchText)) {
+                                  return const SizedBox.shrink();
+                                }
+                              }
+                              return _buildPromptItem(prompt, false);
+                            },
+                          ),
               ),
             ],
           ),

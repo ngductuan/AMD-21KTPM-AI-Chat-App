@@ -55,11 +55,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       print("❌ Logout error: $e");
     }
 
+    // Xóa tất cả dữ liệu lưu trữ và cập nhật lại trạng thái đăng nhập
     await prefs.clear();
+    setState(() {
+      isLoggedIn = false;
+    });
 
-    /*if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-    }*/
+    // Nếu muốn điều hướng về màn hình login, bạn có thể mở dòng dưới đây
+    // Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
   }
 
   Future<bool?> _showLogoutDialog(BuildContext context) {
@@ -172,7 +175,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Container(
           width: spacing24,
           height: spacing24,
-          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+          decoration:
+              const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
           child: const Icon(Icons.check, color: Colors.white, size: spacing20),
         ),
         const SizedBox(width: 12),
@@ -196,11 +200,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Text(
                 'Creator:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ColorConst.blueColor),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: ColorConst.blueColor),
               ),
               const SizedBox(height: 8),
-              const Text('Nguyễn Gia Bảo', style: TextStyle(fontSize: spacing18, fontWeight: FontWeight.bold)),
-              const Text('Nguyễn Đức Tuấn', style: TextStyle(fontSize: spacing18, fontWeight: FontWeight.bold)),
+              const Text('Nguyễn Gia Bảo',
+                  style: TextStyle(
+                      fontSize: spacing18, fontWeight: FontWeight.bold)),
+              const Text('Nguyễn Đức Tuấn',
+                  style: TextStyle(
+                      fontSize: spacing18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
               GradientFormButton(
                 text: 'Cancel',
@@ -225,14 +236,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, color: iconColor, size: 24),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      title: Text(title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (trailing != null) Text(trailing, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          if (trailing != null)
+            Text(trailing,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14)),
           Icon(Icons.chevron_right, color: Colors.grey[400]),
         ],
       ),
@@ -253,7 +269,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         title: const Text(
           'Settings',
-          style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -266,7 +283,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   // First group
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
                     child: Column(
                       children: [
                         _buildSettingItem(
@@ -300,7 +319,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 16),
                   // Log out or Login section
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
                     child: _buildSettingItem(
                       icon: isLoggedIn ? Icons.logout : Icons.login,
                       iconColor: Colors.orange,
@@ -312,7 +333,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             await _logout(context);
                           }
                         } else {
-                          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/login', (route) => false);
                         }
                       },
                     ),
@@ -324,9 +346,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(spacing16),
               child: Column(
                 children: const [
-                  Text('Version: 2.3.4', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text('Version: 2.3.4',
+                      style: TextStyle(color: Colors.grey, fontSize: 14)),
                   SizedBox(height: 4),
-                  Text('Design by @EcoTeam', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text('Design by @EcoTeam',
+                      style: TextStyle(color: Colors.grey, fontSize: 14)),
                   SizedBox(height: spacing24),
                 ],
               ),

@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 
 import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
-import 'package:another_flushbar/flushbar.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/widgets/animations/typing_indicator.dart';

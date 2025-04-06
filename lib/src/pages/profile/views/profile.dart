@@ -25,8 +25,10 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userId = prefs.getString(LocalStorageKey.userId);
-      email = prefs.getString(LocalStorageKey.email);
+      // Nếu không có email, mặc định hiển thị "Guest"
+      email = prefs.getString(LocalStorageKey.email) ?? "Guest";
+      // Nếu không có userId, có thể để rỗng hoặc hiển thị "Guest" tùy ý
+      userId = prefs.getString(LocalStorageKey.userId) ?? "";
     });
   }
 
@@ -43,9 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
     showMenu(
       context: context,
       position: RelativeRect.fromRect(
-        tapPosition &
-            const Size(spacing40,
-                spacing40), // Smaller rect for more precise positioning
+        tapPosition & const Size(spacing40, spacing40),
         Offset.zero & overlay.size,
       ),
       items: [
@@ -58,7 +58,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
           onTap: () {
-            // Add edit functionality
             Navigator.of(context)
                 .push(AnimationModal.fadeInModal(CreateBotModal()));
           },
@@ -106,11 +105,13 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings_outlined),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () async {
+              // Điều hướng sang SettingsScreen và đợi kết quả trả về
+              await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const SettingsScreen()));
+              // Sau khi trở về, load lại thông tin người dùng
+              _loadUserData();
             },
           ),
         ],
@@ -136,18 +137,18 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        email != null
+                        email != null && email != "Guest"
                             ? (email!.length > 10
                                 ? '${email!.substring(0, 10)}...'
                                 : email!)
-                            : 'Loading Email...',
+                            : 'Guest',
                         style: AppFontStyles.poppinsTitleSemiBold(
                             fontSize: fontSize20),
                       ),
                       Text(
-                        userId != null
+                        userId != null && userId!.isNotEmpty
                             ? 'ID ${userId!.length > 5 ? '${userId!.substring(0, 5)}...' : userId!}'
-                            : 'Loading ID...',
+                            : 'ID: ',
                         style: AppFontStyles.poppinsRegular(
                           fontSize: fontSize14,
                           color: ColorConst.textGrayColor,
@@ -158,7 +159,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-
             // My bots section
             Expanded(
               child: Container(
@@ -174,22 +174,21 @@ class _ProfilePageState extends State<ProfilePage> {
                             fontSize: fontSize18),
                       ),
                     ),
-
                     // Dynamically render bot list
                     ...List.generate(MockData.selfAiModels.length, (index) {
                       final bot = MockData.selfAiModels[index];
                       return GestureDetector(
-                          onTapUp: (TapUpDetails details) {
-                            setState(() {
-                              selectedBotIndex = index;
-                            });
-                            _showBotMenu(
-                                context, index, details.globalPosition);
-                          },
-                          child: AiBotItem(
-                            botData: MockData.selfAiModels[index],
-                            selfAI: true,
-                          ));
+                        onTapUp: (TapUpDetails details) {
+                          setState(() {
+                            selectedBotIndex = index;
+                          });
+                          _showBotMenu(context, index, details.globalPosition);
+                        },
+                        child: AiBotItem(
+                          botData: bot,
+                          selfAI: true,
+                        ),
+                      );
                     }),
                   ],
                 ),

@@ -67,11 +67,19 @@ class _LoginScreenState extends State<LoginScreen> {
       final responseJson = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Sau khi nhận phản hồi đăng nhập thành công:
         final prefs = await SharedPreferences.getInstance();
+        final currentTime = DateTime.now();
+        final expiryTime =
+            currentTime.add(Duration(minutes: 5)); // hoặc 10 phút, tùy theo API
+
         await prefs.setString(LocalStorageKey.accessToken,
             responseJson[LocalStorageKey.accessToken]);
         await prefs.setString(LocalStorageKey.refreshToken,
             responseJson[LocalStorageKey.refreshToken]);
+        await prefs.setString(
+            LocalStorageKey.accessTokenExpiry, expiryTime.toIso8601String());
+
         await prefs.setString(
             LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
         await prefs.setString(LocalStorageKey.email, email);

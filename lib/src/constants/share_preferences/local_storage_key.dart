@@ -4,5 +4,5 @@ class LocalStorageKey {
   static const userId = 'user_id';
   static const email = 'email';
   static const hasSeenWelcome = 'has_seen_welcome';
-  
+  static String accessTokenExpiry = '';
 }
