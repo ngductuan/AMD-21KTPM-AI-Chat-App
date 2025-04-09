@@ -43,13 +43,11 @@ on:
   pull_request:
     branches:
       - main
-      - master
+      - basic-feature
   push:
     branches:
       - main
-      - master
-      - develop
-      - ui/auth
+      - basic-feature
 
 name: "Build & Release"
 jobs:
