@@ -2,10 +2,12 @@ on:
   pull_request:
     branches:
       - main
+      - basic-feature
 
   push:
     branches:
       - main
+      - basic-feature
 
 name: "Build & Release"
 jobs:
