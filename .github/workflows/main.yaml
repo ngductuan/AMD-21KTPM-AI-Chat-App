@@ -1,9 +1,4 @@
 on:
-  pull_request:
-    branches:
-      - main
-      - basic-feature
-
   push:
     branches:
       - main
