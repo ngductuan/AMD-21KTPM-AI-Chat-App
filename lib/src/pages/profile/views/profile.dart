@@ -1,7 +1,9 @@
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_profile.dart';
 import 'package:flutter/material.dart';
 import '../../../constants/styles.dart';
@@ -17,6 +19,24 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int? selectedBotIndex;
+  String? userId;
+  String? email;
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      // Nếu không có email, mặc định hiển thị "Guest"
+      email = prefs.getString(LocalStorageKey.email) ?? "Guest";
+      // Nếu không có userId, có thể để rỗng hoặc hiển thị "Guest" tùy ý
+      userId = prefs.getString(LocalStorageKey.userId) ?? "";
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
 
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
     final RenderBox overlay =
@@ -25,9 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
     showMenu(
       context: context,
       position: RelativeRect.fromRect(
-        tapPosition &
-            const Size(spacing40,
-                spacing40), // Smaller rect for more precise positioning
+        tapPosition & const Size(spacing40, spacing40),
         Offset.zero & overlay.size,
       ),
       items: [
@@ -40,7 +58,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
           onTap: () {
-            // Add edit functionality
             Navigator.of(context)
                 .push(AnimationModal.fadeInModal(CreateBotModal()));
           },
@@ -88,11 +105,13 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings_outlined),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () async {
+              // Điều hướng sang SettingsScreen và đợi kết quả trả về
+              await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const SettingsScreen()));
+              // Sau khi trở về, load lại thông tin người dùng
+              _loadUserData();
             },
           ),
         ],
@@ -118,22 +137,28 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'StarrySia',
+                        email != null && email != "Guest"
+                            ? (email!.length > 10
+                                ? '${email!.substring(0, 10)}...'
+                                : email!)
+                            : 'Guest',
                         style: AppFontStyles.poppinsTitleSemiBold(
                             fontSize: fontSize20),
                       ),
                       Text(
-                        'ID 845289347',
+                        userId != null && userId!.isNotEmpty
+                            ? 'ID ${userId!.length > 5 ? '${userId!.substring(0, 5)}...' : userId!}'
+                            : 'ID: ',
                         style: AppFontStyles.poppinsRegular(
-                            fontSize: fontSize14,
-                            color: ColorConst.textGrayColor),
+                          fontSize: fontSize14,
+                          color: ColorConst.textGrayColor,
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-
             // My bots section
             Expanded(
               child: Container(
@@ -149,22 +174,21 @@ class _ProfilePageState extends State<ProfilePage> {
                             fontSize: fontSize18),
                       ),
                     ),
-
                     // Dynamically render bot list
                     ...List.generate(MockData.selfAiModels.length, (index) {
                       final bot = MockData.selfAiModels[index];
                       return GestureDetector(
-                          onTapUp: (TapUpDetails details) {
-                            setState(() {
-                              selectedBotIndex = index;
-                            });
-                            _showBotMenu(
-                                context, index, details.globalPosition);
-                          },
-                          child: AiBotItem(
-                            botData: MockData.selfAiModels[index],
-                            selfAI: true,
-                          ));
+                        onTapUp: (TapUpDetails details) {
+                          setState(() {
+                            selectedBotIndex = index;
+                          });
+                          _showBotMenu(context, index, details.globalPosition);
+                        },
+                        child: AiBotItem(
+                          botData: bot,
+                          selfAI: true,
+                        ),
+                      );
                     }),
                   ],
                 ),

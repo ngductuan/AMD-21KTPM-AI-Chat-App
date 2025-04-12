@@ -1,25 +1,61 @@
+import 'package:eco_chat_bot/firebase_options.dart';
 import 'package:eco_chat_bot/routes.dart';
+import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:eco_chat_bot/src/helpers/local_storage_helper.dart';
-import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/welcome.dart';
 import 'package:eco_chat_bot/src/pages/general/views/home.dart';
-import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // <-- Thêm dòng này
 
 Future<void> main() async {
-  // Local storage
-  await Hive.initFlutter();
-  await LocalStorageHelper.initLocalStorageHelper();
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    // Local storage
+    await Hive.initFlutter();
+    await LocalStorageHelper.initLocalStorageHelper();
+
+    // Check if user has seen welcome screen
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenWelcome = prefs.getBool(LocalStorageKey.hasSeenWelcome) ?? false;
+
+    runApp(MyApp(
+      initialScreen: hasSeenWelcome ? const HomeScreen() : const WelcomeScreen(),
+    ));
+  } catch (e) {
+    // Handle initialization errors
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Failed to initialize app: $e'),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget initialScreen;
+
+  const MyApp({super.key, required this.initialScreen});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo', debugShowCheckedModeBanner: false, routes: routes, home: const HomeScreen());
+      title: 'Eco Chat Bot',
+      debugShowCheckedModeBanner: false,
+      routes: routes,
+      home: initialScreen,
+    );
   }
 }

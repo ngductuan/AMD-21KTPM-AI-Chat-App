@@ -30,6 +30,7 @@ class ColorConst {
   static const backgroundWhiteColor = Color(0xFFFFFFFF);
   static const backgroundBlackColor = Color(0xFF000000);
   static const backgroundRedColor = Color(0xFFFF3B30);
+  static const backgroundYellowColor = Color(0xFFFFCC00);
   static const backgroundLightGrayColor =
       Color(0xFFE5E5E5); // & indicator color
   static const backgroundLightGrayColor2 = Color(0xFFEFEFF4);
@@ -40,6 +41,7 @@ class ColorConst {
   static const textBlackColor = Color(0xFF000000);
   static const textWhiteColor = Color(0xFFFFFFFF);
   static const textRedColor = Color(0xFFFF3B30);
+  static const textGradientBlueColor = Color(0x3B82F6);
 
   static const grayOverlayColor = Color(0xFFAEAEB2);
   static const blueColor = Color(0xFF3b82f6);
