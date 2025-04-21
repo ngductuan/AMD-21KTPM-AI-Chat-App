@@ -13,6 +13,12 @@ class CreateBotModal extends StatefulWidget {
 }
 
 class _CreateBotModalState extends State<CreateBotModal> {
+  String? _selectedFilePath;
+
+  void _clearSelection() {
+    setState(() => _selectedFilePath = null);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -34,7 +40,8 @@ class _CreateBotModalState extends State<CreateBotModal> {
                   children: [
                     Text(
                       'Create Your Own Bot',
-                      style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
+                      style: AppFontStyles.poppinsTitleSemiBold(
+                          fontSize: fontSize16),
                     ),
                     SizedBox(
                       width: spacing32,
@@ -53,12 +60,15 @@ class _CreateBotModalState extends State<CreateBotModal> {
                 SizedBox(height: spacing24),
 
                 // Name Field
-                InputFormField.build('Name', 'Enter a name for your bot', required: true),
+                InputFormField.build('Name', 'Enter a name for your bot',
+                    required: true),
 
                 SizedBox(height: spacing24),
 
                 // Instructions Field
-                InputFormField.build('Instructions (Optional)', 'Enter instructions for the bot', maxLines: 6),
+                InputFormField.build(
+                    'Instructions (Optional)', 'Enter instructions for the bot',
+                    maxLines: 6),
 
                 SizedBox(height: spacing24),
 
@@ -66,44 +76,81 @@ class _CreateBotModalState extends State<CreateBotModal> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Knowledge base (Optional)', style: AppFontStyles.poppinsTextBold()),
+                    Text('Knowledge base (Optional)',
+                        style: AppFontStyles.poppinsTextBold()),
                     SizedBox(height: spacing4),
                     Text(
                       'Enhance your bot’s responses by adding custom knowledge',
-                      style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
+                      style: AppFontStyles.poppinsRegular(
+                          fontSize: fontSize14,
+                          color: ColorConst.textGrayColor),
                     ),
                     SizedBox(height: spacing20),
+
+                    // File preview or add button
                     Center(
-                      child: DottedBorder(
-                        strokeWidth: 1,
-                        dashPattern: [4, 2], // Dashed pattern
-                        borderType: BorderType.RRect, // Rounded rectangle
-                        radius: Radius.circular(radius12), // Border radius
-                        color: ColorConst.textHighlightColor,
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: spacing32,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              overlayColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
+                      child: _selectedFilePath == null
+                          ? DottedBorder(
+                              strokeWidth: 1,
+                              dashPattern: [4, 2],
+                              borderType: BorderType.RRect,
+                              radius: Radius.circular(radius12),
+                              color: ColorConst.textHighlightColor,
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: spacing32,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    overlayColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(radius12),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    SelectKnowledgeSourcePopup.build(
+                                      context,
+                                      onLocalFileSelected: (path) {
+                                        setState(
+                                            () => _selectedFilePath = path);
+                                      },
+                                    );
+                                  },
+                                  child: Text(
+                                    "+ Add knowledge source",
+                                    style: AppFontStyles.poppinsTextBold(),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: spacing12, vertical: spacing8),
+                              decoration: BoxDecoration(
+                                color: ColorConst.backgroundLightGrayColor,
                                 borderRadius: BorderRadius.circular(radius12),
                               ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _selectedFilePath!.split('/').last,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppFontStyles.poppinsRegular(),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.close,
+                                        color: Colors.redAccent),
+                                    onPressed: _clearSelection,
+                                  ),
+                                ],
+                              ),
                             ),
-                            onPressed: () {
-                              // Open the SelectKnowledgeSourcePopup
-                              SelectKnowledgeSourcePopup.build(context);
-                            },
-                            child: Text(
-                              "+ Add knowledge source",
-                              style: AppFontStyles.poppinsTextBold(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
+                    ),
                   ],
                 ),
 

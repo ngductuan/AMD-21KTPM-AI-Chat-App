@@ -13,7 +13,8 @@ class ImportWebSourcePopup {
 
     void closeOverlay(BuildContext context) {
       overlayEntry?.remove();
-      SelectKnowledgeSourcePopup.build(context);
+      SelectKnowledgeSourcePopup.build(context,
+          onLocalFileSelected: (String) {});
     }
 
     // Declare overlayEntry before use
@@ -37,7 +38,8 @@ class ImportWebSourcePopup {
                     children: [
                       Text(
                         'Import Web Resource',
-                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
+                        style: AppFontStyles.poppinsTitleSemiBold(
+                            fontSize: fontSize16),
                       ),
                       SizedBox(
                         width: spacing32,
@@ -58,12 +60,14 @@ class ImportWebSourcePopup {
                   SizedBox(height: spacing24),
 
                   // Name Field
-                  InputFormField.build('Name', 'Enter knowledge unit name', required: true),
+                  InputFormField.build('Name', 'Enter knowledge unit name',
+                      required: true),
 
                   SizedBox(height: spacing24),
 
                   // Instructions Field
-                  InputFormField.build('Web URL', 'https://example.com', required: true),
+                  InputFormField.build('Web URL', 'https://example.com',
+                      required: true),
 
                   SizedBox(height: spacing32),
 
@@ -72,7 +76,10 @@ class ImportWebSourcePopup {
                     decoration: BoxDecoration(
                       color: ColorConst.bluePastelColor,
                       borderRadius: BorderRadius.circular(spacing12),
-                      border: Border.all(color: ColorConst.blueColor.withAlpha((0.5 * 255).toInt()), width: 1),
+                      border: Border.all(
+                          color: ColorConst.blueColor
+                              .withAlpha((0.5 * 255).toInt()),
+                          width: 1),
                     ),
                     padding: EdgeInsets.all(15),
                     child: Column(
@@ -80,7 +87,8 @@ class ImportWebSourcePopup {
                       children: [
                         Text(
                           'Current Limitation:',
-                          style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16, color: Colors.blue),
+                          style: AppFontStyles.poppinsTitleSemiBold(
+                              fontSize: fontSize16, color: Colors.blue),
                         ),
                         SizedBox(height: spacing8),
                         Text(
@@ -97,7 +105,8 @@ class ImportWebSourcePopup {
                         ),
                         Text(
                           'myjarvischat@gmail.com',
-                          style: AppFontStyles.poppinsRegular(color: Colors.blue),
+                          style:
+                              AppFontStyles.poppinsRegular(color: Colors.blue),
                         ),
                       ],
                     ),

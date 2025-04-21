@@ -40,7 +40,7 @@ class AssetPath {
 
   static const Map<String, String> knowledgeSource = {
     "local_file": 'assets/icons/ic_local_file.png',
-    "website":  'assets/icons/ic_website.png',
+    "website": 'assets/icons/ic_website.png',
     "google_drive": 'assets/icons/ic_google_drive.png',
     "slack": 'assets/icons/ic_slack.png',
     "confluence": 'assets/icons/ic_confluence.png',
@@ -52,6 +52,7 @@ class AssetPath {
   // Knowledge source
   static const String icLocalFile = 'assets/icons/ic_local_file.png';
   static const String icUpload = 'assets/icons/ic_upload.svg';
+  static const String noData = 'assets/images/no_data.svg';
 
   // Others
   static const String noDataIcon = 'assets/icons/no_data.svg';
@@ -77,6 +78,9 @@ class AssetPath {
   static const String bellAfterNavIcon = 'assets/icons/nav_bar/bell_after.svg';
   static const String meBeforeNavIcon = 'assets/icons/nav_bar/me_before.svg';
   static const String meAfterNavIcon = 'assets/icons/nav_bar/me_after.svg';
+  static const String dataBeforeNavIcon =
+      'assets/icons/nav_bar/data_before.svg';
+  static const String dataAfterNavIcon = 'assets/icons/nav_bar/data_after.svg';
 
   //Asset for the star icon
   static const String black_star = 'assets/icons/black_star.svg';
