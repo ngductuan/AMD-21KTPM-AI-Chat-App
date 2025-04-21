@@ -4,6 +4,7 @@ import 'package:eco_chat_bot/src/constants/asset_path.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:eco_chat_bot/src/pages/data/widgets/create_knowledge_popup.dart';
+import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_info_popup.dart';
 
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 
@@ -52,7 +53,7 @@ class _DataScreenState extends State<DataScreen> {
       setState(() {
         _knowledgeData = data.map((e) {
           return {
-            'id': e['knowledgeId'],
+            'id': e['id'],
             'knowledgeName': e['knowledgeName'],
             'description': e['description'],
             'createdAt': e['createdAt'],
@@ -200,7 +201,23 @@ class _DataScreenState extends State<DataScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               onTap: () {
-                                // TODO: Mở chi tiết knowledge, truyền item['id']
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => KnowledgeInfoPopup(
+                                    knowledge: item,
+                                    onDeleted: () {
+                                      setState(() {
+                                        _knowledgeData.removeWhere(
+                                            (e) => e['id'] == item['id']);
+                                      });
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text('Knowledge deleted')),
+                                      );
+                                    },
+                                  ),
+                                );
                               },
                             );
                           },

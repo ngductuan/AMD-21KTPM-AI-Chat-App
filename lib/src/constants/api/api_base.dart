@@ -173,7 +173,7 @@ class ApiBase {
 
     // Gửi GET
     final response = await http.get(uri, headers: headers);
-
+    debugPrint("Get knowledge:" + response.body);
     // Xử lý kết quả
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
@@ -197,7 +197,7 @@ class ApiBase {
     final response = await http.delete(uri, headers: headers);
 
     // Xử lý kết quả
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       // API trả về body là "true" hoặc "false"
       final result = jsonDecode(response.body) as bool;
       return result;
