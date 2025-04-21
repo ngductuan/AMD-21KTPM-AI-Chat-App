@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiBase {
   // Base URLs
@@ -133,12 +134,12 @@ class ApiBase {
     final response = await http.post(url, headers: headers, body: body);
 
     // Xử lý kết quả
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception(
-        'Failed to create knowledge: [${response.statusCode}] ${response.reasonPhrase}',
-      );
+          'Failed to create knowledge: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
     }
   }
 
@@ -174,12 +175,12 @@ class ApiBase {
     final response = await http.get(uri, headers: headers);
 
     // Xử lý kết quả
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception(
-        'Failed to fetch knowledges: [${response.statusCode}] ${response.reasonPhrase}',
-      );
+          'Failed to fetch knowledges: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
     }
   }
 
