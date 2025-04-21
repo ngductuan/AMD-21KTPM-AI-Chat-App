@@ -285,4 +285,93 @@ class ApiBase {
       );
     }
   }
+
+  // Upload dữ liệu từ Slack vào một Knowledge đã tạo
+  // Tham số:
+  //  + [knowledgeId]: ID của knowledge cần nạp
+  //  + [unitName]: tên đơn vị (unit) hiển thị trong tri thức
+  //  + [slackWorkspace]: tên workspace trên Slack
+  //  + [slackBotToken]: Bot token để truy cập Slack API
+  //  Trả về JSON của Knowledge Data Source nếu thành công
+  Future<Map<String, dynamic>> uploadKnowledgeFromSlack({
+    required String knowledgeId,
+    required String unitName,
+    required String slackWorkspace,
+    required String slackBotToken,
+  }) async {
+    // 1. Lấy header (Bearer token + x-jarvis-guid)
+    final headers = await getAuthHeaders();
+    // Đảm bảo Content-Type là JSON
+    headers['Content-Type'] = 'application/json';
+
+    // 2. Build URI
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/slack',
+    );
+
+    // 3. Chuẩn bị body JSON
+    final body = jsonEncode({
+      'unitName': unitName,
+      'slackWorkspace': slackWorkspace,
+      'slackBotToken': slackBotToken,
+    });
+
+    // 4. Gửi POST
+    final response = await http.post(uri, headers: headers, body: body);
+
+    // 5. Xử lý kết quả
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to upload knowledge from Slack: [${response.statusCode}] ${response.reasonPhrase}',
+      );
+    }
+  }
+
+  // Upload dữ liệu từ Confluence vào một Knowledge đã tạo
+  // Tham số:
+  //  + [knowledgeId]: ID của knowledge cần nạp
+  //  + [unitName]: tên đơn vị (unit) hiển thị trong tri thức
+  //  + [wikiPageUrl]: URL trang Confluence cần crawl
+  //  + [confluenceUsername]: username để truy cập Confluence
+  //  + [confluenceAccessToken]: token truy cập Confluence
+  // Trả về JSON của Knowledge Data Source nếu thành công
+  Future<Map<String, dynamic>> uploadKnowledgeFromConfluence({
+    required String knowledgeId,
+    required String unitName,
+    required String wikiPageUrl,
+    required String confluenceUsername,
+    required String confluenceAccessToken,
+  }) async {
+    // 1. Lấy header (Bearer token + x-jarvis-guid)
+    final headers = await getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    // 2. Build URI
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/confluence',
+    );
+
+    // 3. Chuẩn bị body JSON
+    final body = jsonEncode({
+      'unitName': unitName,
+      'wikiPageUrl': wikiPageUrl,
+      'confluenceUsername': confluenceUsername,
+      'confluenceAccessToken': confluenceAccessToken,
+    });
+
+    // 4. Gửi POST
+    final response = await http.post(uri, headers: headers, body: body);
+
+    // 5. Xử lý kết quả
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to upload knowledge from Confluence: '
+        '[${response.statusCode}] ${response.reasonPhrase}',
+      );
+    }
+  }
 }
