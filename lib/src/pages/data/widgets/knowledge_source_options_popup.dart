@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
-import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/import_web_source_popup.dart';
+
+import 'package:eco_chat_bot/src/pages/data/widgets/import_web_source_popup.dart';
 import 'package:eco_chat_bot/src/pages/data/widgets/local_knowledge_source_popup.dart';
 
 /// A popup that lets the user select a source to add knowledge from.
@@ -90,7 +91,10 @@ class KnowledgeSourceOptionsPopup {
                               onFilesSelected: onLocalFileSelected,
                             );
                           } else if (item['value'] == 'website') {
-                            ImportWebSourcePopup.build(context);
+                            ImportWebSourcePopup.build(
+                              context,
+                              knowledgeId: knowledgeId, // truyền từ cha xuống
+                            );
                           } else {
                             // other source handlers
                           }

@@ -1,28 +1,31 @@
-import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/select_knowledge_source_popup.dart';
-import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
-import 'package:eco_chat_bot/src/widgets/input_form_field.dart';
 import 'package:flutter/material.dart';
-
-import '../../../constants/styles.dart';
+import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/constants/api/api_base.dart';
+import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 
 class ImportWebSourcePopup {
-  static void build(BuildContext context) {
-    final overlay = Overlay.of(context);
+  static void build(
+    BuildContext context, {
+    required String knowledgeId,
+  }) {
+    // Lấy overlay, fallback sang Navigator nếu cần
+    final overlay = Overlay.of(context) ?? Navigator.of(context).overlay!;
+    OverlayEntry? entry;
 
-    OverlayEntry? overlayEntry;
+    // Controllers để đọc input
+    final unitNameController = TextEditingController();
+    final webUrlController = TextEditingController();
 
-    void closeOverlay(BuildContext context) {
-      overlayEntry?.remove();
-      SelectKnowledgeSourcePopup.build(context,
-          onLocalFileSelected: (String) {});
+    void _close() {
+      entry?.remove();
     }
 
-    // Declare overlayEntry before use
-    overlayEntry = OverlayEntry(
-      builder: (context) => Material(
+    entry = OverlayEntry(
+      builder: (overlayContext) => Material(
         color: Colors.black.withOpacity(0.5),
         child: Center(
           child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: padding16),
             decoration: BoxDecoration(
               color: ColorConst.backgroundWhiteColor,
               borderRadius: BorderRadius.circular(radius12),
@@ -32,7 +35,7 @@ class ImportWebSourcePopup {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Title and Close Button
+                  // Tiêu đề + đóng
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -41,97 +44,83 @@ class ImportWebSourcePopup {
                         style: AppFontStyles.poppinsTitleSemiBold(
                             fontSize: fontSize16),
                       ),
-                      SizedBox(
-                        width: spacing32,
-                        height: spacing32,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            size: spacing20,
-                          ),
-                          onPressed: () {
-                            closeOverlay(context);
-                          },
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: _close,
                       ),
                     ],
                   ),
 
-                  SizedBox(height: spacing24),
+                  const SizedBox(height: spacing24),
 
-                  // Name Field
-                  InputFormField.build('Name', 'Enter knowledge unit name',
-                      required: true),
-
-                  SizedBox(height: spacing24),
-
-                  // Instructions Field
-                  InputFormField.build('Web URL', 'https://example.com',
-                      required: true),
-
-                  SizedBox(height: spacing32),
-
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: ColorConst.bluePastelColor,
-                      borderRadius: BorderRadius.circular(spacing12),
-                      border: Border.all(
-                          color: ColorConst.blueColor
-                              .withAlpha((0.5 * 255).toInt()),
-                          width: 1),
-                    ),
-                    padding: EdgeInsets.all(15),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Current Limitation:',
-                          style: AppFontStyles.poppinsTitleSemiBold(
-                              fontSize: fontSize16, color: Colors.blue),
-                        ),
-                        SizedBox(height: spacing8),
-                        Text(
-                          '• You can load up to 64 pages at a time',
-                          style: AppFontStyles.poppinsRegular(),
-                        ),
-                        SizedBox(height: spacing4),
-                        Text(
-                          '• Need more? Contact us at',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          'myjarvischat@gmail.com',
-                          style:
-                              AppFontStyles.poppinsRegular(color: Colors.blue),
-                        ),
-                      ],
+                  // Nhập unit name
+                  TextField(
+                    controller: unitNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Unit Name',
+                      hintText: 'Enter knowledge unit name',
                     ),
                   ),
 
-                  SizedBox(height: spacing40),
+                  const SizedBox(height: spacing24),
 
-                  // Buttons Row
+                  // Nhập web URL
+                  TextField(
+                    controller: webUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Web URL',
+                      hintText: 'https://example.com',
+                    ),
+                  ),
+
+                  const SizedBox(height: spacing32),
+
+                  // Nút Cancel / Import
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GradientFormButton(
                         text: 'Cancel',
-                        onPressed: () {
-                          closeOverlay(context);
-                        },
                         isActiveButton: false,
+                        onPressed: _close,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: spacing12),
-                        child: GradientFormButton(
-                          text: 'Import',
-                          onPressed: () {},
-                          isActiveButton: true,
-                        ),
+                      const SizedBox(width: spacing12),
+                      GradientFormButton(
+                        text: 'Import',
+                        isActiveButton: true,
+                        onPressed: () {
+                          final unitName = unitNameController.text.trim();
+                          final webUrl = webUrlController.text.trim();
+                          if (unitName.isEmpty || webUrl.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please fill both fields'),
+                              ),
+                            );
+                            return;
+                          }
+                          // Gọi API
+                          ApiBase()
+                              .uploadKnowledgeFromWeb(
+                            knowledgeId: knowledgeId,
+                            unitName: unitName,
+                            webUrl: webUrl,
+                          )
+                              .then((resp) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Upload từ web thành công!'),
+                              ),
+                            );
+                            _close();
+                          }).catchError((e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Lỗi khi upload: $e'),
+                              ),
+                            );
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -143,7 +132,6 @@ class ImportWebSourcePopup {
       ),
     );
 
-    // Now insert the overlay entry
-    overlay.insert(overlayEntry);
+    overlay.insert(entry);
   }
 }
