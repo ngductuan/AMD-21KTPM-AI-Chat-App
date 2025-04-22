@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
-import 'package:eco_chat_bot/src/constants/asset_path.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:eco_chat_bot/src/pages/data/widgets/create_knowledge_popup.dart';
