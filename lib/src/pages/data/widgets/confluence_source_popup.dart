@@ -4,7 +4,7 @@ import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 
-class ImportWebSourcePopup {
+class ConfluenceSourcePopup {
   static void build(
     BuildContext context, {
     required String knowledgeId,
@@ -13,10 +13,11 @@ class ImportWebSourcePopup {
     OverlayEntry? entry;
 
     final unitNameController = TextEditingController();
-    final webUrlController = TextEditingController();
+    final pageUrlController = TextEditingController();
+    final usernameController = TextEditingController();
+    final accessTokenController = TextEditingController();
     final loading = ValueNotifier<bool>(false);
 
-    // Chỉ remove overlay, không dispose notifier
     void _close() {
       entry?.remove();
     }
@@ -38,13 +39,15 @@ class ImportWebSourcePopup {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Tiêu đề & close
+                    // Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Import Web Resource',
-                            style: AppFontStyles.poppinsTitleSemiBold(
-                                fontSize: fontSize16)),
+                        Text(
+                          'Import from Confluence',
+                          style: AppFontStyles.poppinsTitleSemiBold(
+                              fontSize: fontSize16),
+                        ),
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: isLoading ? null : _close,
@@ -52,26 +55,60 @@ class ImportWebSourcePopup {
                       ],
                     ),
                     const SizedBox(height: spacing24),
+
+                    // Unit Name
                     TextField(
                       controller: unitNameController,
-                      decoration: const InputDecoration(labelText: 'Unit Name'),
+                      decoration: const InputDecoration(
+                        labelText: 'Unit Name',
+                        hintText: 'e.g. Project Docs',
+                      ),
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: spacing16),
+
+                    // Wiki Page URL
+                    TextField(
+                      controller: pageUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Wiki Page URL',
+                        hintText: 'https://yourcompany.atlassian.net/...',
+                      ),
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: spacing16),
+
+                    // Username
+                    TextField(
+                      controller: usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                      ),
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: spacing16),
+
+                    // Access Token
+                    TextField(
+                      controller: accessTokenController,
+                      decoration: const InputDecoration(
+                        labelText: 'Access Token',
+                        hintText: 'Confluence API token',
+                      ),
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: spacing24),
-                    TextField(
-                      controller: webUrlController,
-                      decoration: const InputDecoration(labelText: 'Web URL'),
-                      enabled: !isLoading,
-                    ),
-                    const SizedBox(height: spacing32),
+
                     if (isLoading) const CircularProgressIndicator(),
                     const SizedBox(height: spacing16),
+
+                    // Buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         GradientFormButton(
                           text: 'Cancel',
-                          isActiveButton: false,
+                          isActiveButton: !isLoading,
                           onPressed: _close,
                         ),
                         const SizedBox(width: spacing12),
@@ -80,44 +117,45 @@ class ImportWebSourcePopup {
                           isActiveButton: !isLoading,
                           onPressed: () {
                             final unit = unitNameController.text.trim();
-                            final url = webUrlController.text.trim();
-                            if (unit.isEmpty || url.isEmpty) {
+                            final url = pageUrlController.text.trim();
+                            final user = usernameController.text.trim();
+                            final token = accessTokenController.text.trim();
+                            if ([unit, url, user, token]
+                                .any((s) => s.isEmpty)) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('Please fill both fields')),
+                                    content: Text('Please fill all fields')),
                               );
                               return;
                             }
                             loading.value = true;
                             ApiBase()
-                                .uploadKnowledgeFromWeb(
+                                .uploadKnowledgeFromConfluence(
                               knowledgeId: knowledgeId,
                               unitName: unit,
-                              webUrl: url,
+                              wikiPageUrl: url,
+                              confluenceUsername: user,
+                              confluenceAccessToken: token,
                             )
                                 .then((_) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('Upload thành công!')),
+                                    content: Text(
+                                        'Import from Confluence thành công!')),
                               );
                             }).catchError((e) {
-                              // parse JSON nếu có
                               String msg = 'Internal server error';
                               try {
-                                final m = jsonDecode(
-                                  RegExp(r'\{.*\}')
-                                          .firstMatch(e.toString())
-                                          ?.group(0) ??
-                                      '{}',
-                                ) as Map<String, dynamic>;
+                                final m = jsonDecode(RegExp(r'\{.*\}')
+                                        .firstMatch(e.toString())
+                                        ?.group(0) ??
+                                    '{}') as Map<String, dynamic>;
                                 msg = m['message'] ?? msg;
                               } catch (_) {}
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Lỗi: $msg')),
                               );
-                            }).whenComplete(() {
-                              _close();
-                            });
+                            }).whenComplete(_close);
                           },
                         ),
                       ],

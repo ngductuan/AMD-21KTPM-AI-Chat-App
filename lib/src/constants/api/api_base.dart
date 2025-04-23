@@ -248,8 +248,7 @@ class ApiBase {
     // 5) Send & parse response
     final streamed = await request.send();
     final resp = await http.Response.fromStream(streamed);
-    debugPrint(
-        'uploadKnowledgeLocalFile resp: ${resp.statusCode} ${resp.body}');
+    // debugPrint('uploadKnowledgeLocalFile resp: ${resp.statusCode} ${resp.body}');
 
     if (resp.statusCode == 200 || resp.statusCode == 201) {
       return jsonDecode(resp.body) as Map<String, dynamic>;
@@ -287,16 +286,60 @@ class ApiBase {
       'unitName': unitName,
       'webUrl': webUrl,
     });
+    debugPrint('Headers: ${headers.toString()}');
+    debugPrint('Web body: ${body}');
+    debugPrint('Knowledge id: ${knowledgeId}');
 
-    // 4. Gửi POST
+    // Gửi POST
     final response = await http.post(uri, headers: headers, body: body);
+    // ===== ĐỔI PHẦN LOGGING =====
+    debugPrint('–– Response status: ${response.statusCode}');
+    // Với JSON dài, bạn có thể tăng wrapWidth để không bị cắt ngắn
+    debugPrint('–– Response body: ${response.body}', wrapWidth: 2048);
 
-    // 5. Xử lý kết quả
+    // Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      // Nếu API lỗi, in luôn cả body để xem chi tiết
+      throw Exception(
+        'Failed to upload knowledge from web: '
+        '[${response.statusCode}] ${response.reasonPhrase}\n'
+        'Body: ${response.body}',
+      );
+    }
+  }
+
+  // Upload dữ liệu từ Google Drive vào nguồn tri thức
+  Future<Map<String, dynamic>> uploadKnowledgeFromGoogleDrive({
+    required String knowledgeId,
+    required String googleDriveToken,
+  }) async {
+    // 1) Lấy header (Bearer token + x-jarvis-guid)
+    final headers = await getAuthHeaders();
+    // MultipartRequest tự set Content-Type, nên gỡ bỏ nếu có
+    headers.remove('Content-Type');
+
+    // 2) Khởi tạo MultipartRequest
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/google-drive',
+    );
+    final request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(headers)
+      // 3) Đính token vào field (hoặc bạn có thể dùng header tuỳ backend)
+      ..fields['driveToken'] = googleDriveToken;
+
+    // 4) Gửi và chờ response
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+
+    // 5) Xử lý kết quả
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception(
-        'Failed to upload knowledge from web: [${response.statusCode}] ${response.reasonPhrase}',
+        'Failed to import from Drive: [${response.statusCode}] '
+        '${response.reasonPhrase}\nBody: ${response.body}',
       );
     }
   }

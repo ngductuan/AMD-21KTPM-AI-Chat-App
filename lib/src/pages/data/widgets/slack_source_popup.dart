@@ -4,7 +4,7 @@ import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 
-class ImportWebSourcePopup {
+class SlackSourcePopup {
   static void build(
     BuildContext context, {
     required String knowledgeId,
@@ -13,10 +13,10 @@ class ImportWebSourcePopup {
     OverlayEntry? entry;
 
     final unitNameController = TextEditingController();
-    final webUrlController = TextEditingController();
+    final workspaceController = TextEditingController();
+    final botTokenController = TextEditingController();
     final loading = ValueNotifier<bool>(false);
 
-    // Chỉ remove overlay, không dispose notifier
     void _close() {
       entry?.remove();
     }
@@ -38,13 +38,15 @@ class ImportWebSourcePopup {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Tiêu đề & close
+                    // Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Import Web Resource',
-                            style: AppFontStyles.poppinsTitleSemiBold(
-                                fontSize: fontSize16)),
+                        Text(
+                          'Import from Slack',
+                          style: AppFontStyles.poppinsTitleSemiBold(
+                              fontSize: fontSize16),
+                        ),
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: isLoading ? null : _close,
@@ -52,26 +54,50 @@ class ImportWebSourcePopup {
                       ],
                     ),
                     const SizedBox(height: spacing24),
+
+                    // Unit Name
                     TextField(
                       controller: unitNameController,
-                      decoration: const InputDecoration(labelText: 'Unit Name'),
+                      decoration: const InputDecoration(
+                        labelText: 'Unit Name',
+                        hintText: 'e.g. Slack Channel',
+                      ),
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: spacing16),
+
+                    // Workspace
+                    TextField(
+                      controller: workspaceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Slack Workspace',
+                        hintText: 'your-workspace',
+                      ),
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: spacing16),
+
+                    // Bot Token
+                    TextField(
+                      controller: botTokenController,
+                      decoration: const InputDecoration(
+                        labelText: 'Slack Bot Token',
+                        hintText: 'xoxb-...',
+                      ),
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: spacing24),
-                    TextField(
-                      controller: webUrlController,
-                      decoration: const InputDecoration(labelText: 'Web URL'),
-                      enabled: !isLoading,
-                    ),
-                    const SizedBox(height: spacing32),
+
                     if (isLoading) const CircularProgressIndicator(),
                     const SizedBox(height: spacing16),
+
+                    // Buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         GradientFormButton(
                           text: 'Cancel',
-                          isActiveButton: false,
+                          isActiveButton: !isLoading,
                           onPressed: _close,
                         ),
                         const SizedBox(width: spacing12),
@@ -80,44 +106,42 @@ class ImportWebSourcePopup {
                           isActiveButton: !isLoading,
                           onPressed: () {
                             final unit = unitNameController.text.trim();
-                            final url = webUrlController.text.trim();
-                            if (unit.isEmpty || url.isEmpty) {
+                            final ws = workspaceController.text.trim();
+                            final token = botTokenController.text.trim();
+                            if (unit.isEmpty || ws.isEmpty || token.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('Please fill both fields')),
+                                    content: Text('Please fill all fields')),
                               );
                               return;
                             }
                             loading.value = true;
                             ApiBase()
-                                .uploadKnowledgeFromWeb(
+                                .uploadKnowledgeFromSlack(
                               knowledgeId: knowledgeId,
                               unitName: unit,
-                              webUrl: url,
+                              slackWorkspace: ws,
+                              slackBotToken: token,
                             )
                                 .then((_) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('Upload thành công!')),
+                                    content:
+                                        Text('Import from Slack thành công!')),
                               );
                             }).catchError((e) {
-                              // parse JSON nếu có
                               String msg = 'Internal server error';
                               try {
-                                final m = jsonDecode(
-                                  RegExp(r'\{.*\}')
-                                          .firstMatch(e.toString())
-                                          ?.group(0) ??
-                                      '{}',
-                                ) as Map<String, dynamic>;
+                                final m = jsonDecode(RegExp(r'\{.*\}')
+                                        .firstMatch(e.toString())
+                                        ?.group(0) ??
+                                    '{}') as Map<String, dynamic>;
                                 msg = m['message'] ?? msg;
                               } catch (_) {}
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Lỗi: $msg')),
                               );
-                            }).whenComplete(() {
-                              _close();
-                            });
+                            }).whenComplete(_close);
                           },
                         ),
                       ],
