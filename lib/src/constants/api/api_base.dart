@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiBase {
   // Base URLs
@@ -133,12 +136,12 @@ class ApiBase {
     final response = await http.post(url, headers: headers, body: body);
 
     // Xử lý kết quả
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception(
-        'Failed to create knowledge: [${response.statusCode}] ${response.reasonPhrase}',
-      );
+          'Failed to create knowledge: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
     }
   }
 
@@ -172,14 +175,14 @@ class ApiBase {
 
     // Gửi GET
     final response = await http.get(uri, headers: headers);
-
+    //debugPrint("Get knowledge:" + response.body);
     // Xử lý kết quả
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception(
-        'Failed to fetch knowledges: [${response.statusCode}] ${response.reasonPhrase}',
-      );
+          'Failed to fetch knowledges: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
     }
   }
 
@@ -196,7 +199,7 @@ class ApiBase {
     final response = await http.delete(uri, headers: headers);
 
     // Xử lý kết quả
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       // API trả về body là "true" hoặc "false"
       final result = jsonDecode(response.body) as bool;
       return result;
@@ -216,32 +219,43 @@ class ApiBase {
     required String knowledgeId,
     required String filePath,
   }) async {
-    // 1. Lấy header (Bearer token)
+    // 1) Get auth headers
     final headers = await getAuthHeaders();
-    // MultipartRequest sẽ tự set Content-Type, nên remove header cũ:
+    // MultipartRequest will set its own Content-Type, so remove JSON header:
     headers.remove('Content-Type');
 
-    // 2. Build URI
+    // 2) Build URI
     final uri = Uri.parse(
       '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/local-file',
     );
 
-    // 3. Tạo multipart request
+    // 3) Detect the file's MIME type from its extension:
+    final mimeType = lookupMimeType(filePath) ?? 'application/octet-stream';
+    final parts = mimeType.split('/');
+    final mediaType = MediaType(parts[0], parts[1]);
+
+    // 4) Create & attach the multipart file with explicit contentType:
     final request = http.MultipartRequest('POST', uri)
       ..headers.addAll(headers)
-      // field name “file” theo spec, từ đường dẫn file trên thiết bị
-      ..files.add(await http.MultipartFile.fromPath('file', filePath));
+      ..files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          filePath,
+          contentType: mediaType,
+        ),
+      );
 
-    // 4. Gửi và chờ response
-    final streamedResp = await request.send();
-    final resp = await http.Response.fromStream(streamedResp);
+    // 5) Send & parse response
+    final streamed = await request.send();
+    final resp = await http.Response.fromStream(streamed);
+    // debugPrint('uploadKnowledgeLocalFile resp: ${resp.statusCode} ${resp.body}');
 
-    // 5. Xử lý kết quả
-    if (resp.statusCode == 200) {
+    if (resp.statusCode == 200 || resp.statusCode == 201) {
       return jsonDecode(resp.body) as Map<String, dynamic>;
     } else {
       throw Exception(
-        'Failed to upload knowledge file: [${resp.statusCode}] ${resp.reasonPhrase}',
+        'Failed to upload local file: [${resp.statusCode}] ${resp.reasonPhrase}\n'
+        'Body: ${resp.body}',
       );
     }
   }
@@ -272,16 +286,60 @@ class ApiBase {
       'unitName': unitName,
       'webUrl': webUrl,
     });
+    debugPrint('Headers: ${headers.toString()}');
+    debugPrint('Web body: ${body}');
+    debugPrint('Knowledge id: ${knowledgeId}');
 
-    // 4. Gửi POST
+    // Gửi POST
     final response = await http.post(uri, headers: headers, body: body);
+    // ===== ĐỔI PHẦN LOGGING =====
+    debugPrint('–– Response status: ${response.statusCode}');
+    // Với JSON dài, bạn có thể tăng wrapWidth để không bị cắt ngắn
+    debugPrint('–– Response body: ${response.body}', wrapWidth: 2048);
 
-    // 5. Xử lý kết quả
-    if (response.statusCode == 200) {
+    // Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      // Nếu API lỗi, in luôn cả body để xem chi tiết
+      throw Exception(
+        'Failed to upload knowledge from web: '
+        '[${response.statusCode}] ${response.reasonPhrase}\n'
+        'Body: ${response.body}',
+      );
+    }
+  }
+
+  // Upload dữ liệu từ Google Drive vào nguồn tri thức
+  Future<Map<String, dynamic>> uploadKnowledgeFromGoogleDrive({
+    required String knowledgeId,
+    required String googleDriveToken,
+  }) async {
+    // 1) Lấy header (Bearer token + x-jarvis-guid)
+    final headers = await getAuthHeaders();
+    // MultipartRequest tự set Content-Type, nên gỡ bỏ nếu có
+    headers.remove('Content-Type');
+
+    // 2) Khởi tạo MultipartRequest
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/google-drive',
+    );
+    final request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(headers)
+      // 3) Đính token vào field (hoặc bạn có thể dùng header tuỳ backend)
+      ..fields['driveToken'] = googleDriveToken;
+
+    // 4) Gửi và chờ response
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+
+    // 5) Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception(
-        'Failed to upload knowledge from web: [${response.statusCode}] ${response.reasonPhrase}',
+        'Failed to import from Drive: [${response.statusCode}] '
+        '${response.reasonPhrase}\nBody: ${response.body}',
       );
     }
   }

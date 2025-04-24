@@ -13,6 +13,21 @@ class CreateBotModal extends StatefulWidget {
 }
 
 class _CreateBotModalState extends State<CreateBotModal> {
+  List<String> _selectedPaths = [];
+
+  void _pickFiles() {
+    SelectKnowledgeSourcePopup.build(
+      context,
+      onLocalFilesSelected: (paths) {
+        setState(() => _selectedPaths = paths);
+      },
+    );
+  }
+
+  void _removePath(String path) {
+    setState(() => _selectedPaths.remove(path));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -34,7 +49,8 @@ class _CreateBotModalState extends State<CreateBotModal> {
                   children: [
                     Text(
                       'Create Your Own Bot',
-                      style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
+                      style: AppFontStyles.poppinsTitleSemiBold(
+                          fontSize: fontSize16),
                     ),
                     SizedBox(
                       width: spacing32,
@@ -53,61 +69,55 @@ class _CreateBotModalState extends State<CreateBotModal> {
                 SizedBox(height: spacing24),
 
                 // Name Field
-                InputFormField.build('Name', 'Enter a name for your bot', required: true),
+                InputFormField.build('Name', 'Enter a name for your bot',
+                    required: true),
 
                 SizedBox(height: spacing24),
 
                 // Instructions Field
-                InputFormField.build('Instructions (Optional)', 'Enter instructions for the bot', maxLines: 6),
+                InputFormField.build(
+                    'Instructions (Optional)', 'Enter instructions for the bot',
+                    maxLines: 6),
 
-                SizedBox(height: spacing24),
+                const SizedBox(height: spacing16),
 
-                // Knowledge Base Section
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Knowledge base (Optional)', style: AppFontStyles.poppinsTextBold()),
-                    SizedBox(height: spacing4),
-                    Text(
-                      'Enhance your bot’s responses by adding custom knowledge',
-                      style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
-                    ),
-                    SizedBox(height: spacing20),
-                    Center(
-                      child: DottedBorder(
-                        strokeWidth: 1,
-                        dashPattern: [4, 2], // Dashed pattern
-                        borderType: BorderType.RRect, // Rounded rectangle
-                        radius: Radius.circular(radius12), // Border radius
-                        color: ColorConst.textHighlightColor,
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: spacing32,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              overlayColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(radius12),
-                              ),
-                            ),
-                            onPressed: () {
-                              // Open the SelectKnowledgeSourcePopup
-                              SelectKnowledgeSourcePopup.build(context);
-                            },
-                            child: Text(
-                              "+ Add knowledge source",
-                              style: AppFontStyles.poppinsTextBold(),
-                            ),
-                          ),
-                        ),
+                // Knowledge base
+                Text('Knowledge Base (Optional)',
+                    style: AppFontStyles.poppinsTextBold()),
+                const SizedBox(height: spacing8),
+                DottedBorder(
+                  borderType: BorderType.RRect,
+                  dashPattern: [4, 2],
+                  radius: Radius.circular(radius12),
+                  child: InkWell(
+                    onTap: _pickFiles,
+                    child: Container(
+                      height: spacing32,
+                      alignment: Alignment.center,
+                      child: Text(
+                        _selectedPaths.isEmpty
+                            ? '+ Add sources'
+                            : '${_selectedPaths.length} selected',
+                        style: AppFontStyles.poppinsRegular(),
                       ),
-                    )
-                  ],
+                    ),
+                  ),
                 ),
+                if (_selectedPaths.isNotEmpty) ...[
+                  const SizedBox(height: spacing8),
+                  Wrap(
+                    spacing: spacing8,
+                    children: _selectedPaths.map((p) {
+                      final name = p.split('/').last;
+                      return Chip(
+                        label: Text(name, overflow: TextOverflow.ellipsis),
+                        onDeleted: () => _removePath(p),
+                      );
+                    }).toList(),
+                  ),
+                ],
 
-                SizedBox(height: spacing60),
+                const SizedBox(height: spacing24),
 
                 // Buttons Row
                 Row(

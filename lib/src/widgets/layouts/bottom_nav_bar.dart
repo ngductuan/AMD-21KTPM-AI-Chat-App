@@ -21,7 +21,8 @@ class _AppBottomNavBarState extends State<AppBottomNavBar> {
     _currentIndex = 0;
   }
 
-  BottomNavigationBarItem _bottomNavItem(String label, String icoBefore, String icoAfter, Color? color) {
+  BottomNavigationBarItem _bottomNavItem(
+      String label, String icoBefore, String icoAfter, Color? color) {
     return BottomNavigationBarItem(
         icon: ImageHelper.loadFromAsset(
           icoBefore,
@@ -80,14 +81,22 @@ class _AppBottomNavBarState extends State<AppBottomNavBar> {
             // ).show(context);
           },
           items: [
+            _bottomNavItem('Chat', AssetPath.chatBeforeNavIcon,
+                AssetPath.chatAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem('Explore', AssetPath.searchBeforeNavIcon,
+                AssetPath.searchAfterNavIcon, ColorConst.textHighlightColor),
             _bottomNavItem(
-                'Chat', AssetPath.chatBeforeNavIcon, AssetPath.chatAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem(
-                'Explore', AssetPath.searchBeforeNavIcon, AssetPath.searchAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem('Add', AssetPath.addBeforeNavIcon, AssetPath.addAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem(
-                'Message', AssetPath.bellBeforeNavIcon, AssetPath.bellAfterNavIcon, ColorConst.textHighlightColor),
-            _bottomNavItem('Me', AssetPath.meBeforeNavIcon, AssetPath.meAfterNavIcon, ColorConst.textHighlightColor),
+              'Data',
+              AssetPath.dataBeforeNavIcon,
+              AssetPath.dataAfterNavIcon,
+              ColorConst.textHighlightColor,
+            ),
+            _bottomNavItem('Add', AssetPath.addBeforeNavIcon,
+                AssetPath.addAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem('Message', AssetPath.bellBeforeNavIcon,
+                AssetPath.bellAfterNavIcon, ColorConst.textHighlightColor),
+            _bottomNavItem('Me', AssetPath.meBeforeNavIcon,
+                AssetPath.meAfterNavIcon, ColorConst.textHighlightColor),
           ],
         ),
       ),

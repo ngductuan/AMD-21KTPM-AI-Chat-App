@@ -2,6 +2,7 @@ import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/views/explore.dart';
 import 'package:eco_chat_bot/src/pages/chat/views/chat_list.dart';
 import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
+import 'package:eco_chat_bot/src/pages/data/views/data_screen.dart';
 import 'package:eco_chat_bot/src/pages/profile/views/profile.dart';
 import 'package:eco_chat_bot/src/widgets/layouts/bottom_nav_bar.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
@@ -22,16 +23,18 @@ class _HomeScreenState extends State<HomeScreen> {
   final tabs = [
     ChatListScreen(),
     ExploreScreen(),
+    DataScreen(),
     const Center(child: Text('Create')),
     const Center(child: Text('Message')),
     ProfilePage(),
   ];
 
   void onTabChanged(int page) {
-    if (page == 2) {
-      Navigator.of(context).pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
+    if (page == 3) {
+      Navigator.of(context).pushNamed(ChatThreadScreen.routeName,
+          arguments: {'chatStatus': ChatThreadStatus.new_});
       return;
-    } else if (page == 3) {
+    } else if (page == 4) {
       AppToast(
         context: context,
         message: 'Coming soon!',
