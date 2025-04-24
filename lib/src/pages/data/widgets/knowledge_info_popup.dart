@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_source_options_popup.dart';
@@ -43,7 +44,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
         widget.onDeleted();
         Navigator.of(context).pop();
       } else {
-        setState(() => _error = 'Cannot delete this knowledge.');
+        setState(() => _error = 'Could not delete this item.');
       }
     } catch (e) {
       setState(() => _error = 'Error: ${e.toString()}');
@@ -53,28 +54,23 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
   }
 
   void _handleAddSource() {
-    // Open the select source popup
     KnowledgeSourceOptionsPopup.build(
       context,
-      knowledgeId: widget.knowledge['id'] as String, // ← truyền vào đây
+      knowledgeId: widget.knowledge['id'] as String,
       onLocalFileSelected: (knowledgeId, paths) {
-        // paths là List<String> đường dẫn đến file
-        // gọi API upload từng file
-        for (final p in paths) {
+        for (final path in paths) {
           ApiBase()
               .uploadKnowledgeLocalFile(
             knowledgeId: knowledgeId,
-            filePath: p,
+            filePath: path,
           )
-              .then((resp) {
-            // xử lý thành công, có thể show toast
+              .then((_) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Upload thành công!")),
+              const SnackBar(content: Text("Upload successful!")),
             );
           }).catchError((e) {
-            // xử lý lỗi
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Lỗi: ${e.toString()}")),
+              SnackBar(content: Text("Error: ${e.toString()}")),
             );
           });
         }
@@ -84,58 +80,92 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
 
   @override
   Widget build(BuildContext context) {
-    final k = widget.knowledge;
+    final data = widget.knowledge;
+    final createdAt = DateTime.tryParse(data['createdAt'] ?? '');
+    final updatedAt = DateTime.tryParse(data['updatedAt'] ?? '');
+    final createdStr =
+        createdAt != null ? DateFormat('yyyy-MM-dd').format(createdAt) : '-';
+    final updatedStr =
+        updatedAt != null ? DateFormat('yyyy-MM-dd').format(updatedAt) : '-';
+
+    Widget buildItem(String label, String value) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: AppFontStyles.poppinsTextBold(fontSize: 14)),
+            const SizedBox(height: 2),
+            Text(value, style: AppFontStyles.poppinsRegular(fontSize: 12)),
+          ],
+        ),
+      );
+    }
+
     return AlertDialog(
-      scrollable: true,
-      title: Text(
-        'Knowledge Details',
-        style: AppFontStyles.poppinsTitleBold(),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: Row(
         children: [
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
-          Text(
-            k['knowledgeName'] as String? ?? '-',
-            style: AppFontStyles.poppinsTextBold(fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            k['description'] as String? ?? '-',
-            style: AppFontStyles.poppinsRegular(),
-          ),
+          Icon(Icons.info_outline,
+              size: 20, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 8),
+          Text('Knowledge Details',
+              style: AppFontStyles.poppinsTitleBold(fontSize: 16)),
         ],
       ),
-      actionsPadding:
-          const EdgeInsets.symmetric(horizontal: padding16, vertical: spacing8),
-      actions: [
-        // Add knowledge source button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _handleAddSource,
-            icon: const Icon(Icons.add),
-            label: const Text('Add knowledge source'),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 380, maxWidth: 360),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_error != null) ...[
+                Text(_error!,
+                    style: TextStyle(color: Colors.red, fontSize: 12)),
+                const SizedBox(height: 8),
+              ],
+              buildItem('Name', data['knowledgeName'] as String? ?? '-'),
+              buildItem('Description', data['description'] as String? ?? '-'),
+              Row(
+                children: [
+                  Expanded(child: buildItem('Created Date', createdStr)),
+                  const SizedBox(width: 16),
+                  Expanded(child: buildItem('Updated Date', updatedStr)),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                      child: buildItem(
+                          'Units', data['numUnits']?.toString() ?? '0')),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: buildItem(
+                          'Total Size', data['totalSize']?.toString() ?? '0')),
+                ],
+              ),
+            ],
           ),
         ),
-
-        // Cancel and Delete button
+      ),
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: _handleAddSource,
+            child: const Text('Add Source', style: TextStyle(fontSize: 14)),
+          ),
+        ),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: const Text('Close', style: TextStyle(fontSize: 14)),
             ),
-            const SizedBox(width: spacing12),
+            const SizedBox(width: 12),
             ElevatedButton(
               onPressed: _isDeleting ? null : _handleDelete,
               style: ElevatedButton.styleFrom(
@@ -147,11 +177,10 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
-                      ),
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white)),
                     )
-                  : const Text('Delete'),
+                  : const Text('Delete', style: TextStyle(fontSize: 14)),
             ),
           ],
         ),

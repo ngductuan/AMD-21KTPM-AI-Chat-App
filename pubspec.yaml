@@ -39,6 +39,7 @@ dependencies:
   file_picker: ^10.1.2
   mime: ^1.0.0
   url_launcher: ^6.1.7
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

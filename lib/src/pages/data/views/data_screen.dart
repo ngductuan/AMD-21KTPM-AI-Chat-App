@@ -60,6 +60,8 @@ class _DataScreenState extends State<DataScreen> {
             'createdBy': e['createdBy'],
             'updatedBy': e['updatedBy'],
             'userId': e['userId'],
+            'numUnits': e['numUnits'],
+            'totalSize': e['totalSize']
           };
         }).toList();
         _isLoading = false;

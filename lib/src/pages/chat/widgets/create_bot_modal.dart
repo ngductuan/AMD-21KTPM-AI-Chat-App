@@ -13,10 +13,19 @@ class CreateBotModal extends StatefulWidget {
 }
 
 class _CreateBotModalState extends State<CreateBotModal> {
-  String? _selectedFilePath;
+  List<String> _selectedPaths = [];
 
-  void _clearSelection() {
-    setState(() => _selectedFilePath = null);
+  void _pickFiles() {
+    SelectKnowledgeSourcePopup.build(
+      context,
+      onLocalFilesSelected: (paths) {
+        setState(() => _selectedPaths = paths);
+      },
+    );
+  }
+
+  void _removePath(String path) {
+    setState(() => _selectedPaths.remove(path));
   }
 
   @override
@@ -70,91 +79,45 @@ class _CreateBotModalState extends State<CreateBotModal> {
                     'Instructions (Optional)', 'Enter instructions for the bot',
                     maxLines: 6),
 
-                SizedBox(height: spacing24),
+                const SizedBox(height: spacing16),
 
-                // Knowledge Base Section
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Knowledge base (Optional)',
-                        style: AppFontStyles.poppinsTextBold()),
-                    SizedBox(height: spacing4),
-                    Text(
-                      'Enhance your bot’s responses by adding custom knowledge',
-                      style: AppFontStyles.poppinsRegular(
-                          fontSize: fontSize14,
-                          color: ColorConst.textGrayColor),
+                // Knowledge base
+                Text('Knowledge Base (Optional)',
+                    style: AppFontStyles.poppinsTextBold()),
+                const SizedBox(height: spacing8),
+                DottedBorder(
+                  borderType: BorderType.RRect,
+                  dashPattern: [4, 2],
+                  radius: Radius.circular(radius12),
+                  child: InkWell(
+                    onTap: _pickFiles,
+                    child: Container(
+                      height: spacing32,
+                      alignment: Alignment.center,
+                      child: Text(
+                        _selectedPaths.isEmpty
+                            ? '+ Add sources'
+                            : '${_selectedPaths.length} selected',
+                        style: AppFontStyles.poppinsRegular(),
+                      ),
                     ),
-                    SizedBox(height: spacing20),
-
-                    // File preview or add button
-                    Center(
-                      child: _selectedFilePath == null
-                          ? DottedBorder(
-                              strokeWidth: 1,
-                              dashPattern: [4, 2],
-                              borderType: BorderType.RRect,
-                              radius: Radius.circular(radius12),
-                              color: ColorConst.textHighlightColor,
-                              child: SizedBox(
-                                width: double.infinity,
-                                height: spacing32,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    overlayColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(radius12),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    SelectKnowledgeSourcePopup.build(
-                                      context,
-                                      onLocalFileSelected: (path) {
-                                        setState(
-                                            () => _selectedFilePath = path);
-                                      },
-                                    );
-                                  },
-                                  child: Text(
-                                    "+ Add knowledge source",
-                                    style: AppFontStyles.poppinsTextBold(),
-                                  ),
-                                ),
-                              ),
-                            )
-                          : Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: spacing12, vertical: spacing8),
-                              decoration: BoxDecoration(
-                                color: ColorConst.backgroundLightGrayColor,
-                                borderRadius: BorderRadius.circular(radius12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _selectedFilePath!.split('/').last,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppFontStyles.poppinsRegular(),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.close,
-                                        color: Colors.redAccent),
-                                    onPressed: _clearSelection,
-                                  ),
-                                ],
-                              ),
-                            ),
-                    ),
-                  ],
+                  ),
                 ),
+                if (_selectedPaths.isNotEmpty) ...[
+                  const SizedBox(height: spacing8),
+                  Wrap(
+                    spacing: spacing8,
+                    children: _selectedPaths.map((p) {
+                      final name = p.split('/').last;
+                      return Chip(
+                        label: Text(name, overflow: TextOverflow.ellipsis),
+                        onDeleted: () => _removePath(p),
+                      );
+                    }).toList(),
+                  ),
+                ],
 
-                SizedBox(height: spacing60),
+                const SizedBox(height: spacing24),
 
                 // Buttons Row
                 Row(

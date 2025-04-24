@@ -97,7 +97,7 @@ class SlackSourcePopup {
                       children: [
                         GradientFormButton(
                           text: 'Cancel',
-                          isActiveButton: !isLoading,
+                          isActiveButton: false,
                           onPressed: _close,
                         ),
                         const SizedBox(width: spacing12),

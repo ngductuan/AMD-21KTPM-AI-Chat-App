@@ -1,14 +1,20 @@
+// SelectKnowledgeSourcePopup.dart
+
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
-import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/import_web_source_popup.dart';
-import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/local_knowledge_source_popup.dart';
 import 'package:flutter/material.dart';
+import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/local_knowledge_source_popup.dart';
+import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/import_web_source_popup.dart';
 
 class SelectKnowledgeSourcePopup {
+  /// Shows an overlay allowing the user to pick between local files or web import.
+  ///
+  /// [onLocalFilesSelected] will be called with a list of file paths when the user
+  /// picks one or more local files.
   static void build(
     BuildContext context, {
-    required void Function(String) onLocalFileSelected,
+    required void Function(List<String>) onLocalFilesSelected,
   }) {
     final overlay = Overlay.of(context);
     OverlayEntry? overlayEntry;
@@ -18,6 +24,7 @@ class SelectKnowledgeSourcePopup {
         color: Colors.black.withOpacity(0.5),
         child: Center(
           child: Container(
+            width: MediaQuery.of(context).size.width * 0.8,
             decoration: BoxDecoration(
               color: ColorConst.backgroundWhiteColor,
               borderRadius: BorderRadius.circular(radius12),
@@ -42,10 +49,7 @@ class SelectKnowledgeSourcePopup {
                           width: spacing32,
                           height: spacing32,
                           child: IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              size: spacing20,
-                            ),
+                            icon: const Icon(Icons.close, size: spacing20),
                             onPressed: () => overlayEntry?.remove(),
                           ),
                         ),
@@ -53,7 +57,7 @@ class SelectKnowledgeSourcePopup {
                     ),
                   ),
 
-                  SizedBox(height: spacing16),
+                  const SizedBox(height: spacing16),
 
                   // Options List
                   SizedBox(
@@ -69,11 +73,13 @@ class SelectKnowledgeSourcePopup {
                           onTap: () {
                             overlayEntry?.remove();
                             if (data['value'] == 'local_file') {
+                              // Launch local file picker overlay
                               LocalKnowledgeSourcePopup.build(
                                 context,
-                                onFileSelected: onLocalFileSelected,
+                                onFilesSelected: onLocalFilesSelected,
                               );
                             } else if (data['value'] == 'website') {
+                              // Launch web import overlay
                               ImportWebSourcePopup.build(context);
                             }
                           },
