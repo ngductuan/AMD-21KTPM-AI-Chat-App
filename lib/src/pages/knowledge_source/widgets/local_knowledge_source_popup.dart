@@ -53,6 +53,7 @@ class LocalKnowledgeSourcePopup {
                             SelectKnowledgeSourcePopup.build(
                               context,
                               onLocalFilesSelected: onFilesSelected,
+                              onWebSourceSelected: (String name, String url) {},
                             );
                           },
                         ),
@@ -144,6 +145,7 @@ class LocalKnowledgeSourcePopup {
                             SelectKnowledgeSourcePopup.build(
                               context,
                               onLocalFilesSelected: onFilesSelected,
+                              onWebSourceSelected: (String name, String url) {},
                             );
                           },
                         ),
