@@ -1,6 +1,5 @@
 import 'package:eco_chat_bot/firebase_options.dart';
 import 'package:eco_chat_bot/routes.dart';
-// import 'package:eco_chat_bot/src/constants/api/env_key.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:eco_chat_bot/src/helpers/local_storage_helper.dart';

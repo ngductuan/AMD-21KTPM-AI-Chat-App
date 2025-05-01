@@ -3,6 +3,8 @@ import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/constants/dimensions.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
+import 'package:eco_chat_bot/src/pages/authentication/views/welcome.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       print("🔐 Logout status: ${response.statusCode}");
       print("🔐 Logout response: ${await response.stream.bytesToString()}");
+
     } catch (e) {
       print("❌ Logout error: $e");
     }
@@ -62,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
 
     // Nếu muốn điều hướng về màn hình login, bạn có thể mở dòng dưới đây
-    // Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil(LoginScreen.routeName, (route) => false);
   }
 
   Future<bool?> _showLogoutDialog(BuildContext context) {
