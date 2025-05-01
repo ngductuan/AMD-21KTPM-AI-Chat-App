@@ -30,7 +30,7 @@ class ImportWebSourcePopup {
             builder: (_, isLoading, __) {
               return Container(
                 padding: const EdgeInsets.all(padding16),
-                margin: const EdgeInsets.symmetric(horizontal: padding16),
+                // margin: const EdgeInsets.symmetric(horizontal: padding16),
                 decoration: BoxDecoration(
                   color: ColorConst.backgroundWhiteColor,
                   borderRadius: BorderRadius.circular(radius12),

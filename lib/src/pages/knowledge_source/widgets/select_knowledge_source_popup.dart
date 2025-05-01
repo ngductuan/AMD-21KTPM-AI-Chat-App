@@ -21,7 +21,7 @@ class SelectKnowledgeSourcePopup {
         color: Colors.black.withOpacity(0.5),
         child: Center(
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.8,
+            // width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(
               color: ColorConst.backgroundWhiteColor,
               borderRadius: BorderRadius.circular(radius12),
@@ -39,8 +39,7 @@ class SelectKnowledgeSourcePopup {
                       children: [
                         Text(
                           'Select Knowledge Source',
-                          style: AppFontStyles.poppinsTitleSemiBold(
-                              fontSize: fontSize16),
+                          style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
                         ),
                         SizedBox(
                           width: spacing32,
@@ -57,98 +56,98 @@ class SelectKnowledgeSourcePopup {
                   const SizedBox(height: spacing16),
 
                   // Options List
-                  SizedBox(
-                    height: 500,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: spacing8),
-                      itemCount: MockData.knowledgeSource.length,
-                      itemBuilder: (context, index) {
-                        final data = MockData.knowledgeSource[index];
-                        final avatarPath =
-                            AssetPath.knowledgeSource[data['value']]!;
-                        return GestureDetector(
-                          onTap: () {
-                            overlayEntry?.remove();
-                            if (data['value'] == 'local_file') {
-                              LocalKnowledgeSourcePopup.build(
-                                context,
-                                onFilesSelected: onLocalFilesSelected,
-                              );
-                            } else if (data['value'] == 'website') {
-                              ImportWebSourcePopup.build(
-                                context,
-                                onWebSourceSelected: onWebSourceSelected,
-                              );
-                            } else {
-                              AppToast(
-                                context: context,
-                                message: 'Coming soon!',
-                                mode: AppToastMode.info,
-                              ).show(context);
-                            }
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(spacing12),
-                            margin: EdgeInsets.only(bottom: spacing8),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: ColorConst.backgroundLightGrayColor,
-                                width: 1,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: padding16),
+                    child: SizedBox(
+                      height: 500,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: spacing8),
+                        itemCount: MockData.knowledgeSource.length,
+                        itemBuilder: (context, index) {
+                          final data = MockData.knowledgeSource[index];
+                          final avatarPath = AssetPath.knowledgeSource[data['value']]!;
+                          return GestureDetector(
+                            onTap: () {
+                              overlayEntry?.remove();
+                              if (data['value'] == 'local_file') {
+                                LocalKnowledgeSourcePopup.build(
+                                  context,
+                                  onFilesSelected: onLocalFilesSelected,
+                                );
+                              } else if (data['value'] == 'website') {
+                                ImportWebSourcePopup.build(
+                                  context,
+                                  onWebSourceSelected: onWebSourceSelected,
+                                );
+                              } else {
+                                AppToast(
+                                  context: context,
+                                  message: 'Coming soon!',
+                                  mode: AppToastMode.info,
+                                ).show(context);
+                              }
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(spacing12),
+                              margin: EdgeInsets.only(bottom: spacing8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: ColorConst.backgroundLightGrayColor,
+                                  width: 1,
+                                ),
+                                borderRadius: BorderRadius.circular(radius12),
                               ),
-                              borderRadius: BorderRadius.circular(radius12),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: spacing32,
-                                  height: spacing32,
-                                  decoration: BoxDecoration(
-                                    color: ColorConst.bluePastelColor,
-                                    borderRadius:
-                                        BorderRadius.circular(radius24),
-                                  ),
-                                  child: Center(
-                                    child: ImageHelper.loadFromAsset(
-                                      avatarPath,
-                                      width: spacing16,
-                                      height: spacing16,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: spacing32,
+                                    height: spacing32,
+                                    decoration: BoxDecoration(
+                                      color: ColorConst.bluePastelColor,
+                                      borderRadius: BorderRadius.circular(radius24),
+                                    ),
+                                    child: Center(
+                                      child: ImageHelper.loadFromAsset(
+                                        avatarPath,
+                                        width: spacing16,
+                                        height: spacing16,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: spacing12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        data['display']!,
-                                        style: AppFontStyles.poppinsTextBold(),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      SizedBox(height: spacing4),
-                                      Text(
-                                        data['hint']!,
-                                        style: AppFontStyles.poppinsRegular(
-                                          color: ColorConst.textGrayColor,
-                                          fontSize: fontSize12,
+                                  SizedBox(width: spacing12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          data['display']!,
+                                          style: AppFontStyles.poppinsTextBold(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
+                                        SizedBox(height: spacing4),
+                                        Text(
+                                          data['hint']!,
+                                          style: AppFontStyles.poppinsRegular(
+                                            color: ColorConst.textGrayColor,
+                                            fontSize: fontSize12,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward,
-                                  color: ColorConst.textGrayColor,
-                                ),
-                              ],
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    color: ColorConst.textGrayColor,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],

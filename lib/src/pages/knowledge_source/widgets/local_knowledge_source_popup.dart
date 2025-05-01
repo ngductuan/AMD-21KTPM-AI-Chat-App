@@ -26,7 +26,7 @@ class LocalKnowledgeSourcePopup {
           child: StatefulBuilder(
             builder: (context, setState) {
               return Container(
-                width: MediaQuery.of(context).size.width * 0.8,
+                // width: MediaQuery.of(context).size.width * 0.8,
                 decoration: BoxDecoration(
                   color: ColorConst.backgroundWhiteColor,
                   borderRadius: BorderRadius.circular(radius12),
@@ -70,10 +70,7 @@ class LocalKnowledgeSourcePopup {
                         );
                         if (result == null) return;
                         setState(() {
-                          pickedFiles = result.paths
-                              .where((path) => path != null)
-                              .cast<String>()
-                              .toList();
+                          pickedFiles = result.paths.where((path) => path != null).cast<String>().toList();
                         });
                       },
                       child: DottedBorder(
@@ -85,8 +82,7 @@ class LocalKnowledgeSourcePopup {
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(spacing16),
-                          color: ColorConst.backgroundGrayColor
-                              .withAlpha((0.5 * 255).toInt()),
+                          color: ColorConst.backgroundGrayColor.withAlpha((0.5 * 255).toInt()),
                           child: pickedFiles.isEmpty
                               ? Column(
                                   mainAxisSize: MainAxisSize.min,

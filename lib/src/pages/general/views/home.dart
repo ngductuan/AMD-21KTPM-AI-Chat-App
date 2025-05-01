@@ -23,23 +23,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final tabs = [
     ChatListScreen(),
     ExploreScreen(),
+    ChatThreadScreen(),
     DataScreen(),
-    const Center(child: Text('Create')),
-    const Center(child: Text('Message')),
     ProfilePage(),
   ];
 
   void onTabChanged(int page) {
-    if (page == 3) {
-      Navigator.of(context).pushNamed(ChatThreadScreen.routeName,
-          arguments: {'chatStatus': ChatThreadStatus.new_});
-      return;
-    } else if (page == 4) {
-      AppToast(
-        context: context,
-        message: 'Coming soon!',
-        mode: AppToastMode.info,
-      ).show(context);
+    if (page == 2) {
+      Navigator.of(context).pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
       return;
     }
 

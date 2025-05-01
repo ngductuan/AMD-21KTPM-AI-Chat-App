@@ -24,8 +24,7 @@ class ImportWebSourcePopup {
             borderRadius: BorderRadius.circular(radius12),
           ),
           backgroundColor: ColorConst.backgroundWhiteColor,
-          insetPadding: EdgeInsets.symmetric(
-              horizontal: (MediaQuery.of(dialogContext).size.width - w) / 2),
+          insetPadding: EdgeInsets.symmetric(horizontal: (MediaQuery.of(dialogContext).size.width - w) / 2),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(padding16),
@@ -40,8 +39,7 @@ class ImportWebSourcePopup {
                       children: [
                         Text(
                           'Import Web Resource',
-                          style: AppFontStyles.poppinsTitleSemiBold(
-                              fontSize: fontSize16),
+                          style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: spacing20),
@@ -59,8 +57,7 @@ class ImportWebSourcePopup {
                         labelText: 'Name *',
                         hintText: 'Enter knowledge unit name',
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                     ),
 
                     const SizedBox(height: spacing24),
@@ -72,8 +69,7 @@ class ImportWebSourcePopup {
                         labelText: 'Web URL *',
                         hintText: 'https://example.com',
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                     ),
 
                     const SizedBox(height: spacing32),
@@ -86,8 +82,7 @@ class ImportWebSourcePopup {
                         color: ColorConst.bluePastelColor,
                         borderRadius: BorderRadius.circular(radius12),
                         border: Border.all(
-                          color: ColorConst.blueColor
-                              .withAlpha((0.5 * 255).toInt()),
+                          color: ColorConst.blueColor.withAlpha((0.5 * 255).toInt()),
                           width: 1,
                         ),
                       ),
@@ -102,14 +97,10 @@ class ImportWebSourcePopup {
                             ),
                           ),
                           const SizedBox(height: spacing8),
-                          Text('• You can load up to 64 pages at a time',
-                              style: AppFontStyles.poppinsRegular()),
+                          Text('• You can load up to 64 pages at a time', style: AppFontStyles.poppinsRegular()),
                           const SizedBox(height: spacing4),
-                          Text('• Need more? Contact us at',
-                              style: AppFontStyles.poppinsRegular()),
-                          Text('myjarvischat@gmail.com',
-                              style: AppFontStyles.poppinsRegular(
-                                  color: Colors.blue)),
+                          Text('• Need more? Contact us at', style: AppFontStyles.poppinsRegular()),
+                          Text('myjarvischat@gmail.com', style: AppFontStyles.poppinsRegular(color: Colors.blue)),
                         ],
                       ),
                     ),
