@@ -184,10 +184,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           });
                           _showBotMenu(context, index, details.globalPosition);
                         },
-                        child: AiBotItem(
-                          botData: bot,
-                          selfAI: true,
-                        ),
+                        // child: AiBotItem(
+                        //   botData: bot,
+                        //   selfAI: true,
+                        // ),
+                        child: SizedBox(),
                       );
                     }),
                   ],
