@@ -132,39 +132,9 @@ class _CreateBotModalState extends State<CreateBotModal> {
                               'Enhance your bot’s responses by adding custom knowledge',
                               style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
                             ),
-                            SizedBox(height: spacing20),
-                            // Center(
-                            //   child: DottedBorder(
-                            //     strokeWidth: 1,
-                            //     dashPattern: [4, 2], // Dashed pattern
-                            //     borderType: BorderType.RRect, // Rounded rectangle
-                            //     radius: Radius.circular(radius12), // Border radius
-                            //     color: ColorConst.textHighlightColor,
-                            //     child: SizedBox(
-                            //       width: double.infinity,
-                            //       height: spacing32,
-                            //       child: ElevatedButton(
-                            //         style: ElevatedButton.styleFrom(
-                            //           backgroundColor: Colors.transparent,
-                            //           shadowColor: Colors.transparent,
-                            //           overlayColor: Colors.transparent,
-                            //           shape: RoundedRectangleBorder(
-                            //             borderRadius: BorderRadius.circular(radius12),
-                            //           ),
-                            //         ),
-                            //         onPressed: () {
-                            //           // Open the SelectKnowledgeSourcePopup
-                            //           SelectKnowledgeSourcePopup.build(context);
-                            //         },
-                            //         child: Text(
-                            //           "+ Add knowledge source",
-                            //           style: AppFontStyles.poppinsTextBold(),
-                            //         ),
-                            //       ),
-                            //     ),
-                            //   ),
-                            // )
 
+                            SizedBox(height: spacing20),
+  
                             DottedBorder(
                               borderType: BorderType.RRect,
                               dashPattern: [4, 2],
@@ -286,6 +256,12 @@ class _CreateBotModalState extends State<CreateBotModal> {
                             ).show(context);
                           } catch (e) {
                             print('Error creating bot: $e');
+                            AppToast(
+                              context: context,
+                              duration: Duration(seconds: 1),
+                              message: 'Error creating bot',
+                              mode: AppToastMode.error,
+                            ).show(context);
                           } finally {
                             if (mounted) {
                               setState(() {

@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
+import 'package:eco_chat_bot/src/constants/services/chat.service.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -34,8 +37,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   // Lưu trữ các message chat
   final List<Map<String, dynamic>> _messages = [
-    {'text': "Hello.👋 I'm your new friend, StarryAI Bot.", 'isBot': true},
+    {'content': "Hello.👋 I'm your new friend, StarryAI Bot.", 'role': ChatRole.model.text},
   ];
+  bool isFirstLoading = true;
 
   @override
   void initState() {
@@ -48,10 +52,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         String? botValue = args['botValue'];
 
         setState(() {
-          activeAiModelIndex = botValue != null
-              ? MockData.aiModels
-                  .indexWhere((element) => element["value"] == botValue)
-              : 0;
+          activeAiModelIndex = botValue != null ? MockData.aiModels.indexWhere((element) => element["value"] == botValue) : 0;
           if (activeAiModelIndex == -1) {
             activeAiModelIndex = 0;
           }
@@ -79,9 +80,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   Future<void> _fetchInitialPrompts() async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
-    final authHeader = (accessToken == null || accessToken.isEmpty)
-        ? ''
-        : 'Bearer $accessToken';
+    final authHeader = (accessToken == null || accessToken.isEmpty) ? '' : 'Bearer $accessToken';
     var headers = {'Authorization': authHeader};
     final url = 'https://api.dev.jarvis.cx/api/v1/prompts?limit=3';
 
@@ -111,12 +110,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   Future<void> _fetchPromptSuggestions(String query) async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
-    final authHeader = (accessToken == null || accessToken.isEmpty)
-        ? ''
-        : 'Bearer $accessToken';
+    final authHeader = (accessToken == null || accessToken.isEmpty) ? '' : 'Bearer $accessToken';
     var headers = {'Authorization': authHeader};
-    final url =
-        'https://api.dev.jarvis.cx/api/v1/prompts?query=$query&limit=3&offset=0';
+    final url = 'https://api.dev.jarvis.cx/api/v1/prompts?query=$query&limit=3&offset=0';
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -239,14 +235,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     onPressed: () {
                       // Thay thế các placeholder bằng giá trị người dùng nhập
                       final replacements = <String, String>{};
-                      _placeholderControllers
-                          .forEach((placeholder, controller) {
-                        replacements[placeholder] = controller.text.isNotEmpty
-                            ? controller.text
-                            : placeholder;
+                      _placeholderControllers.forEach((placeholder, controller) {
+                        replacements[placeholder] = controller.text.isNotEmpty ? controller.text : placeholder;
                       });
-                      final finalPrompt =
-                          _replacePlaceholders(result['prompt'], replacements);
+                      final finalPrompt = _replacePlaceholders(result['prompt'], replacements);
 
                       setState(() {
                         _controller.text = finalPrompt;
@@ -293,8 +285,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   // Hàm thay thế placeholder bằng giá trị người dùng nhập
-  String _replacePlaceholders(
-      String promptText, Map<String, String> replacements) {
+  String _replacePlaceholders(String promptText, Map<String, String> replacements) {
     String result = promptText;
     replacements.forEach((placeholder, value) {
       result = result.replaceAll('[$placeholder]', value);
@@ -303,12 +294,59 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   // Hàm gửi message
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     if (_controller.text.isNotEmpty) {
-      setState(() {
-        _messages.add({'text': _controller.text, 'isBot': false});
-        _controller.clear();
-      });
+      final String content = _controller.text;
+
+      try {
+        // Update UI with user message
+        setState(() {
+          _messages.addAll([
+            {'content': content, 'role': ChatRole.user.text},
+            {'content': "", 'role': ChatRole.model.text}
+          ]);
+          _controller.clear();
+        });
+
+        // Transform messages to remove unnecessary elements
+        final messageDto = _messages.map((message) {
+          return {
+            ...message,
+            'assistant': BotServiceApi.assistant,
+          };
+        }).toList();
+
+        messageDto.removeAt(0);
+        messageDto.removeLast();
+
+        // Send message to server and wait for response
+        dynamic response = await ChatServiceApi.createChatWithBot(content, messageDto);
+
+        // If you want to add the bot's response too:
+        final Map<String, dynamic> jsonResponse = json.decode(response);
+
+        if (jsonResponse.containsKey('message')) {
+          setState(() {
+            _messages[_messages.length - 1]['content'] = jsonResponse['message'];
+          });
+        }
+      } catch (e) {
+        // Handle any errors that occur during the API call
+        print("Error sending message: $e");
+
+        setState(() {
+          _messages.removeLast();
+        });
+
+        AppToast(
+          context: context,
+          duration: Duration(seconds: 1),
+          message: 'Error sending message',
+          mode: AppToastMode.error,
+        ).show(context);
+      }
+    } else {
+      print("Message is empty");
     }
   }
 
@@ -320,20 +358,20 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
     ChatThreadStatus chatStatus = args['chatStatus'];
 
-    if (chatStatus == ChatThreadStatus.existing) {
+    if (chatStatus == ChatThreadStatus.existing && isFirstLoading) {
       title = args['title'];
 
       _messages.addAll([
-        {'text': "Have a healthy meal.", 'isBot': true},
-        {'text': "How much price is it?", 'isBot': false},
-        {'text': "Only 5\$ for hamburger.", 'isBot': true},
-        {
-          'text': 'What is this image?',
-          'imagePath': AssetPath.imgUploadChat,
-          'isBot': false
-        },
-        {'text': "", 'isBot': true}
+        {'content': "Have a healthy meal.", 'role': ChatRole.model.text},
+        {'content': "How much price is it?", 'role': ChatRole.user.text},
+        {'content': "Only 5\$ for hamburger.", 'role': ChatRole.model.text},
+        {'content': 'What is this image?', 'imagePath': AssetPath.imgUploadChat, 'role': ChatRole.user.text},
+        {'content': "", 'role': ChatRole.model.text}
       ]);
+
+      setState(() {
+        isFirstLoading = false;
+      });
     }
 
     return Scaffold(
@@ -380,32 +418,26 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final message = _messages[index];
-                    String messageContent = message['text'];
+                    String messageContent = message['content'];
+
+                    bool isModel = message['role'] == ChatRole.model.text;
 
                     if (messageContent.isEmpty) {
                       return TypingIndicator();
                     }
 
                     return Align(
-                      alignment: message['isBot']
-                          ? Alignment.centerLeft
-                          : Alignment.centerRight,
+                      alignment: isModel ? Alignment.centerLeft : Alignment.centerRight,
                       child: Container(
                         padding: EdgeInsets.all(spacing8),
-                        margin: EdgeInsets.symmetric(
-                            vertical: spacing6, horizontal: spacing8),
+                        margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
                         decoration: BoxDecoration(
-                          color: message['isBot']
-                              ? ColorConst.textWhiteColor
-                              : ColorConst.textHighlightColor,
+                          color: isModel ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
                           borderRadius: BorderRadius.circular(radius12),
                         ),
                         child: Text(
-                          message['text'],
-                          style: TextStyle(
-                              color: message['isBot']
-                                  ? ColorConst.textBlackColor
-                                  : ColorConst.textWhiteColor),
+                          message['content'],
+                          style: TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
                         ),
                       ),
                     );
@@ -441,8 +473,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: spacing8, vertical: spacing4),
+                        padding: const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing4),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(radius16),
                           color: ColorConst.backgroundWhiteColor,
@@ -457,8 +488,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           ),
                           dropdownColor: ColorConst.backgroundWhiteColor,
                           value: MockData.aiModels[activeAiModelIndex]["value"],
-                          items: MockData.aiModels
-                              .map<DropdownMenuItem<String>>((model) {
+                          items: MockData.aiModels.map<DropdownMenuItem<String>>((model) {
                             return DropdownMenuItem<String>(
                               value: model["value"],
                               child: Row(
@@ -479,28 +509,22 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           }).toList(),
                           onChanged: (value) {
                             setState(() {
-                              activeAiModelIndex = MockData.aiModels.indexWhere(
-                                  (element) => element["value"] == value);
+                              activeAiModelIndex = MockData.aiModels.indexWhere((element) => element["value"] == value);
                               print(activeAiModelIndex);
-                              print(MockData.aiModels[activeAiModelIndex]
-                                  ["value"]);
+                              print(MockData.aiModels[activeAiModelIndex]["value"]);
                             });
                           },
                         ),
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.camera_enhance_outlined,
-                              color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.camera_enhance_outlined, color: ColorConst.backgroundBlackColor),
                           SizedBox(width: spacing16),
-                          const Icon(Icons.image,
-                              color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
                           SizedBox(width: spacing16),
-                          const Icon(Icons.history_outlined,
-                              color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.history_outlined, color: ColorConst.backgroundBlackColor),
                           SizedBox(width: spacing16),
-                          const Icon(Icons.add_circle_outline,
-                              color: ColorConst.backgroundBlackColor),
+                          const Icon(Icons.add_circle_outline, color: ColorConst.backgroundBlackColor),
                         ],
                       )
                     ],
@@ -532,27 +556,20 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 ),
                                 color: Colors.transparent,
                               ),
-                              padding: EdgeInsets.only(
-                                  left: spacing16,
-                                  right: spacing16,
-                                  top: spacing12),
+                              padding: EdgeInsets.only(left: spacing16, right: spacing16, top: spacing12),
                               child: TextField(
                                 controller: _controller,
                                 maxLines: null,
                                 decoration: InputDecoration(
                                   hintText: "Ask me anything...",
                                   border: InputBorder.none,
-                                  hintStyle: AppFontStyles.poppinsRegular(
-                                      color: ColorConst.textLightGrayColor),
+                                  hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
                                 ),
                               ),
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.only(
-                                left: spacing16,
-                                right: spacing16,
-                                bottom: spacing12),
+                            padding: EdgeInsets.only(left: spacing16, right: spacing16, bottom: spacing12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(radius20),
@@ -568,20 +585,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                     final result = await Navigator.push(
                                       context,
                                       PageRouteBuilder(
-                                        transitionDuration:
-                                            const Duration(milliseconds: 500),
-                                        pageBuilder: (context, animation,
-                                                secondaryAnimation) =>
-                                            const PromptLibrary(),
-                                        transitionsBuilder: (context, animation,
-                                            secondaryAnimation, child) {
+                                        transitionDuration: const Duration(milliseconds: 500),
+                                        pageBuilder: (context, animation, secondaryAnimation) => const PromptLibrary(),
+                                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                           const begin = Offset(1.0, 0.0);
                                           const end = Offset.zero;
                                           const curve = Curves.easeInOut;
 
-                                          var tween = Tween(
-                                                  begin: begin, end: end)
-                                              .chain(CurveTween(curve: curve));
+                                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
                                           return SlideTransition(
                                             position: animation.drive(tween),
@@ -593,11 +604,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
                                     if (result != null) {
                                       _placeholderControllers.clear();
-                                      final placeholders = _extractPlaceholders(
-                                          result['prompt']);
+                                      final placeholders = _extractPlaceholders(result['prompt']);
                                       for (final placeholder in placeholders) {
-                                        _placeholderControllers[placeholder] =
-                                            TextEditingController();
+                                        _placeholderControllers[placeholder] = TextEditingController();
                                       }
                                       if (placeholders.isNotEmpty) {
                                         showModalBottomSheet(
@@ -605,28 +614,23 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                           isScrollControlled: true,
                                           backgroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.vertical(
-                                                top: Radius.circular(20)),
+                                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                                           ),
                                           builder: (context) => Padding(
                                             padding: EdgeInsets.only(
-                                              bottom: MediaQuery.of(context)
-                                                  .viewInsets
-                                                  .bottom,
+                                              bottom: MediaQuery.of(context).viewInsets.bottom,
                                             ),
                                             child: Container(
                                               padding: EdgeInsets.all(16),
                                               child: Column(
                                                 mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     result['title'],
                                                     style: TextStyle(
                                                       fontSize: 24,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      fontWeight: FontWeight.bold,
                                                     ),
                                                   ),
                                                   SizedBox(height: 8),
@@ -638,42 +642,27 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                                     ),
                                                   ),
                                                   SizedBox(height: 16),
-                                                  ...placeholders
-                                                      .map((placeholder) {
+                                                  ...placeholders.map((placeholder) {
                                                     return Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         Text(
                                                           placeholder,
                                                           style: TextStyle(
                                                             fontSize: 16,
-                                                            fontWeight:
-                                                                FontWeight.w500,
+                                                            fontWeight: FontWeight.w500,
                                                           ),
                                                         ),
                                                         SizedBox(height: 8),
                                                         TextField(
-                                                          controller:
-                                                              _placeholderControllers[
-                                                                  placeholder],
-                                                          decoration:
-                                                              InputDecoration(
-                                                            hintText:
-                                                                placeholder,
+                                                          controller: _placeholderControllers[placeholder],
+                                                          decoration: InputDecoration(
+                                                            hintText: placeholder,
                                                             filled: true,
-                                                            fillColor: Colors
-                                                                .grey[100],
-                                                            border:
-                                                                OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none,
+                                                            fillColor: Colors.grey[100],
+                                                            border: OutlineInputBorder(
+                                                              borderRadius: BorderRadius.circular(12),
+                                                              borderSide: BorderSide.none,
                                                             ),
                                                           ),
                                                         ),
@@ -685,54 +674,32 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                                     width: double.infinity,
                                                     child: ElevatedButton(
                                                       onPressed: () {
-                                                        final replacements =
-                                                            <String, String>{};
-                                                        _placeholderControllers
-                                                            .forEach(
-                                                                (placeholder,
-                                                                    controller) {
-                                                          replacements[
-                                                                  placeholder] =
-                                                              controller.text
-                                                                      .isNotEmpty
-                                                                  ? controller
-                                                                      .text
-                                                                  : placeholder;
+                                                        final replacements = <String, String>{};
+                                                        _placeholderControllers.forEach((placeholder, controller) {
+                                                          replacements[placeholder] =
+                                                              controller.text.isNotEmpty ? controller.text : placeholder;
                                                         });
 
-                                                        final finalPrompt =
-                                                            _replacePlaceholders(
-                                                                result[
-                                                                    'prompt'],
-                                                                replacements);
+                                                        final finalPrompt = _replacePlaceholders(result['prompt'], replacements);
 
                                                         setState(() {
-                                                          _controller.text =
-                                                              finalPrompt;
+                                                          _controller.text = finalPrompt;
                                                         });
                                                         Navigator.pop(context);
                                                         _sendMessage();
                                                       },
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor:
-                                                            Colors.green,
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                                vertical: 16),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(12),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: Colors.green,
+                                                        padding: EdgeInsets.symmetric(vertical: 16),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(12),
                                                         ),
                                                       ),
                                                       child: Text(
                                                         'Send',
                                                         style: TextStyle(
                                                           fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.w600,
+                                                          fontWeight: FontWeight.w600,
                                                         ),
                                                       ),
                                                     ),
@@ -750,8 +717,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                     }
                                   },
                                   child: InkWell(
-                                    borderRadius:
-                                        BorderRadius.circular(spacing10),
+                                    borderRadius: BorderRadius.circular(spacing10),
                                     splashColor: Colors.grey.withOpacity(0.2),
                                     child: ImageHelper.loadFromAsset(
                                       AssetPath.icoPromptLibrary,

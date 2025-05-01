@@ -5,12 +5,16 @@ import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:http/http.dart' as http;
 
 class BotServiceApi {
+  static final assistant = {
+    "model": "knowledge-base",
+    "name": "votutrinh2002's Default Team Assistant",
+    "id": "29178123-34d4-4e52-94fb-8e580face2d5"
+  };
+
   static Future<dynamic> createBotResponse(Map<String, dynamic>? body) async {
     final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant');
 
     final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
-
-    headers['Content-Type'] = 'application/json';
 
     final encodedBody = body is String ? body : jsonEncode(body);
 
