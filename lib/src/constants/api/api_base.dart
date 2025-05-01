@@ -1,13 +1,15 @@
 import 'dart:convert';
+import 'package:eco_chat_bot/src/constants/api/env_key.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiBase {
   // Base URLs
-  static const authUrl = 'https://auth-api.dev.jarvis.cx';
-  static const jarvisUrl = 'https://api.dev.jarvis.cx';
-  static const knowledgeUrl = 'https://knowledge-api.dev.jarvis.cx';
+  static final authUrl = dotenv.maybeGet(EnvKey.authApi) ?? 'https://auth-api.dev.jarvis.cx';
+  static final jarvisUrl = dotenv.maybeGet(EnvKey.jarvisApi) ?? 'https://api.dev.jarvis.cx';
+  static final knowledgeUrl = dotenv.maybeGet(EnvKey.knowledgeApi) ?? 'https://knowledge-api.dev.jarvis.cx';
 
   // Other URLs
   static const verificationCallbackUrl =
@@ -15,8 +17,7 @@ class ApiBase {
   static const headerAuth = {
     'X-Stack-Access-Type': 'client',
     'X-Stack-Project-Id': 'a914f06b-5e46-4966-8693-80e4b9f4f409',
-    'X-Stack-Publishable-Client-Key':
-        'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
+    'X-Stack-Publishable-Client-Key': 'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
     'Content-Type': 'application/json',
   };
 
@@ -40,8 +41,7 @@ class ApiBase {
     final headers = {
       'X-Stack-Access-Type': 'client',
       'X-Stack-Project-Id': 'a914f06b-5e46-4966-8693-80e4b9f4f409',
-      'X-Stack-Publishable-Client-Key':
-          'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
+      'X-Stack-Publishable-Client-Key': 'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
       'X-Stack-Refresh-Token': refreshToken ?? '',
     };
 
@@ -62,8 +62,7 @@ class ApiBase {
 
       // Cập nhật access token và thời gian hết hạn
       await prefs.setString(LocalStorageKey.accessToken, newAccessToken);
-      await prefs.setString(
-          LocalStorageKey.accessTokenExpiry, newExpiryTime.toIso8601String());
+      await prefs.setString(LocalStorageKey.accessTokenExpiry, newExpiryTime.toIso8601String());
       print('Access token refreshed successfully');
     } else {
       throw Exception('Failed to refresh token: ${response.reasonPhrase}');
@@ -87,8 +86,7 @@ class ApiBase {
   }
 
   /// Ví dụ về wrapper cho HTTP POST đã tích hợp refresh token
-  Future<http.Response> authenticatedPost(String endpoint,
-      {Map<String, dynamic>? body}) async {
+  Future<http.Response> authenticatedPost(String endpoint, {Map<String, dynamic>? body}) async {
     final headers = await getAuthHeaders();
     final url = Uri.parse('$jarvisUrl/$endpoint');
     return await http.post(url, headers: headers, body: jsonEncode(body));
@@ -106,3 +104,5 @@ class ApiBase {
     return await http.delete(url, headers: headers);
   }
 }
+
+final apiBaseInstance = ApiBase();

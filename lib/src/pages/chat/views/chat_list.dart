@@ -123,10 +123,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
         offset: const Offset(0, spacing48),
         onSelected: (value) {
           if (value == 1) {
-            Navigator.of(context)
-                .pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
+            Navigator.of(context).pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
           } else if (value == 2) {
             Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+            // showDialog(
+            //   context: context,
+            //   builder: (context) => CreateBotModal(),
+            // );
           }
         },
         itemBuilder: (context) => [
