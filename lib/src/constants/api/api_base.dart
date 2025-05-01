@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'package:eco_chat_bot/src/constants/api/env_key.dart';
 import 'package:http/http.dart' as http;
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiBase {
   // Base URLs
@@ -102,6 +106,329 @@ class ApiBase {
   Future<http.Response> authenticatedDelete(Uri url) async {
     final headers = await getAuthHeaders();
     return await http.delete(url, headers: headers);
+  }
+
+  /// CÁC API TẠO BỘ DỮ LIỆU TRI THỨC ///
+
+  // Tạo một bộ dữ liệu tri thức mới trên Knowledge API
+  // Tham số:
+  // - [knowledgeName]: Tên bộ tri thức mới
+  // - [description]: mô tả tri thức mới
+  Future<Map<String, dynamic>> createKnowledge({
+    required String knowledgeName,
+    required String description,
+  }) async {
+    // Lấy header (bao gồm Bearer token)
+    final headers = await getAuthHeaders();
+
+    // Endpoint của Knowledge API
+    final url = Uri.parse('$knowledgeUrl/kb-core/v1/knowledge');
+
+    // Chuẩn bị body
+    final body = jsonEncode({
+      'knowledgeName': knowledgeName,
+      'description': description,
+    });
+
+    // Gửi POST
+    final response = await http.post(url, headers: headers, body: body);
+
+    // Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+          'Failed to create knowledge: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
+    }
+  }
+
+  // API Hiển thị/tìm kiếm bộ dữ liệu tri thức
+  // Tham số:
+  // - [q]: chuỗi tìm kiếm (mặc định là rỗng để lấy tất cả)
+  // - [order]: thứ tự sắp xếp, "ASC" hoặc "DESC" (mặc định "DESC")
+  // - [orderField]: trường để sắp xếp (mặc định "createdAt")
+  // - [offset]: chỉ số bắt đầu (mặc định 0)
+  // - [limit]: số phần tử trả về (mặc định 20)
+  Future<Map<String, dynamic>> getKnowledges({
+    String q = '',
+    String order = 'DESC',
+    String orderField = 'createdAt',
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    // Lấy header (bao gồm Bearer token)
+    final headers = await getAuthHeaders();
+
+    // Xây dựng URI với query parameters
+    final uri = Uri.parse('$knowledgeUrl/kb-core/v1/knowledge').replace(
+      queryParameters: {
+        'q': q,
+        'order': order,
+        'order_field': orderField,
+        'offset': offset.toString(),
+        'limit': limit.toString(),
+      },
+    );
+
+    // Gửi GET
+    final response = await http.get(uri, headers: headers);
+    //debugPrint("Get knowledge:" + response.body);
+    // Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+          'Failed to fetch knowledges: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
+    }
+  }
+
+  // Xóa (disable) một bộ dữ liệu tri thức theo ID
+  // Trả về `true` nếu xóa thành công, ngược lại ném Exception.
+  Future<bool> deleteKnowledge(String knowledgeId) async {
+    // Lấy header (bao gồm Bearer token)
+    final headers = await getAuthHeaders();
+
+    // Endpoint DELETE với path parameter là knowledgeId
+    final uri = Uri.parse('$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId');
+
+    // Gửi DELETE
+    final response = await http.delete(uri, headers: headers);
+
+    // Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // API trả về body là "true" hoặc "false"
+      final result = jsonDecode(response.body) as bool;
+      return result;
+    } else {
+      throw Exception(
+        'Failed to delete knowledge: [${response.statusCode}] ${response.reasonPhrase}',
+      );
+    }
+  }
+
+  // Upload một file lên nguồn tri thức đã tạo
+  // Tham số:
+  //    - [knowledgeId]: ID của knowledge cần nạp file
+  //    - [filePath]: đường dẫn local đến file cần upload
+  //    -Trả về JSON của Knowledge Data Source nếu thành công
+  Future<Map<String, dynamic>> uploadKnowledgeLocalFile({
+    required String knowledgeId,
+    required String filePath,
+  }) async {
+    // 1) Get auth headers
+    final headers = await getAuthHeaders();
+    // MultipartRequest will set its own Content-Type, so remove JSON header:
+    headers.remove('Content-Type');
+
+    // 2) Build URI
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/local-file',
+    );
+
+    // 3) Detect the file's MIME type from its extension:
+    final mimeType = lookupMimeType(filePath) ?? 'application/octet-stream';
+    final parts = mimeType.split('/');
+    final mediaType = MediaType(parts[0], parts[1]);
+
+    // 4) Create & attach the multipart file with explicit contentType:
+    final request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(headers)
+      ..files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          filePath,
+          contentType: mediaType,
+        ),
+      );
+
+    // 5) Send & parse response
+    final streamed = await request.send();
+    final resp = await http.Response.fromStream(streamed);
+    // debugPrint('uploadKnowledgeLocalFile resp: ${resp.statusCode} ${resp.body}');
+
+    if (resp.statusCode == 200 || resp.statusCode == 201) {
+      return jsonDecode(resp.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to upload local file: [${resp.statusCode}] ${resp.reasonPhrase}\n'
+        'Body: ${resp.body}',
+      );
+    }
+  }
+
+  // Upload dữ liệu từ URL website vào nguồn tri thức
+  // Tham số:
+  //  + [knowledgeId]: ID của knowledge cần nạp
+  //  + [unitName]: tên đơn vị (unit) hiển thị trong tri thức
+  //  + [webUrl]: địa chỉ website cần crawl
+  //  + Trả về JSON của Knowledge Data Source nếu thành công
+  Future<Map<String, dynamic>> uploadKnowledgeFromWeb({
+    required String knowledgeId,
+    required String unitName,
+    required String webUrl,
+  }) async {
+    // 1. Lấy header (Bearer token)
+    final headers = await getAuthHeaders();
+    // Content-Type JSON
+    headers['Content-Type'] = 'application/json';
+
+    // 2. Build URI
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/web',
+    );
+
+    // 3. Chuẩn bị body JSON
+    final body = jsonEncode({
+      'unitName': unitName,
+      'webUrl': webUrl,
+    });
+    debugPrint('Headers: ${headers.toString()}');
+    debugPrint('Web body: ${body}');
+    debugPrint('Knowledge id: ${knowledgeId}');
+
+    // Gửi POST
+    final response = await http.post(uri, headers: headers, body: body);
+    // ===== ĐỔI PHẦN LOGGING =====
+    debugPrint('–– Response status: ${response.statusCode}');
+    // Với JSON dài, bạn có thể tăng wrapWidth để không bị cắt ngắn
+    debugPrint('–– Response body: ${response.body}', wrapWidth: 2048);
+
+    // Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      // Nếu API lỗi, in luôn cả body để xem chi tiết
+      throw Exception(
+        'Failed to upload knowledge from web: '
+        '[${response.statusCode}] ${response.reasonPhrase}\n'
+        'Body: ${response.body}',
+      );
+    }
+  }
+
+  // Upload dữ liệu từ Google Drive vào nguồn tri thức
+  Future<Map<String, dynamic>> uploadKnowledgeFromGoogleDrive({
+    required String knowledgeId,
+    required String googleDriveToken,
+  }) async {
+    // 1) Lấy header (Bearer token + x-jarvis-guid)
+    final headers = await getAuthHeaders();
+    // MultipartRequest tự set Content-Type, nên gỡ bỏ nếu có
+    headers.remove('Content-Type');
+
+    // 2) Khởi tạo MultipartRequest
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/google-drive',
+    );
+    final request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(headers)
+      // 3) Đính token vào field (hoặc bạn có thể dùng header tuỳ backend)
+      ..fields['driveToken'] = googleDriveToken;
+
+    // 4) Gửi và chờ response
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+
+    // 5) Xử lý kết quả
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to import from Drive: [${response.statusCode}] '
+        '${response.reasonPhrase}\nBody: ${response.body}',
+      );
+    }
+  }
+
+  // Upload dữ liệu từ Slack vào một Knowledge đã tạo
+  // Tham số:
+  //  + [knowledgeId]: ID của knowledge cần nạp
+  //  + [unitName]: tên đơn vị (unit) hiển thị trong tri thức
+  //  + [slackWorkspace]: tên workspace trên Slack
+  //  + [slackBotToken]: Bot token để truy cập Slack API
+  //  Trả về JSON của Knowledge Data Source nếu thành công
+  Future<Map<String, dynamic>> uploadKnowledgeFromSlack({
+    required String knowledgeId,
+    required String unitName,
+    required String slackWorkspace,
+    required String slackBotToken,
+  }) async {
+    // 1. Lấy header (Bearer token + x-jarvis-guid)
+    final headers = await getAuthHeaders();
+    // Đảm bảo Content-Type là JSON
+    headers['Content-Type'] = 'application/json';
+
+    // 2. Build URI
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/slack',
+    );
+
+    // 3. Chuẩn bị body JSON
+    final body = jsonEncode({
+      'unitName': unitName,
+      'slackWorkspace': slackWorkspace,
+      'slackBotToken': slackBotToken,
+    });
+
+    // 4. Gửi POST
+    final response = await http.post(uri, headers: headers, body: body);
+
+    // 5. Xử lý kết quả
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to upload knowledge from Slack: [${response.statusCode}] ${response.reasonPhrase}',
+      );
+    }
+  }
+
+  // Upload dữ liệu từ Confluence vào một Knowledge đã tạo
+  // Tham số:
+  //  + [knowledgeId]: ID của knowledge cần nạp
+  //  + [unitName]: tên đơn vị (unit) hiển thị trong tri thức
+  //  + [wikiPageUrl]: URL trang Confluence cần crawl
+  //  + [confluenceUsername]: username để truy cập Confluence
+  //  + [confluenceAccessToken]: token truy cập Confluence
+  // Trả về JSON của Knowledge Data Source nếu thành công
+  Future<Map<String, dynamic>> uploadKnowledgeFromConfluence({
+    required String knowledgeId,
+    required String unitName,
+    required String wikiPageUrl,
+    required String confluenceUsername,
+    required String confluenceAccessToken,
+  }) async {
+    // 1. Lấy header (Bearer token + x-jarvis-guid)
+    final headers = await getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    // 2. Build URI
+    final uri = Uri.parse(
+      '$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/confluence',
+    );
+
+    // 3. Chuẩn bị body JSON
+    final body = jsonEncode({
+      'unitName': unitName,
+      'wikiPageUrl': wikiPageUrl,
+      'confluenceUsername': confluenceUsername,
+      'confluenceAccessToken': confluenceAccessToken,
+    });
+
+    // 4. Gửi POST
+    final response = await http.post(uri, headers: headers, body: body);
+
+    // 5. Xử lý kết quả
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to upload knowledge from Confluence: '
+        '[${response.statusCode}] ${response.reasonPhrase}',
+      );
+    }
   }
 }
 

@@ -1,140 +1,153 @@
-import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/select_knowledge_source_popup.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
-import 'package:eco_chat_bot/src/widgets/input_form_field.dart';
 import 'package:flutter/material.dart';
-
 import '../../../constants/styles.dart';
 
 class ImportWebSourcePopup {
-  static void build(BuildContext context) {
-    final overlay = Overlay.of(context);
+  /// Opens a dialog to import from a web URL.
+  static Future<void> build(
+    BuildContext context, {
+    required void Function(String name, String url) onWebSourceSelected,
+  }) {
+    final _formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final urlController = TextEditingController();
 
-    OverlayEntry? overlayEntry;
-
-    void closeOverlay(BuildContext context) {
-      overlayEntry?.remove();
-      SelectKnowledgeSourcePopup.build(context);
-    }
-
-    // Declare overlayEntry before use
-    overlayEntry = OverlayEntry(
-      builder: (context) => Material(
-        color: Colors.black.withOpacity(0.5),
-        child: Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: ColorConst.backgroundWhiteColor,
-              borderRadius: BorderRadius.circular(radius12),
-            ),
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (dialogContext) {
+        // dùng builderContext để mọi InheritedWidget đều có sẵn
+        final w = MediaQuery.of(dialogContext).size.width * .8;
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radius12),
+          ),
+          backgroundColor: ColorConst.backgroundWhiteColor,
+          insetPadding: EdgeInsets.symmetric(
+              horizontal: (MediaQuery.of(dialogContext).size.width - w) / 2),
+          child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(padding16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Title and Close Button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Import Web Resource',
-                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
-                      ),
-                      SizedBox(
-                        width: spacing32,
-                        height: spacing32,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            size: spacing20,
-                          ),
-                          onPressed: () {
-                            closeOverlay(context);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: spacing24),
-
-                  // Name Field
-                  InputFormField.build('Name', 'Enter knowledge unit name', required: true),
-
-                  SizedBox(height: spacing24),
-
-                  // Instructions Field
-                  InputFormField.build('Web URL', 'https://example.com', required: true),
-
-                  SizedBox(height: spacing32),
-
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: ColorConst.bluePastelColor,
-                      borderRadius: BorderRadius.circular(spacing12),
-                      border: Border.all(color: ColorConst.blueColor.withAlpha((0.5 * 255).toInt()), width: 1),
-                    ),
-                    padding: EdgeInsets.all(15),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Current Limitation:',
-                          style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16, color: Colors.blue),
+                          'Import Web Resource',
+                          style: AppFontStyles.poppinsTitleSemiBold(
+                              fontSize: fontSize16),
                         ),
-                        SizedBox(height: spacing8),
-                        Text(
-                          '• You can load up to 64 pages at a time',
-                          style: AppFontStyles.poppinsRegular(),
-                        ),
-                        SizedBox(height: spacing4),
-                        Text(
-                          '• Need more? Contact us at',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          'myjarvischat@gmail.com',
-                          style: AppFontStyles.poppinsRegular(color: Colors.blue),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: spacing20),
+                          onPressed: () => Navigator.of(dialogContext).pop(),
                         ),
                       ],
                     ),
-                  ),
 
-                  SizedBox(height: spacing40),
+                    const SizedBox(height: spacing24),
 
-                  // Buttons Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GradientFormButton(
-                        text: 'Cancel',
-                        onPressed: () {
-                          closeOverlay(context);
-                        },
-                        isActiveButton: false,
+                    // Name
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Name *',
+                        hintText: 'Enter knowledge unit name',
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: spacing12),
-                        child: GradientFormButton(
-                          text: 'Import',
-                          onPressed: () {},
-                          isActiveButton: true,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+
+                    const SizedBox(height: spacing24),
+
+                    // URL
+                    TextFormField(
+                      controller: urlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Web URL *',
+                        hintText: 'https://example.com',
+                      ),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+
+                    const SizedBox(height: spacing32),
+
+                    // Limitation notice
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(spacing12),
+                      decoration: BoxDecoration(
+                        color: ColorConst.bluePastelColor,
+                        borderRadius: BorderRadius.circular(radius12),
+                        border: Border.all(
+                          color: ColorConst.blueColor
+                              .withAlpha((0.5 * 255).toInt()),
+                          width: 1,
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Current Limitation:',
+                            style: AppFontStyles.poppinsTitleSemiBold(
+                              fontSize: fontSize16,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: spacing8),
+                          Text('• You can load up to 64 pages at a time',
+                              style: AppFontStyles.poppinsRegular()),
+                          const SizedBox(height: spacing4),
+                          Text('• Need more? Contact us at',
+                              style: AppFontStyles.poppinsRegular()),
+                          Text('myjarvischat@gmail.com',
+                              style: AppFontStyles.poppinsRegular(
+                                  color: Colors.blue)),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: spacing40),
+
+                    // Actions
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GradientFormButton(
+                          text: 'Cancel',
+                          isActiveButton: false,
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                        ),
+                        const SizedBox(width: spacing12),
+                        GradientFormButton(
+                          text: 'Import',
+                          isActiveButton: true,
+                          onPressed: () {
+                            if (_formKey.currentState?.validate() ?? false) {
+                              onWebSourceSelected(
+                                nameController.text.trim(),
+                                urlController.text.trim(),
+                              );
+                              Navigator.of(dialogContext).pop();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
-
-    // Now insert the overlay entry
-    overlay.insert(overlayEntry);
   }
 }

@@ -40,6 +40,31 @@ class _CreateBotModalState extends State<CreateBotModal> {
     }
   }
 
+  List<String> _selectedPaths = [];
+  List<Map<String, String>> _importedWebSources = [];
+
+  void _pickSources() {
+    SelectKnowledgeSourcePopup.build(
+      context,
+      onLocalFilesSelected: (paths) {
+        setState(() => _selectedPaths = paths);
+      },
+      onWebSourceSelected: (name, url) {
+        setState(() {
+          _importedWebSources.add({'name': name, 'url': url});
+        });
+      },
+    );
+  }
+
+  void _removeLocalPath(String path) {
+    setState(() => _selectedPaths.remove(path));
+  }
+
+  void _removeWebSource(Map<String, String> source) {
+    setState(() => _importedWebSources.remove(source));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -77,7 +102,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
                   ],
                 ),
 
-                SizedBox(height: spacing24),
+                const SizedBox(height: spacing24),
 
                 // Name Field
                 SizedBox(
@@ -108,37 +133,92 @@ class _CreateBotModalState extends State<CreateBotModal> {
                               style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
                             ),
                             SizedBox(height: spacing20),
-                            Center(
-                              child: DottedBorder(
-                                strokeWidth: 1,
-                                dashPattern: [4, 2], // Dashed pattern
-                                borderType: BorderType.RRect, // Rounded rectangle
-                                radius: Radius.circular(radius12), // Border radius
-                                color: ColorConst.textHighlightColor,
-                                child: SizedBox(
-                                  width: double.infinity,
+                            // Center(
+                            //   child: DottedBorder(
+                            //     strokeWidth: 1,
+                            //     dashPattern: [4, 2], // Dashed pattern
+                            //     borderType: BorderType.RRect, // Rounded rectangle
+                            //     radius: Radius.circular(radius12), // Border radius
+                            //     color: ColorConst.textHighlightColor,
+                            //     child: SizedBox(
+                            //       width: double.infinity,
+                            //       height: spacing32,
+                            //       child: ElevatedButton(
+                            //         style: ElevatedButton.styleFrom(
+                            //           backgroundColor: Colors.transparent,
+                            //           shadowColor: Colors.transparent,
+                            //           overlayColor: Colors.transparent,
+                            //           shape: RoundedRectangleBorder(
+                            //             borderRadius: BorderRadius.circular(radius12),
+                            //           ),
+                            //         ),
+                            //         onPressed: () {
+                            //           // Open the SelectKnowledgeSourcePopup
+                            //           SelectKnowledgeSourcePopup.build(context);
+                            //         },
+                            //         child: Text(
+                            //           "+ Add knowledge source",
+                            //           style: AppFontStyles.poppinsTextBold(),
+                            //         ),
+                            //       ),
+                            //     ),
+                            //   ),
+                            // )
+
+                            DottedBorder(
+                              borderType: BorderType.RRect,
+                              dashPattern: [4, 2],
+                              radius: Radius.circular(radius12),
+                              child: InkWell(
+                                onTap: _pickSources,
+                                child: Container(
                                   height: spacing32,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      overlayColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(radius12),
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      // Open the SelectKnowledgeSourcePopup
-                                      SelectKnowledgeSourcePopup.build(context);
-                                    },
-                                    child: Text(
-                                      "+ Add knowledge source",
-                                      style: AppFontStyles.poppinsTextBold(),
-                                    ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    _selectedPaths.isEmpty && _importedWebSources.isEmpty
+                                        ? '+ Add knowledge source'
+                                        :
+                                        // show summary count
+                                        '${_selectedPaths.length} file(s), ${_importedWebSources.length} web source(s) selected',
+                                    style: AppFontStyles.poppinsRegular(),
                                   ),
                                 ),
                               ),
-                            )
+                            ),
+
+                            if (_selectedPaths.isNotEmpty) ...[
+                              const SizedBox(height: spacing8),
+                              Wrap(
+                                spacing: spacing8,
+                                children: _selectedPaths.map((p) {
+                                  final name = p.split('/').last;
+                                  return Chip(
+                                    label: Text(name, overflow: TextOverflow.ellipsis),
+                                    onDeleted: () => _removeLocalPath(p),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+
+                            if (_importedWebSources.isNotEmpty) ...[
+                              const SizedBox(height: spacing8),
+                              Wrap(
+                                spacing: spacing8,
+                                children: _importedWebSources.map((src) {
+                                  return InputChip(
+                                    label: Text(
+                                      src['name']!,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    onDeleted: () => _removeWebSource(src),
+                                    avatar: Icon(Icons.link, size: spacing16),
+                                    onPressed: () {
+                                      // optionally handle tap to open URL
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                           ],
                         ),
 
