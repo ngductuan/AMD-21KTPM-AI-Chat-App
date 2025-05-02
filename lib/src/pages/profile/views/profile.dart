@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
+import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
-import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
+import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
+import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_profile.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +23,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int? selectedBotIndex;
   String? userId;
   String? email;
+  List<dynamic> _aiModels = [];
+  String botSelectedId = "";
+  dynamic botSelectedData;
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,18 +39,123 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  int _currentPage = 0;
+  final int _limit = 10; // Number of items to load per request
+  bool _isLoading = false;
+  bool _hasMore = true;
+  final ScrollController _scrollController = ScrollController();
+
+  Future<void> fetchAiModels({String? searchQuery, bool reset = false}) async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      if (reset) {
+        _currentPage = 0;
+        _hasMore = true;
+        _aiModels.clear();
+      }
+    });
+
+    try {
+      final offset = _currentPage * _limit;
+      dynamic response = await BotServiceApi.getAllBots(search: searchQuery, offset: offset, limit: _limit);
+
+      final Map<String, dynamic> jsonResponse = json.decode(response);
+
+      if (jsonResponse.containsKey('data')) {
+        final newItems = jsonResponse['data'];
+
+        setState(() {
+          _aiModels.addAll(newItems);
+          _currentPage++;
+          // If we get fewer items than requested, we've reached the end
+          _hasMore = newItems.length == _limit;
+        });
+      }
+    } catch (e) {
+      // Handle the exception
+      print('Exception occurred while fetching AI models: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<dynamic> fetchAiModelById() async {
+    if (botSelectedId.isEmpty) return;
+
+    try {
+      dynamic response = await BotServiceApi.getBotById(botSelectedId);
+
+      return response;
+    } catch (e) {
+      print('Exception occurred while fetching bot data: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+
+    _scrollController.addListener(_scrollListener);
+
+    fetchAiModels();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange) {
+      if (!_isLoading && _hasMore) {
+        fetchAiModels();
+        // print('Loading more items...');
+      }
+    }
+  }
+
+  Future<void> updateBotData(dynamic body, Function endCallback) async {
+    try {
+      await BotServiceApi.updateBotById(
+        botSelectedId,
+        body,
+      );
+
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Bot updated successfully!',
+        mode: AppToastMode.confirm,
+      ).show(context);
+    } catch (e) {
+      print('Error updating bot: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error updating bot',
+        mode: AppToastMode.error,
+      ).show(context);
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      endCallback();
+      fetchAiModels(reset: true);
+    }
   }
 
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
+      color: ColorConst.backgroundGrayColor2,
       position: RelativeRect.fromRect(
         tapPosition & const Size(spacing40, spacing40),
         Offset.zero & overlay.size,
@@ -57,9 +169,11 @@ class _ProfilePageState extends State<ProfilePage> {
               Text('Edit Bot'),
             ],
           ),
-          onTap: () {
-            Navigator.of(context)
-                .push(AnimationModal.fadeInModal(CreateBotModal()));
+          onTap: () async {
+            final dynamic data = await fetchAiModelById();
+
+            Navigator.of(context).push(AnimationModal.fadeInModal(
+                ManageBotModal(botData: data, endCallback: updateBotData, activeButtonText: 'Update')));
           },
         ),
         PopupMenuItem(
@@ -67,8 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
               const SizedBox(width: spacing8),
-              Text('Remove Bot',
-                  style: TextStyle(color: ColorConst.textRedColor)),
+              Text('Remove Bot', style: TextStyle(color: ColorConst.textRedColor)),
             ],
           ),
           onTap: () {
@@ -77,8 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ],
       elevation: 8,
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
     );
   }
 
@@ -99,8 +211,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ).createShader(bounds),
           child: Text(
             'EcoChatBot',
-            style: AppFontStyles.poppinsTitleSemiBold(
-                fontSize: fontSize24, color: ColorConst.textWhiteColor),
+            style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize24, color: ColorConst.textWhiteColor),
           ),
         ),
         actions: [
@@ -108,8 +219,7 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: const Icon(Icons.settings_outlined),
             onPressed: () async {
               // Điều hướng sang SettingsScreen và đợi kết quả trả về
-              await Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const SettingsScreen()));
+              await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
               // Sau khi trở về, load lại thông tin người dùng
               _loadUserData();
             },
@@ -138,16 +248,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       Text(
                         email != null && email != "Guest"
-                            ? (email!.length > 10
-                                ? '${email!.substring(0, 10)}...'
-                                : email!)
+                            ? (email!.contains('@gmail.com')
+                                ? email!.replaceFirst(RegExp(r'@gmail\.com$'), '')
+                                : (email!.length > 10 ? '${email!.substring(0, 15)}...' : email!))
                             : 'Guest',
-                        style: AppFontStyles.poppinsTitleSemiBold(
-                            fontSize: fontSize20),
+                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize20),
                       ),
                       Text(
                         userId != null && userId!.isNotEmpty
-                            ? 'ID ${userId!.length > 5 ? '${userId!.substring(0, 5)}...' : userId!}'
+                            ? 'ID: ${userId!.length > 5 ? userId!.substring(0, 8) : userId!}'
                             : 'ID: ',
                         style: AppFontStyles.poppinsRegular(
                           fontSize: fontSize14,
@@ -170,27 +279,40 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: EdgeInsets.all(spacing20),
                       child: Text(
                         'My bots',
-                        style: AppFontStyles.poppinsTitleSemiBold(
-                            fontSize: fontSize18),
+                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize18),
                       ),
                     ),
                     // Dynamically render bot list
-                    ...List.generate(MockData.selfAiModels.length, (index) {
-                      final bot = MockData.selfAiModels[index];
-                      return GestureDetector(
-                        onTapUp: (TapUpDetails details) {
-                          setState(() {
-                            selectedBotIndex = index;
-                          });
-                          _showBotMenu(context, index, details.globalPosition);
+                    Expanded(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(vertical: spacing8),
+                        itemCount: _aiModels.length + (_hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == _aiModels.length) {
+                            return buildLoadingIndicator(hasMore: _hasMore);
+                          }
+
+                          Map<String, String> botAvatar = MockData.aiModels[index % MockData.aiModels.length];
+
+                          return GestureDetector(
+                            onTapUp: (TapUpDetails details) {
+                              botSelectedId = _aiModels[index]['id'] ?? "";
+                              print("botSelectedId: $botSelectedId");
+
+                              _showBotMenu(context, index, details.globalPosition);
+                            },
+                            onTapDown: (_) {
+                              botSelectedId = "";
+                            },
+                            child: AiBotItem(
+                              botData: _aiModels[index],
+                              avatarValue: botAvatar['value'],
+                            ),
+                          );
                         },
-                        // child: AiBotItem(
-                        //   botData: bot,
-                        //   selfAI: true,
-                        // ),
-                        child: SizedBox(),
-                      );
-                    }),
+                      ),
+                    ),
                   ],
                 ),
               ),

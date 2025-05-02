@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/widgets/debouncer.dart';
+import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import '../../../constants/styles.dart';
@@ -101,8 +102,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
       final Map<String, dynamic> jsonResponse = json.decode(response);
 
-      // print('Response: $jsonResponse');
-
       if (jsonResponse.containsKey('data')) {
         final newItems = jsonResponse['data'];
 
@@ -192,7 +191,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           itemCount: _aiModels.length + (_hasMore ? 1 : 0), // Add one more item for loading indicator
           itemBuilder: (context, index) {
             if (index >= _aiModels.length) {
-              return _buildLoadingIndicator();
+              return buildLoadingIndicator(hasMore: _hasMore);
             }
 
             Map<String, String> botAvatar = MockData.aiModels[index % MockData.aiModels.length];
@@ -210,13 +209,5 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  Widget _buildLoadingIndicator() {
-    return Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Center(
-        // Show a loading indicator if more items are being loaded
-        child: _hasMore ? CircularProgressIndicator() : SizedBox.shrink(),
-      ),
-    );
-  }
+
 }
