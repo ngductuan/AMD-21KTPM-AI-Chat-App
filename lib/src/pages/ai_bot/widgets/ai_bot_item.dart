@@ -6,20 +6,15 @@ class AiBotItem extends StatelessWidget {
   final dynamic botData;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
-  final bool selfAI;
   final String? avatarValue;
 
   const AiBotItem(
-      {super.key, required this.botData, this.onTap, this.onLongPress, this.avatarValue, this.selfAI = false});
+      {super.key, required this.botData, this.onTap, this.onLongPress, this.avatarValue});
 
   @override
   Widget build(BuildContext context) {
     // Avatar path
     String avatarPath = AssetPath.aiModels[avatarValue] ?? AssetPath.icoDefaultImage;
-
-    if (selfAI) {
-      avatarPath = AssetPath.selfAiModels[avatarValue] ?? AssetPath.icoDefaultImage;
-    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: padding16, vertical: padding4),
