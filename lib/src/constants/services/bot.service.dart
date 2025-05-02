@@ -26,4 +26,47 @@ class BotServiceApi {
       }
     });
   }
+
+  static Future<dynamic> getAllBots({int offset = 0, int limit = 10, String? search}) async {
+    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant').replace(
+      queryParameters: {
+        'q': search,
+        'order': 'DESC',
+        'order_field': 'createdAt',
+        'offset': offset.toString(),
+        'limit': limit.toString(),
+        'is_published': null,
+      },
+    );
+
+    final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
+
+    return await http.get(url, headers: headers).then((response) {
+      if (response.statusCode == HttpStatus.ok) {
+        return response.body;
+      } else {
+        throw Exception('Failed to load bots: ${response.reasonPhrase}');
+      }
+    });
+  }
+
+  static Future<dynamic> getBotById(String assistantId) async {
+    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant').replace(
+      queryParameters: {
+        'assistantId': assistantId,
+      },
+    );
+
+    final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
+
+    return await http.get(url, headers: headers).then((response) {
+      if (response.statusCode == HttpStatus.ok) {
+        return response.body;
+      } else {
+        throw Exception('Failed to load bot by ID $assistantId : ${response.reasonPhrase}');
+      }
+    });
+  }
+
+
 }

@@ -3,20 +3,22 @@ import '../../../constants/styles.dart';
 import '../../../helpers/image_helpers.dart';
 
 class AiBotItem extends StatelessWidget {
-  final Map<String, String> botData;
+  final dynamic botData;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final bool selfAI;
+  final String? avatarValue;
 
-  const AiBotItem({super.key, required this.botData, this.onTap, this.onLongPress, this.selfAI = false});
+  const AiBotItem(
+      {super.key, required this.botData, this.onTap, this.onLongPress, this.avatarValue, this.selfAI = false});
 
   @override
   Widget build(BuildContext context) {
     // Avatar path
-    String avatarPath = AssetPath.aiModels[botData['value']] ?? AssetPath.icoDefaultImage;
+    String avatarPath = AssetPath.aiModels[avatarValue] ?? AssetPath.icoDefaultImage;
 
     if (selfAI) {
-      avatarPath = AssetPath.selfAiModels[botData['value']] ?? AssetPath.icoDefaultImage;
+      avatarPath = AssetPath.selfAiModels[avatarValue] ?? AssetPath.icoDefaultImage;
     }
 
     return Container(
@@ -40,13 +42,13 @@ class AiBotItem extends StatelessWidget {
           radius: BorderRadius.circular(radius32),
         ),
         title: Text(
-          botData["display"]!,
+          botData["assistantName"]?.toString() ?? "",
           style: AppFontStyles.poppinsTextBold(),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          botData["prompt"]!,
+          botData["description"]?.toString() ?? "",
           style: AppFontStyles.poppinsRegular(
             color: ColorConst.textGrayColor,
             fontSize: fontSize12,

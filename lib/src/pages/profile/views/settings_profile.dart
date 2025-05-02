@@ -10,6 +10,7 @@ import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eco_chat_bot/src/pages/profile/views/upgrade_account.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -53,7 +54,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       print("🔐 Logout status: ${response.statusCode}");
       print("🔐 Logout response: ${await response.stream.bytesToString()}");
-
     } catch (e) {
       print("❌ Logout error: $e");
     }
@@ -65,7 +65,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
 
     // Nếu muốn điều hướng về màn hình login, bạn có thể mở dòng dưới đây
-    Navigator.of(context).pushNamedAndRemoveUntil(LoginScreen.routeName, (route) => false);
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(LoginScreen.routeName, (route) => false);
   }
 
   Future<bool?> _showLogoutDialog(BuildContext context) {
@@ -101,64 +102,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onPressed: () {
                         Navigator.of(context).pop(true);
                       },
-                      isActiveButton: true,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showUpgradeModal(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: ColorConst.backgroundWhiteColor,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Upgrade PRO account?',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Benefit features',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _buildBenefitItem('AI Chat Models (GPT-3.5, GPT-4.0, Gemini...)'),
-              const SizedBox(height: 12),
-              _buildBenefitItem('Unlimited queries per month'),
-              const SizedBox(height: 12),
-              _buildBenefitItem('Unlimited AI Action Injection'),
-              const SizedBox(height: 30),
-              const Text(
-                '\$9.99/month',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: GradientFormButton(
-                      text: 'Cancel',
-                      onPressed: () => Navigator.of(context).pop(),
-                      isActiveButton: false,
-                    ),
-                  ),
-                  const SizedBox(width: spacing12),
-                  Expanded(
-                    child: GradientFormButton(
-                      text: 'Upgrade',
-                      onPressed: () => Navigator.of(context).pop(),
                       isActiveButton: true,
                     ),
                   ),
@@ -307,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.workspace_premium,
                           iconColor: Colors.pink,
                           title: 'Upgrade account',
-                          onTap: () => _showUpgradeModal(context),
+                          onTap: () => showUpgradeAccountModal(context),
                         ),
                         Divider(height: 1, color: Colors.grey.withOpacity(0.3)),
                         _buildSettingItem(
