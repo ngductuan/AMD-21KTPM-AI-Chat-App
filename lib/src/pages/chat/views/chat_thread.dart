@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/constants/services/chat.service.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
@@ -16,8 +17,6 @@ import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 class ChatThreadScreen extends StatefulWidget {
   const ChatThreadScreen({super.key});
 
-  // final bool isInvisibleForPreview;
-
   static const String routeName = '/chat-thread';
 
   @override
@@ -28,6 +27,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   bool isTyping = true;
   int activeAiModelIndex = 0;
   String activeAiModelId = "";
+
+  // For preview bot
+  bool isVisibleGadget = true;
 
   final TextEditingController _controller = TextEditingController();
   // Controller cho từng placeholder khi chọn prompt có chứa dấu []
@@ -53,7 +55,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   void initState() {
     super.initState();
 
-    fetchAiModels();
+    if (isVisibleGadget) {
+      fetchAiModels();
+    }
 
     // Gọi API ban đầu để lấy danh sách prompt (limit 3)
     _fetchInitialPrompts();
@@ -354,8 +358,22 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         // Send message to server and wait for response
         dynamic response = await ChatServiceApi.createChatWithBot(content, messageDto);
 
-        // If you want to add the bot's response too:
-        final Map<String, dynamic> jsonResponse = json.decode(response);
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+
+        if (response.statusCode == HttpStatus.unprocessableEntity) {
+          setState(() {
+            _messages.removeLast();
+          });
+
+          AppToast(
+            context: context,
+            duration: Duration(seconds: 1),
+            message: jsonResponse['message'] ?? 'Error sending message',
+            mode: AppToastMode.error,
+          ).show(context);
+
+          return;
+        }
 
         if (jsonResponse.containsKey('message')) {
           setState(() {
@@ -401,6 +419,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       //     'bool: ${activeAiModelId.isNotEmpty ? activeAiModelId : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null)}');
       setState(() {
         activeAiModelId = args['botId'];
+        if (args['isVisibleGadget'] != null) {
+          isVisibleGadget = args['isVisibleGadget'];
+          title = 'Preview';
+        }
       });
     }
 
@@ -420,7 +442,13 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: spacing44,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back), // Your back icon
+          onPressed: () {
+            Navigator.of(context).pop(true);
+          },
+        ),
+        leadingWidth: spacing48,
         elevation: 1,
         shadowColor: ColorConst.backgroundLightGrayColor,
         backgroundColor: ColorConst.backgroundWhiteColor,
@@ -526,59 +554,61 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
               color: Colors.transparent,
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Dropdown chọn AI model
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing4),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(radius16),
-                          color: ColorConst.backgroundWhiteColor,
-                        ),
-                        child: DropdownButton<String>(
-                          underline: SizedBox.shrink(),
-                          isDense: true,
-                          isExpanded: false,
-                          icon: const Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.black,
-                          ),
-                          value: activeAiModelId.isNotEmpty
-                              ? activeAiModelId
-                              : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null),
-                          items: _aiModels.map<DropdownMenuItem<String>>((model) {
-                            return DropdownMenuItem<String>(
-                              value: model["id"],
-                              child: _buildModelLabel(model['id']!),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              isFirstLoading = false;
+                  isVisibleGadget
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Dropdown chọn AI model
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(radius16),
+                                color: ColorConst.backgroundWhiteColor,
+                              ),
+                              child: DropdownButton<String>(
+                                underline: SizedBox.shrink(),
+                                isDense: true,
+                                isExpanded: false,
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.black,
+                                ),
+                                value: activeAiModelId.isNotEmpty
+                                    ? activeAiModelId
+                                    : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null),
+                                items: _aiModels.map<DropdownMenuItem<String>>((model) {
+                                  return DropdownMenuItem<String>(
+                                    value: model["id"],
+                                    child: _buildModelLabel(model['id']!),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    isFirstLoading = false;
 
-                              activeAiModelIndex = _aiModels.indexWhere((element) => element["id"] == value);
-                              activeAiModelId = value!;
-                              // print(activeAiModelIndex);
-                              print(activeAiModelId);
-                            });
-                          },
-                        ),
-                      ),
-                      // Các icon chức năng
-                      Row(
-                        children: [
-                          const Icon(Icons.camera_enhance_outlined, color: ColorConst.backgroundBlackColor),
-                          SizedBox(width: spacing16),
-                          const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
-                          SizedBox(width: spacing16),
-                          const Icon(Icons.history_outlined, color: ColorConst.backgroundBlackColor),
-                          SizedBox(width: spacing16),
-                          const Icon(Icons.add_circle_outline, color: ColorConst.backgroundBlackColor),
-                        ],
-                      )
-                    ],
-                  ),
+                                    activeAiModelIndex = _aiModels.indexWhere((element) => element["id"] == value);
+                                    activeAiModelId = value!;
+                                    // print(activeAiModelIndex);
+                                    print(activeAiModelId);
+                                  });
+                                },
+                              ),
+                            ),
+                            // Các icon chức năng
+                            Row(
+                              children: [
+                                const Icon(Icons.camera_enhance_outlined, color: ColorConst.backgroundBlackColor),
+                                SizedBox(width: spacing16),
+                                const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
+                                SizedBox(width: spacing16),
+                                const Icon(Icons.history_outlined, color: ColorConst.backgroundBlackColor),
+                                SizedBox(width: spacing16),
+                                const Icon(Icons.add_circle_outline, color: ColorConst.backgroundBlackColor),
+                              ],
+                            )
+                          ],
+                        )
+                      : SizedBox.shrink(),
                   SizedBox(height: spacing12),
                   Container(
                     margin: EdgeInsets.only(bottom: spacing16),
