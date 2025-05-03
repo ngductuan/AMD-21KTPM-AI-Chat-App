@@ -1,4 +1,4 @@
-enum ChatThreadStatus { new_, existing }
+enum ChatThreadStatus { new_, existing, newExplore }
 
 enum ChatRole {
   user('user'),

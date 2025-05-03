@@ -16,6 +16,8 @@ import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 class ChatThreadScreen extends StatefulWidget {
   const ChatThreadScreen({super.key});
 
+  // final bool isInvisibleForPreview;
+
   static const String routeName = '/chat-thread';
 
   @override
@@ -52,24 +54,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     super.initState();
 
     fetchAiModels();
-
-    // Lấy đối số truyền vào (nếu có) và cập nhật activeAiModelIndex
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   final args = ModalRoute.of(context)!.settings.arguments as Map?;
-    //   if (args != null) {
-    //     String? botValue = args['botValue'];
-
-    //     setState(() {
-    //       activeAiModelIndex =
-    //           botValue != null ? MockData.aiModels.indexWhere((element) => element["value"] == botValue) : 0;
-    //       if (activeAiModelIndex == -1) {
-    //         activeAiModelIndex = 0;
-    //       }
-    //     });
-
-    //     print("Initialized activeAiModelIndex = $activeAiModelIndex");
-    //   }
-    // });
 
     // Gọi API ban đầu để lấy danh sách prompt (limit 3)
     _fetchInitialPrompts();
@@ -411,7 +395,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       setState(() {
         title = args['title'];
       });
-    } else if (chatStatus == ChatThreadStatus.new_ && isFirstLoading) {
+    } else if (chatStatus == ChatThreadStatus.newExplore && isFirstLoading) {
       print('get botId: ${args['botId']} ${isFirstLoading}');
       // print(
       //     'bool: ${activeAiModelId.isNotEmpty ? activeAiModelId : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null)}');
