@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
+import 'package:eco_chat_bot/src/constants/services/token.service.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
+import 'package:eco_chat_bot/src/pages/profile/widgets/token_progress.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
 import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';
 import 'package:eco_chat_bot/src/widgets/show_confirm_dialog.dart';
@@ -45,6 +47,25 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = false;
   bool _hasMore = true;
   final ScrollController _scrollController = ScrollController();
+
+  int usedToken = 0;
+  int totalToken = 0;
+
+  Future<void> fetchTokenUsage() async {
+    try {
+      dynamic response = await TokenServiceApi.getTokenUsage();
+      final Map<String, dynamic> jsonResponse = json.decode(response);
+      final int availableTokens = jsonResponse['availableTokens'] ?? 0;
+
+      setState(() {
+        totalToken = jsonResponse['totalTokens'] ?? 0;
+        usedToken = totalToken - availableTokens;
+      });
+    } catch (e) {
+      // Handle the exception
+      print('Exception occurred while fetching token usage: $e');
+    }
+  }
 
   Future<void> fetchAiModels({String? searchQuery, bool reset = false}) async {
     if (_isLoading) return;
@@ -102,6 +123,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData();
 
     _scrollController.addListener(_scrollListener);
+
+    fetchTokenUsage();
 
     fetchAiModels();
   }
@@ -263,43 +286,80 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             // Profile section
             Container(
-              color: ColorConst.backgroundWhiteColor,
               padding: const EdgeInsets.symmetric(vertical: spacing16),
-              child: Row(
-                children: [
-                  const SizedBox(width: spacing20),
-                  // Profile image
-                  CircleAvatar(
-                    radius: spacing40,
-                    backgroundImage: AssetImage(AssetPath.logoApp),
+              decoration: BoxDecoration(
+                color: ColorConst.backgroundWhiteColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: spacing10,
+                    offset: const Offset(0, spacing4),
                   ),
-                  const SizedBox(width: spacing20),
-                  // Profile info
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        email != null && email != "Guest"
-                            ? (email!.contains('@gmail.com')
-                                ? email!.replaceFirst(RegExp(r'@gmail\.com$'), '')
-                                : (email!.length > 10 ? '${email!.substring(0, 15)}...' : email!))
-                            : 'Guest',
-                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize20),
+                      const SizedBox(width: spacing20),
+                      // Profile image
+                      CircleAvatar(
+                        radius: spacing40,
+                        backgroundImage: AssetImage(AssetPath.logoApp),
                       ),
-                      Text(
-                        userId != null && userId!.isNotEmpty
-                            ? 'ID: ${userId!.length > 5 ? userId!.substring(0, 8) : userId!}'
-                            : 'ID: ',
-                        style: AppFontStyles.poppinsRegular(
-                          fontSize: fontSize14,
-                          color: ColorConst.textGrayColor,
+                      const SizedBox(width: spacing20),
+                      // Profile info
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: spacing16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                email != null && email != "Guest"
+                                    ? (email!.contains('@gmail.com')
+                                        ? email!.replaceFirst(RegExp(r'@gmail\.com$'), '')
+                                        : (email!.length > 10 ? '${email!.substring(0, 15)}...' : email!))
+                                    : 'Guest',
+                                style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize20),
+                              ),
+                              Text(
+                                userId != null && userId!.isNotEmpty
+                                    ? 'ID: ${userId!.length > 5 ? userId!.substring(0, 8) : userId!}'
+                                    : 'ID: ',
+                                style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
+                              ),
+                              SizedBox(height: spacing4),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Token/request: 5',
+                                    style: AppFontStyles.poppinsTitleSemiBold(color: ColorConst.textGrayColor),
+                                  ),
+                                  SizedBox(width: spacing32),
+                                  Icon(
+                                    Icons.edit_note_outlined,
+                                    color: ColorConst.backgroundBlackColor,
+                                    size: spacing24,
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
+                  SizedBox(height: spacing8),
+                  // Token progress section
+                  ProgressTracker(
+                    today: usedToken,
+                    total: totalToken,
+                  ),
                 ],
               ),
             ),
+
             // My bots section
             Expanded(
               child: Container(
@@ -308,7 +368,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(spacing20),
+                      padding: EdgeInsets.symmetric(horizontal: spacing20, vertical: spacing12),
                       child: Text(
                         'My bots',
                         style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize18),
