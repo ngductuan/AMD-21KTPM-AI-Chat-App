@@ -205,6 +205,26 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         PopupMenuItem(
           child: Row(
+            children: const [
+              Icon(Icons.chat_bubble_outline, color: Colors.black),
+              SizedBox(width: spacing8),
+              Text('Preview'),
+            ],
+          ),
+          onTap: () async {},
+        ),
+        PopupMenuItem(
+          child: Row(
+            children: const [
+              Icon(Icons.source_outlined, color: Colors.black),
+              SizedBox(width: spacing8),
+              Text('Edit knowledge'),
+            ],
+          ),
+          onTap: () async {},
+        ),
+        PopupMenuItem(
+          child: Row(
             children: [
               const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
               const SizedBox(width: spacing8),
@@ -214,9 +234,9 @@ class _ProfilePageState extends State<ProfilePage> {
           onTap: () async {
             // Add remove functionality
             buildShowConfirmDialog(context, 'Are you sure you want to remove this bot?', 'Confirm').then(
-              (bool? value) async {
+              (bool? popValue) async {
                 try {
-                  if (value == true) {
+                  if (popValue == true) {
                     final String response = await BotServiceApi.deleteBotById(botSelectedId);
                     if (response == 'true') {
                       AppToast(
@@ -237,7 +257,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   ).show(context);
                 } finally {
                   await Future.delayed(const Duration(milliseconds: 1000));
-                  fetchAiModels(reset: true);
+                  if (popValue == true) {
+                    fetchAiModels(reset: true);
+                  }
                 }
               },
             );

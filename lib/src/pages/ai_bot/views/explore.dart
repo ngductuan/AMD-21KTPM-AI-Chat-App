@@ -206,7 +206,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 Navigator.of(context).pushNamed(
                   ChatThreadScreen.routeName,
                   arguments: {
-                    'chatStatus': ChatThreadStatus.new_,
+                    'chatStatus': ChatThreadStatus.newExplore,
                     'botId': _aiModels[index]['id'],
                   },
                 );
