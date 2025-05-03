@@ -22,7 +22,7 @@ class BotServiceApi {
       if (response.statusCode == HttpStatus.created) {
         return response.body;
       } else {
-        throw Exception('Failed to load bot response: ${response.reasonPhrase}');
+        throw Exception('Failed to create bot response: ${response.reasonPhrase}');
       }
     });
   }
@@ -45,7 +45,7 @@ class BotServiceApi {
       if (response.statusCode == HttpStatus.ok) {
         return response.body;
       } else {
-        throw Exception('Failed to load bots: ${response.reasonPhrase}');
+        throw Exception('Failed to load all bots: ${response.reasonPhrase}');
       }
     });
   }
@@ -75,7 +75,21 @@ class BotServiceApi {
       if (response.statusCode == HttpStatus.ok) {
         return response.body;
       } else {
-        throw Exception('Failed to load bot by ID $assistantId : ${response.reasonPhrase}');
+        throw Exception('Failed to update bot by ID $assistantId : ${response.reasonPhrase}');
+      }
+    });
+  }
+
+  static Future<dynamic> deleteBotById(String assistantId) async {
+    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId');
+
+    final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
+
+    return await http.delete(url, headers: headers).then((response) {
+      if (response.statusCode == HttpStatus.ok) {
+        return response.body;
+      } else {
+        throw Exception('Failed to delete bot by ID $assistantId : ${response.reasonPhrase}');
       }
     });
   }

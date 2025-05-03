@@ -7,7 +7,6 @@ import 'package:eco_chat_bot/src/pages/authentication/views/welcome.dart';
 import 'package:eco_chat_bot/src/pages/general/views/home.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // <-- Thêm dòng này
 
@@ -15,7 +14,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // await dotenv.load(fileName: ".env");
 
   // Check required variables
   // if (dotenv.get(EnvKey.authApi).isEmpty) {
