@@ -31,6 +31,7 @@ class AssetPath {
     "claude_35_sonet": "assets/images/ai_models/claude_35_sonet.svg",
     "deepseek_chat": "assets/images/ai_models/deepseek_chat.svg",
   };
+  static const aiJarvisModel = "assets/images/ai_models/jarvis.png";
 
   static const Map<String, String> selfAiModels = {
     "creative_writingse": 'assets/images/avatar/chat_avatar_6.png',

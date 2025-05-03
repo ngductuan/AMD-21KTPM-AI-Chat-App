@@ -20,8 +20,6 @@ class ChatServiceApi {
       "assistant": BotServiceApi.assistant
     };
 
-    print('body: $body');
-
     final encodedBody = body is String ? body : jsonEncode(body);
 
     return await http.post(url, headers: headers, body: encodedBody).then((response) {
