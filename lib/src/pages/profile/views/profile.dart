@@ -7,6 +7,7 @@ import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
 import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';
+import 'package:eco_chat_bot/src/widgets/show_confirm_dialog.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_profile.dart';
@@ -170,10 +171,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
           onTap: () async {
-            final dynamic data = await fetchAiModelById();
-
-            Navigator.of(context).push(AnimationModal.fadeInModal(
-                ManageBotModal(botData: data, endCallback: updateBotData, activeButtonText: 'Update')));
+            try {
+              final dynamic data = await fetchAiModelById();
+              Navigator.of(context).push(AnimationModal.fadeInModal(
+                  ManageBotModal(botData: data, endCallback: updateBotData, activeButtonText: 'Update')));
+            } catch (e) {
+              print('Error fetching bot data by ID: $e');
+            }
           },
         ),
         PopupMenuItem(
@@ -184,8 +188,36 @@ class _ProfilePageState extends State<ProfilePage> {
               Text('Remove Bot', style: TextStyle(color: ColorConst.textRedColor)),
             ],
           ),
-          onTap: () {
+          onTap: () async {
             // Add remove functionality
+            buildShowConfirmDialog(context, 'Are you sure you want to remove this bot?', 'Confirm').then(
+              (bool? value) async {
+                try {
+                  if (value == true) {
+                    final String response = await BotServiceApi.deleteBotById(botSelectedId);
+                    if (response == 'true') {
+                      AppToast(
+                        context: context,
+                        duration: const Duration(seconds: 1),
+                        message: 'Bot removed successfully!',
+                        mode: AppToastMode.confirm,
+                      ).show(context);
+                    }
+                  }
+                } catch (e) {
+                  print('Error removing bot: $e');
+                  AppToast(
+                    context: context,
+                    duration: const Duration(seconds: 1),
+                    message: 'Error removing bot',
+                    mode: AppToastMode.error,
+                  ).show(context);
+                } finally {
+                  await Future.delayed(const Duration(milliseconds: 1000));
+                  fetchAiModels(reset: true);
+                }
+              },
+            );
           },
         ),
       ],
