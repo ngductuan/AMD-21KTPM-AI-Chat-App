@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/widgets/debouncer.dart';
 import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';
 import 'package:flutter/material.dart';
@@ -201,6 +203,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
               avatarValue: botAvatar['value'],
               onTap: () {
                 // Your onTap logic
+                Navigator.of(context).pushNamed(
+                  ChatThreadScreen.routeName,
+                  arguments: {
+                    'chatStatus': ChatThreadStatus.new_,
+                    'botId': _aiModels[index]['id'],
+                  },
+                );
               },
             );
           },
@@ -208,6 +217,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-
-
 }
