@@ -21,7 +21,6 @@ class SelectKnowledgeSourcePopup {
         color: Colors.black.withOpacity(0.5),
         child: Center(
           child: Container(
-            // width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(
               color: ColorConst.backgroundWhiteColor,
               borderRadius: BorderRadius.circular(radius12),
@@ -158,6 +157,6 @@ class SelectKnowledgeSourcePopup {
       ),
     );
 
-    overlay?.insert(overlayEntry);
+    overlay.insert(overlayEntry);
   }
 }

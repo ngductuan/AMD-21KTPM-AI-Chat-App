@@ -130,13 +130,15 @@ class LocalKnowledgeSourcePopup {
                       const SizedBox(width: spacing12),
                       GradientFormButton(
                         text: 'Import',
-                        isActiveButton: _pickedFiles.isNotEmpty,
-                        onPressed: () {
-                          if (_pickedFiles.isNotEmpty) {
-                            onFilesSelected(knowledgeId, _pickedFiles);
-                            _close();
-                          }
-                        },
+                        isActiveButton: true,
+                        onPressed: _pickedFiles.isNotEmpty
+                            ? () {
+                                if (_pickedFiles.isNotEmpty) {
+                                  onFilesSelected(knowledgeId, _pickedFiles);
+                                  _close();
+                                }
+                              }
+                            : () {},
                       ),
                     ],
                   ),

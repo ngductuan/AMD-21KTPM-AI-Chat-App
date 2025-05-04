@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/constants/services/chat.service.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
@@ -25,6 +26,10 @@ class ChatThreadScreen extends StatefulWidget {
 class _ChatThreadScreenState extends State<ChatThreadScreen> {
   bool isTyping = true;
   int activeAiModelIndex = 0;
+  String activeAiModelId = "";
+
+  // For preview bot
+  bool isVisibleGadget = true;
 
   final TextEditingController _controller = TextEditingController();
   // Controller cho từng placeholder khi chọn prompt có chứa dấu []
@@ -35,38 +40,69 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   // Biến hiển thị gợi ý prompt hay không
   bool _showSuggestions = false;
 
+  bool _isModelsLoading = false;
+  final List<Map<String, String>> _aiModels = [];
+  Map<String, String> selectedBotModel = {};
+
   // Lưu trữ các message chat
   final List<Map<String, dynamic>> _messages = [
     {'content': "Hello.👋 I'm your new friend, StarryAI Bot.", 'role': ChatRole.model.text},
   ];
+
   bool isFirstLoading = true;
 
   @override
   void initState() {
     super.initState();
 
-    // Lấy đối số truyền vào (nếu có) và cập nhật activeAiModelIndex
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map?;
-      if (args != null) {
-        String? botValue = args['botValue'];
-
-        setState(() {
-          activeAiModelIndex = botValue != null ? MockData.aiModels.indexWhere((element) => element["value"] == botValue) : 0;
-          if (activeAiModelIndex == -1) {
-            activeAiModelIndex = 0;
-          }
-        });
-
-        print("Initialized activeAiModelIndex = $activeAiModelIndex");
-      }
-    });
+    if (isVisibleGadget) {
+      fetchAiModels();
+    }
 
     // Gọi API ban đầu để lấy danh sách prompt (limit 3)
     _fetchInitialPrompts();
 
     // Lắng nghe thay đổi nội dung của TextField chat
     _controller.addListener(_onChatInputChanged);
+  }
+
+  Future<void> fetchAiModels({String? searchQuery, bool reset = false}) async {
+    if (_isModelsLoading) return;
+
+    setState(() {
+      _isModelsLoading = true;
+    });
+
+    try {
+      dynamic response = await BotServiceApi.getAllBots(search: searchQuery, offset: 0, limit: 50);
+
+      final Map<String, dynamic> jsonResponse = json.decode(response);
+
+      if (jsonResponse.containsKey('data')) {
+        final List<dynamic> dataList = jsonResponse['data'];
+
+        final List<Map<String, String>> newItems = dataList.where((item) => item is Map<String, dynamic>).map((item) {
+          // Convert each dynamic value to String
+          final Map<String, dynamic> dynamicMap = item as Map<String, dynamic>;
+          return dynamicMap.map((key, value) => MapEntry(key, value?.toString() ?? ''));
+        }).toList();
+
+        // print('listMap: $newItems');
+
+        setState(() {
+          _aiModels.addAll(newItems);
+          activeAiModelId = _aiModels[activeAiModelIndex]["id"]!;
+          // print('AI model: ${_aiModels[activeAiModelIndex]}');
+        });
+      }
+    } catch (e) {
+      // Handle the exception
+      print('Exception occurred while fetching AI models: $e');
+    } finally {
+      setState(() {
+        _isModelsLoading = false;
+      });
+    }
   }
 
   @override
@@ -322,8 +358,22 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         // Send message to server and wait for response
         dynamic response = await ChatServiceApi.createChatWithBot(content, messageDto);
 
-        // If you want to add the bot's response too:
-        final Map<String, dynamic> jsonResponse = json.decode(response);
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+
+        if (response.statusCode == HttpStatus.unprocessableEntity) {
+          setState(() {
+            _messages.removeLast();
+          });
+
+          AppToast(
+            context: context,
+            duration: Duration(seconds: 1),
+            message: jsonResponse['message'] ?? 'Error sending message',
+            mode: AppToastMode.error,
+          ).show(context);
+
+          return;
+        }
 
         if (jsonResponse.containsKey('message')) {
           setState(() {
@@ -354,13 +404,29 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
     String avatarPath = args['avatarPath'] ?? AssetPath.chatThreadAvatarList[0];
-    String? title;
+    String title = 'New chat';
 
     ChatThreadStatus chatStatus = args['chatStatus'];
 
-    if (chatStatus == ChatThreadStatus.existing && isFirstLoading) {
-      title = args['title'];
+    if (chatStatus == ChatThreadStatus.existing) {
+      print('args: $args');
+      setState(() {
+        title = args['title'];
+      });
+    } else if (chatStatus == ChatThreadStatus.newExplore && isFirstLoading) {
+      print('get botId: ${args['botId']} ${isFirstLoading}');
+      // print(
+      //     'bool: ${activeAiModelId.isNotEmpty ? activeAiModelId : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null)}');
+      setState(() {
+        activeAiModelId = args['botId'];
+        if (args['isVisibleGadget'] != null) {
+          isVisibleGadget = args['isVisibleGadget'];
+          title = 'Preview';
+        }
+      });
+    }
 
+    if (chatStatus == ChatThreadStatus.existing && isFirstLoading) {
       _messages.addAll([
         {'content': "Have a healthy meal.", 'role': ChatRole.model.text},
         {'content': "How much price is it?", 'role': ChatRole.user.text},
@@ -376,7 +442,13 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: spacing44,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back), // Your back icon
+          onPressed: () {
+            Navigator.of(context).pop(true);
+          },
+        ),
+        leadingWidth: spacing48,
         elevation: 1,
         shadowColor: ColorConst.backgroundLightGrayColor,
         backgroundColor: ColorConst.backgroundWhiteColor,
@@ -391,7 +463,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             SizedBox(width: spacing8),
             Expanded(
               child: Text(
-                title ?? 'New chat',
+                title,
                 style: AppFontStyles.poppinsTextBold(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -426,20 +498,33 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                       return TypingIndicator();
                     }
 
-                    return Align(
-                      alignment: isModel ? Alignment.centerLeft : Alignment.centerRight,
-                      child: Container(
-                        padding: EdgeInsets.all(spacing8),
-                        margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
-                        decoration: BoxDecoration(
-                          color: isModel ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
-                          borderRadius: BorderRadius.circular(radius12),
+                    return Column(
+                      children: [
+                        isModel
+                            ? Padding(
+                                padding: EdgeInsets.only(left: spacing8),
+                                child: _buildModelLabel(activeAiModelId, iconSize: spacing20, isDefaultMessage: true),
+                              )
+                            : SizedBox.shrink(),
+                        Align(
+                          alignment: isModel ? Alignment.centerLeft : Alignment.centerRight,
+                          child: IntrinsicWidth(
+                            child: Container(
+                              padding: EdgeInsets.all(spacing8),
+                              margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
+                              decoration: BoxDecoration(
+                                color: isModel ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
+                                borderRadius: BorderRadius.circular(radius12),
+                              ),
+                              child: Text(
+                                message['content'],
+                                style:
+                                    TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
+                              ),
+                            ),
+                          ),
                         ),
-                        child: Text(
-                          message['content'],
-                          style: TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
-                        ),
-                      ),
+                      ],
                     );
                   },
                 ),
@@ -469,66 +554,61 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
               color: Colors.transparent,
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing4),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(radius16),
-                          color: ColorConst.backgroundWhiteColor,
-                        ),
-                        child: DropdownButton<String>(
-                          underline: SizedBox.shrink(),
-                          isDense: true,
-                          isExpanded: false,
-                          icon: const Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.black,
-                          ),
-                          dropdownColor: ColorConst.backgroundWhiteColor,
-                          value: MockData.aiModels[activeAiModelIndex]["value"],
-                          items: MockData.aiModels.map<DropdownMenuItem<String>>((model) {
-                            return DropdownMenuItem<String>(
-                              value: model["value"],
-                              child: Row(
-                                children: [
-                                  ImageHelper.loadFromAsset(
-                                    AssetPath.aiModels[model["value"]]!,
-                                    width: spacing24,
-                                    height: spacing24,
-                                  ),
-                                  SizedBox(width: spacing8),
-                                  Text(
-                                    model["display"]!,
-                                    style: AppFontStyles.poppinsRegular(),
-                                  )
-                                ],
+                  isVisibleGadget
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Dropdown chọn AI model
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(radius16),
+                                color: ColorConst.backgroundWhiteColor,
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              activeAiModelIndex = MockData.aiModels.indexWhere((element) => element["value"] == value);
-                              print(activeAiModelIndex);
-                              print(MockData.aiModels[activeAiModelIndex]["value"]);
-                            });
-                          },
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.camera_enhance_outlined, color: ColorConst.backgroundBlackColor),
-                          SizedBox(width: spacing16),
-                          const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
-                          SizedBox(width: spacing16),
-                          const Icon(Icons.history_outlined, color: ColorConst.backgroundBlackColor),
-                          SizedBox(width: spacing16),
-                          const Icon(Icons.add_circle_outline, color: ColorConst.backgroundBlackColor),
-                        ],
-                      )
-                    ],
-                  ),
+                              child: DropdownButton<String>(
+                                underline: SizedBox.shrink(),
+                                isDense: true,
+                                isExpanded: false,
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.black,
+                                ),
+                                value: activeAiModelId.isNotEmpty
+                                    ? activeAiModelId
+                                    : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null),
+                                items: _aiModels.map<DropdownMenuItem<String>>((model) {
+                                  return DropdownMenuItem<String>(
+                                    value: model["id"],
+                                    child: _buildModelLabel(model['id']!),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    isFirstLoading = false;
+
+                                    activeAiModelIndex = _aiModels.indexWhere((element) => element["id"] == value);
+                                    activeAiModelId = value!;
+                                    // print(activeAiModelIndex);
+                                    print(activeAiModelId);
+                                  });
+                                },
+                              ),
+                            ),
+                            // Các icon chức năng
+                            Row(
+                              children: [
+                                const Icon(Icons.camera_enhance_outlined, color: ColorConst.backgroundBlackColor),
+                                SizedBox(width: spacing16),
+                                const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
+                                SizedBox(width: spacing16),
+                                const Icon(Icons.history_outlined, color: ColorConst.backgroundBlackColor),
+                                SizedBox(width: spacing16),
+                                const Icon(Icons.add_circle_outline, color: ColorConst.backgroundBlackColor),
+                              ],
+                            )
+                          ],
+                        )
+                      : SizedBox.shrink(),
                   SizedBox(height: spacing12),
                   Container(
                     margin: EdgeInsets.only(bottom: spacing16),
@@ -676,11 +756,13 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                                       onPressed: () {
                                                         final replacements = <String, String>{};
                                                         _placeholderControllers.forEach((placeholder, controller) {
-                                                          replacements[placeholder] =
-                                                              controller.text.isNotEmpty ? controller.text : placeholder;
+                                                          replacements[placeholder] = controller.text.isNotEmpty
+                                                              ? controller.text
+                                                              : placeholder;
                                                         });
 
-                                                        final finalPrompt = _replacePlaceholders(result['prompt'], replacements);
+                                                        final finalPrompt =
+                                                            _replacePlaceholders(result['prompt'], replacements);
 
                                                         setState(() {
                                                           _controller.text = finalPrompt;
@@ -748,5 +830,32 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildModelLabel(String modelId, {double iconSize = spacing24, bool isDefaultMessage = false}) {
+    Map<String, String> botModel = _aiModels.firstWhere((model) => model["id"] == modelId,
+        orElse: () => {
+              "assistantName": "Jarvis AI",
+              'id': "jarvis_ai",
+            });
+
+    int indexOfItem = _aiModels.indexOf(botModel);
+
+    Map<String, String> modelAvatar = MockData.aiModels[indexOfItem % MockData.aiModels.length];
+
+    return Row(children: [
+      ImageHelper.loadFromAsset(
+        botModel["id"] == "jarvis_ai"
+            ? AssetPath.aiJarvisModel
+            : (AssetPath.aiModels[modelAvatar["value"]] ?? AssetPath.icoDefaultImage),
+        width: iconSize,
+        height: iconSize,
+      ),
+      SizedBox(width: spacing8),
+      Text(
+        botModel["assistantName"]!,
+        style: AppFontStyles.poppinsRegular(),
+      )
+    ]);
   }
 }

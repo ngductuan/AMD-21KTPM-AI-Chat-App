@@ -50,3 +50,4 @@ app.*.map.json
 .env*
 .DS_Store
 *.txt
+*-test.dart

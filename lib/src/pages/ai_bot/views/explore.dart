@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/widgets/debouncer.dart';
+import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import '../../../constants/styles.dart';
@@ -69,7 +72,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
         !_scrollController.position.outOfRange) {
       if (!_isLoading && _hasMore) {
         fetchAiModels();
@@ -97,11 +101,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     try {
       final offset = _currentPage * _limit;
-      dynamic response = await BotServiceApi.getAllBots(search: searchQuery, offset: offset, limit: _limit);
+      dynamic response = await BotServiceApi.getAllBots(
+          search: searchQuery, offset: offset, limit: _limit);
 
       final Map<String, dynamic> jsonResponse = json.decode(response);
-
-      // print('Response: $jsonResponse');
 
       if (jsonResponse.containsKey('data')) {
         final newItems = jsonResponse['data'];
@@ -138,7 +141,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
             await fetchAiModels(reset: true);
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: spacing8, horizontal: spacing8),
+            padding: const EdgeInsets.symmetric(
+                vertical: spacing8, horizontal: spacing8),
             decoration: BoxDecoration(
               color: ColorConst.backgroundLightGrayColor,
               borderRadius: BorderRadius.circular(radius24),
@@ -156,9 +160,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       decoration: InputDecoration(
                         hintText: "Search for bots",
                         isCollapsed: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: padding8),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: padding8),
                         border: InputBorder.none,
-                        hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
+                        hintStyle: AppFontStyles.poppinsRegular(
+                            color: ColorConst.textLightGrayColor),
                       ),
                       onEditingComplete: () {
                         _focusNode.unfocus();
@@ -189,19 +195,28 @@ class _ExploreScreenState extends State<ExploreScreen> {
         child: ListView.builder(
           controller: _scrollController, // Add the scroll controller
           padding: const EdgeInsets.symmetric(vertical: padding8),
-          itemCount: _aiModels.length + (_hasMore ? 1 : 0), // Add one more item for loading indicator
+          itemCount: _aiModels.length +
+              (_hasMore ? 1 : 0), // Add one more item for loading indicator
           itemBuilder: (context, index) {
             if (index >= _aiModels.length) {
-              return _buildLoadingIndicator();
+              return buildLoadingIndicator(hasMore: _hasMore);
             }
 
-            Map<String, String> botAvatar = MockData.aiModels[index % MockData.aiModels.length];
+            Map<String, String> botAvatar =
+                MockData.aiModels[index % MockData.aiModels.length];
 
             return AiBotItem(
               botData: _aiModels[index],
               avatarValue: botAvatar['value'],
               onTap: () {
                 // Your onTap logic
+                Navigator.of(context).pushNamed(
+                  ChatThreadScreen.routeName,
+                  arguments: {
+                    'chatStatus': ChatThreadStatus.newExplore,
+                    'botId': _aiModels[index]['id'],
+                  },
+                );
               },
             );
           },

@@ -1,3 +1,5 @@
+import 'package:eco_chat_bot/src/constants/services/knowledge.service.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
@@ -8,8 +10,11 @@ import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_info_popup.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 
 class DataScreen extends StatefulWidget {
-  const DataScreen({super.key});
+  const DataScreen({super.key, this.isGotKnowledgeForEachBot = false, this.assistantId = ''});
   static const String routeName = '/data';
+  
+  final bool isGotKnowledgeForEachBot;
+  final String assistantId;
 
   @override
   State<DataScreen> createState() => _DataScreenState();
@@ -26,8 +31,15 @@ class _DataScreenState extends State<DataScreen> {
   @override
   void initState() {
     super.initState();
-    // gọi fetch ngay khi khởi tạo
-    _fetchKnowledges();
+
+    if (widget.isGotKnowledgeForEachBot) {
+      // fetch knowledge by botId
+      _fetchKnowledgeByBotId(widget.assistantId);
+    } else {
+      // fetch all knowledges
+      _fetchKnowledges();
+    }
+
     // lắng nghe thay đổi search
     _searchController.addListener(() {
       setState(() {
@@ -67,7 +79,51 @@ class _DataScreenState extends State<DataScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      // TODO: xử lý lỗi (hiện snackbar, retry, v.v.)
+      print('Error fetching all knowledges: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error fetching all knowledges',
+        mode: AppToastMode.error,
+      ).show(context);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _fetchKnowledgeByBotId(String assistantId) async {
+    try {
+      // 3. Gọi API; có thể truyền tham số nếu cần
+      final resp = await KnowledgeServiceApi.getImportedSourceByBotId(
+        assistantId,
+      );
+
+      // Giả định API trả về JSON với key 'data' là list các knowledge
+      final data = resp['data'] as List<dynamic>;
+      setState(() {
+        _knowledgeData = data.map((e) {
+          return {
+            'id': e['id'],
+            'knowledgeName': e['knowledgeName'],
+            'description': e['description'],
+            'createdAt': e['createdAt'],
+            'updatedAt': e['updatedAt'],
+            'createdBy': e['createdBy'],
+            'updatedBy': e['updatedBy'],
+            'userId': e['userId'],
+          };
+        }).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching knowledge by botId: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error fetching knowledge by botId',
+        mode: AppToastMode.error,
+      ).show(context);
+    } finally {
       setState(() => _isLoading = false);
     }
   }
@@ -103,60 +159,62 @@ class _DataScreenState extends State<DataScreen> {
         backgroundColor: ColorConst.backgroundWhiteColor,
         shadowColor: ColorConst.backgroundLightGrayColor,
       ),
-      backgroundColor: ColorConst.backgroundGrayColor,
-      body: Padding(
-        padding: const EdgeInsets.all(padding16),
-        child: Column(
-          children: [
-            // Search + Create
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search knowledge base',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: ColorConst.backgroundWhiteColor,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(radius12),
-                        borderSide: BorderSide.none,
+      // backgroundColor: ColorConst.backgroundGrayColor,
+      backgroundColor: ColorConst.backgroundWhiteColor,
+      body: Container(
+        color: ColorConst.backgroundGrayColor,
+        child: Padding(
+          padding: const EdgeInsets.all(padding16),
+          child: Column(
+            children: [
+              // Search + Create
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Find knowledge base',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: ColorConst.backgroundWhiteColor,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(radius12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: spacing12),
-                GradientFormButton(
-                  text: 'Create',
-                  isActiveButton: true,
-                  onPressed: () {
-                    // mở modal tạo mới và thêm kết quả vào danh sách
-                    showDialog(
-                        context: context,
-                        builder: (_) =>
-                            CreateKnowledgePopup(onCreated: (newKb) {
-                              setState(() {
-                                // map trực tiếp các trường từ API về structure của _knowledgeData
-                                _knowledgeData.insert(0, {
-                                  'id': newKb['knowledgeId'] ?? newKb['id'],
-                                  'knowledgeName': newKb['knowledgeName'],
-                                  'description': newKb['description'],
-                                  'createdAt': newKb['createdAt'],
-                                  'updatedAt': newKb['updatedAt'],
-                                  'createdBy': newKb['createdBy'],
-                                  'updatedBy': newKb['updatedBy'],
-                                  'userId': newKb['userId'],
+                  const SizedBox(width: spacing12),
+                  GradientFormButton(
+                    text: 'Create',
+                    isActiveButton: true,
+                    onPressed: () {
+                      // mở modal tạo mới và thêm kết quả vào danh sách
+                      showDialog(
+                          context: context,
+                          builder: (_) => CreateKnowledgePopup(onCreated: (newKb) {
+                                setState(() {
+                                  // map trực tiếp các trường từ API về structure của _knowledgeData
+                                  _knowledgeData.insert(0, {
+                                    'id': newKb['knowledgeId'] ?? newKb['id'],
+                                    'knowledgeName': newKb['knowledgeName'],
+                                    'description': newKb['description'],
+                                    'createdAt': newKb['createdAt'],
+                                    'updatedAt': newKb['updatedAt'],
+                                    'createdBy': newKb['createdBy'],
+                                    'updatedBy': newKb['updatedBy'],
+                                    'userId': newKb['userId'],
+                                  });
                                 });
-                              });
-                            }));
-                  },
-                ),
-              ],
-            ),
+                              }));
+                    },
+                  ),
+                ],
+              ),
 
-            const SizedBox(height: spacing16),
+              const SizedBox(height: spacing16),
 
             // Nội dung
             Expanded(

@@ -1,3 +1,5 @@
+import 'package:dotted_border/dotted_border.dart';
+import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
@@ -161,7 +163,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppFontStyles.poppinsTextBold(fontSize: 14)),
+            Text(label, style: AppFontStyles.poppinsTextBold()),
             const SizedBox(height: 2),
             Text(value, style: AppFontStyles.poppinsRegular(fontSize: 12)),
           ],
@@ -170,6 +172,8 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
     }
 
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: spacing8),
+      backgroundColor: ColorConst.backgroundWhiteColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Row(
         children: [
@@ -180,6 +184,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
               style: AppFontStyles.poppinsTitleBold(fontSize: 16)),
         ],
       ),
+      scrollable: true,
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 500, maxWidth: 360),
         child: SingleChildScrollView(
@@ -251,37 +256,46 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
       actions: [
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton(
-            onPressed: _handleAddSource,
-            child: const Text('Add Source', style: TextStyle(fontSize: 14)),
+          child: DottedBorder(
+            color: ColorConst.textHighlightColor,
+            borderType: BorderType.RRect,
+            dashPattern: [4, 2],
+            radius: Radius.circular(radius12),
+            child: InkWell(
+              onTap: _handleAddSource,
+              child: Container(
+                height: spacing32,
+                alignment: Alignment.center,
+                child: Text(
+                  '+ Add knowledge source',
+                  style: AppFontStyles.poppinsRegular(),
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close', style: TextStyle(fontSize: 14)),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: _isDeleting ? null : _handleDelete,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+        const SizedBox(height: spacing48),
+        Padding(
+          padding: const EdgeInsets.only(bottom: spacing8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GradientFormButton(
+                text: 'Cancel',
+                onPressed: () => Navigator.of(context).pop(),
+                isActiveButton: false,
               ),
-              child: _isDeleting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white)),
-                    )
-                  : const Text('Delete', style: TextStyle(fontSize: 14)),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(left: spacing12),
+                child: GradientFormButton(
+                  isLoading: _isDeleting,
+                  text: 'Delete',
+                  onPressed: () async => _isDeleting ? null : _handleDelete(),
+                  isActiveButton: true,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

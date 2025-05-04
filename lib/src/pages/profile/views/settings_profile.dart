@@ -280,7 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           }
                         } else {
                           Navigator.of(context).pushNamedAndRemoveUntil(
-                              '/login', (route) => false);
+                              LoginScreen.routeName, (route) => false);
                         }
                       },
                     ),

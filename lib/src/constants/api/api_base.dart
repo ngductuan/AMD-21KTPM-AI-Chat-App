@@ -1,22 +1,16 @@
 import 'dart:convert';
-import 'package:eco_chat_bot/src/constants/api/env_key.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiBase {
   // Base URLs
-  static final authUrl =
-      dotenv.maybeGet(EnvKey.authApi) ?? 'https://auth-api.dev.jarvis.cx';
-  static final jarvisUrl =
-      dotenv.maybeGet(EnvKey.jarvisApi) ?? 'https://api.dev.jarvis.cx';
-  static final knowledgeUrl = dotenv.maybeGet(EnvKey.knowledgeApi) ??
-      'https://knowledge-api.dev.jarvis.cx';
+  static final authUrl = 'https://auth-api.dev.jarvis.cx';
+  static final jarvisUrl = 'https://api.dev.jarvis.cx';
+  static final knowledgeUrl = 'https://knowledge-api.dev.jarvis.cx';
 
   // Other URLs
   static const verificationCallbackUrl =
@@ -187,6 +181,37 @@ class ApiBase {
     } else {
       throw Exception(
           'Failed to fetch knowledges: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
+    }
+  }
+
+  // API Lấy đơn vị tri thức của một kiến thức
+  Future<Map<String, dynamic>> getKnowledgeUnits({
+    required String knowledgeId,
+    String q = '',
+    String order = 'DESC',
+    String orderField = 'createdAt',
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    final headers = await getAuthHeaders();
+    final uri =
+        Uri.parse('$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/units')
+            .replace(
+      queryParameters: {
+        'q': q,
+        'order': order,
+        'order_field': orderField,
+        'offset': offset.toString(),
+        'limit': limit.toString(),
+      },
+    );
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+          'Failed to fetch knowledge units: [${response.statusCode}] ${response.reasonPhrase}\n'
           'Body: ${response.body}');
     }
   }

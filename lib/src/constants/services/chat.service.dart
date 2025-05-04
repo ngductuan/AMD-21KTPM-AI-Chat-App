@@ -20,16 +20,15 @@ class ChatServiceApi {
       "assistant": BotServiceApi.assistant
     };
 
-    print('body: $body');
-
     final encodedBody = body is String ? body : jsonEncode(body);
 
     return await http.post(url, headers: headers, body: encodedBody).then((response) {
+
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
-      if (response.statusCode == HttpStatus.ok) {
-        return response.body;
+      if (response.statusCode == HttpStatus.ok || response.statusCode == HttpStatus.unprocessableEntity) {
+        return response;
       } else {
         throw Exception('Failed to load bot response: ${response.reasonPhrase}');
       }

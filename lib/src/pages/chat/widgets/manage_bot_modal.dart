@@ -1,29 +1,61 @@
+import 'dart:convert';
+
 import 'package:dotted_border/dotted_border.dart';
-import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
-import 'package:eco_chat_bot/src/pages/chat/views/chat_list.dart';
 import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/select_knowledge_source_popup.dart';
 import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:eco_chat_bot/src/widgets/input_form_field.dart';
-import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 
-class CreateBotModal extends StatefulWidget {
-  const CreateBotModal({
+class ManageBotModal extends StatefulWidget {
+  final dynamic botData;
+  final Function endCallback;
+  final String activeButtonText;
+
+  const ManageBotModal({
     super.key,
+    this.botData,
+    required this.endCallback,
+    required this.activeButtonText,
   });
 
   @override
-  State<CreateBotModal> createState() => _CreateBotModalState();
+  State<ManageBotModal> createState() => _ManageBotModalState();
 }
 
-class _CreateBotModalState extends State<CreateBotModal> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _instructionController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+class _ManageBotModalState extends State<ManageBotModal> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _instructionController;
+  late final TextEditingController _descriptionController;
 
   bool _isLoading = false;
   bool _isSubmit = false;
+  String botSelectedId = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize with empty strings as fallback
+    String name = '';
+    String instructions = '';
+    String description = '';
+
+    // Safely extract values if botData exists and is a Map
+    if (widget.botData != null) {
+      final Map<String, dynamic> jsonResponse = json.decode(widget.botData);
+
+      botSelectedId = jsonResponse['id']?.toString() ?? '';
+
+      name = jsonResponse['assistantName']?.toString() ?? '';
+      instructions = jsonResponse['instructions']?.toString() ?? '';
+      description = jsonResponse['description']?.toString() ?? '';
+    }
+
+    _nameController = TextEditingController(text: name);
+    _instructionController = TextEditingController(text: instructions);
+    _descriptionController = TextEditingController(text: description);
+  }
 
   void clearTextFields() {
     _nameController.clear();
@@ -35,8 +67,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
   void exitWindow() {
     if (mounted && Navigator.of(context).canPop()) {
       clearTextFields();
-      Navigator.of(context).pop(true);
-      // Navigator.pop(context);
+      Navigator.pop(context);
     }
   }
 
@@ -85,7 +116,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Create Your Own Bot',
+                      '${widget.activeButtonText} Your Own Bot',
                       style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
                     ),
                     SizedBox(
@@ -130,12 +161,12 @@ class _CreateBotModalState extends State<CreateBotModal> {
                             SizedBox(height: spacing4),
                             Text(
                               'Enhance your bot’s responses by adding custom knowledge',
-                              style: AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
+                              style:
+                                  AppFontStyles.poppinsRegular(fontSize: fontSize14, color: ColorConst.textGrayColor),
                             ),
-
                             SizedBox(height: spacing20),
-  
                             DottedBorder(
+                              color: ColorConst.textHighlightColor,
                               borderType: BorderType.RRect,
                               dashPattern: [4, 2],
                               radius: Radius.circular(radius12),
@@ -155,7 +186,6 @@ class _CreateBotModalState extends State<CreateBotModal> {
                                 ),
                               ),
                             ),
-
                             if (_selectedPaths.isNotEmpty) ...[
                               const SizedBox(height: spacing8),
                               Wrap(
@@ -169,7 +199,6 @@ class _CreateBotModalState extends State<CreateBotModal> {
                                 }).toList(),
                               ),
                             ],
-
                             if (_importedWebSources.isNotEmpty) ...[
                               const SizedBox(height: spacing8),
                               Wrap(
@@ -227,7 +256,7 @@ class _CreateBotModalState extends State<CreateBotModal> {
                       padding: const EdgeInsets.only(left: spacing12),
                       child: GradientFormButton(
                         isLoading: _isLoading,
-                        text: 'Create',
+                        text: widget.activeButtonText,
                         onPressed: () async {
                           setState(() {
                             _isSubmit = true;
@@ -237,43 +266,20 @@ class _CreateBotModalState extends State<CreateBotModal> {
                             return;
                           }
 
-                          try {
-                            setState(() {
-                              _isLoading = true;
-                            });
+                          setState(() {
+                            _isLoading = true;
+                          });
 
-                            await BotServiceApi.createBotResponse({
-                              'assistantName': _nameController.text,
-                              'description': _descriptionController.text,
-                              'instructions': _instructionController.text,
-                            });
+                          await widget.endCallback({
+                            'assistantName': _nameController.text,
+                            'description': _descriptionController.text,
+                            'instructions': _instructionController.text,
+                          }, exitWindow);
 
-                            AppToast(
-                              context: context,
-                              duration: Duration(seconds: 1),
-                              message: 'Bot created successfully!',
-                              mode: AppToastMode.confirm,
-                            ).show(context);
-                          } catch (e) {
-                            print('Error creating bot: $e');
-                            AppToast(
-                              context: context,
-                              duration: Duration(seconds: 1),
-                              message: 'Error creating bot',
-                              mode: AppToastMode.error,
-                            ).show(context);
-                          } finally {
-                            if (mounted) {
-                              setState(() {
-                                _isLoading = false;
-                              });
-                            }
-                          }
-
-                          await Future.delayed(const Duration(milliseconds: 1000));
                           if (mounted) {
-                            clearTextFields();
-                            Navigator.of(context).pop();
+                            setState(() {
+                              _isLoading = false;
+                            });
                           }
                         },
                         isActiveButton: true,
