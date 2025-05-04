@@ -22,7 +22,67 @@ class KnowledgeInfoPopup extends StatefulWidget {
 
 class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
   bool _isDeleting = false;
-  String? _error;
+  String? _error; // lỗi chung (delete)
+
+  // --- phần units ---
+  bool _isLoadingUnits = true;
+  String? _errorUnits;
+  List<Map<String, dynamic>> _units = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUnits();
+  }
+
+  Future<void> _fetchUnits() async {
+    // Khởi tạo loading state
+    setState(() {
+      _isLoadingUnits = true;
+      _errorUnits = null;
+    });
+
+    final idValue = widget.knowledge['id'] as String?;
+    if (idValue == null) {
+      setState(() {
+        _errorUnits = 'Invalid knowledge ID';
+        _isLoadingUnits = false;
+      });
+      return;
+    }
+
+    try {
+      final api = ApiBase();
+      final resp = await api.getKnowledgeUnits(
+        knowledgeId: idValue,
+        q: '',
+        order: 'DESC',
+        orderField: 'createdAt',
+        offset: 0,
+        limit: 20,
+      );
+      final data = resp['data'] as List<dynamic>;
+      final units = data.map((e) {
+        return {
+          'id': e['id'],
+          'name': e['name'],
+          'createdAt': e['createdAt'],
+        };
+      }).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _units = units;
+        _isLoadingUnits = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorUnits = 'Failed to load units: $e';
+        _isLoadingUnits = false;
+      });
+    }
+  }
 
   Future<void> _handleDelete() async {
     setState(() {
@@ -46,12 +106,17 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
         widget.onDeleted();
         Navigator.of(context).pop();
       } else {
-        setState(() => _error = 'Could not delete this item.');
+        setState(() {
+          _error = 'Could not delete this item.';
+          _isDeleting = false;
+        });
       }
     } catch (e) {
-      setState(() => _error = 'Error: ${e.toString()}');
-    } finally {
-      if (mounted) setState(() => _isDeleting = false);
+      if (mounted)
+        setState(() {
+          _error = 'Error: $e';
+          _isDeleting = false;
+        });
     }
   }
 
@@ -70,9 +135,11 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Upload successful!")),
             );
+            // reload units
+            _fetchUnits();
           }).catchError((e) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Error: ${e.toString()}")),
+              SnackBar(content: Text("Error: $e")),
             );
           });
         }
@@ -85,8 +152,10 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
     final data = widget.knowledge;
     final createdAt = DateTime.tryParse(data['createdAt'] ?? '');
     final updatedAt = DateTime.tryParse(data['updatedAt'] ?? '');
-    final createdStr = createdAt != null ? DateFormat('yyyy-MM-dd').format(createdAt) : '-';
-    final updatedStr = updatedAt != null ? DateFormat('yyyy-MM-dd').format(updatedAt) : '-';
+    final createdStr =
+        createdAt != null ? DateFormat('yyyy-MM-dd').format(createdAt) : '-';
+    final updatedStr =
+        updatedAt != null ? DateFormat('yyyy-MM-dd').format(updatedAt) : '-';
 
     Widget buildItem(String label, String value) {
       return Padding(
@@ -108,22 +177,28 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Row(
         children: [
-          Icon(Icons.info_outline, size: 20, color: Theme.of(context).primaryColor),
+          Icon(Icons.info_outline,
+              size: 20, color: Theme.of(context).primaryColor),
           const SizedBox(width: 8),
-          Text('Knowledge Details', style: AppFontStyles.poppinsTitleBold(fontSize: 16)),
+          Text('Knowledge Details',
+              style: AppFontStyles.poppinsTitleBold(fontSize: 16)),
         ],
       ),
       scrollable: true,
       content: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 380, maxWidth: 360),
+        constraints: const BoxConstraints(maxHeight: 500, maxWidth: 360),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Lỗi delete (nếu có)
               if (_error != null) ...[
-                Text(_error!, style: TextStyle(color: Colors.red, fontSize: 12)),
+                Text(_error!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12)),
                 const SizedBox(height: 8),
               ],
+
+              // Thông tin cơ bản
               buildItem('Name', data['knowledgeName'] as String? ?? '-'),
               buildItem('Description', data['description'] as String? ?? '-'),
               Row(
@@ -133,13 +208,46 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
                   Expanded(child: buildItem('Updated Date', updatedStr)),
                 ],
               ),
-              Row(
-                children: [
-                  Expanded(child: buildItem('Units', data['numUnits']?.toString() ?? 'N/A')),
-                  const SizedBox(width: 16),
-                  Expanded(child: buildItem('Total Size', data['totalSize']?.toString() ?? 'N/A')),
-                ],
-              ),
+              const Divider(height: 24),
+
+              // Phần Units
+              Text('Units', style: AppFontStyles.poppinsTextBold(fontSize: 14)),
+              const SizedBox(height: 8),
+
+              if (_isLoadingUnits)
+                const Center(child: CircularProgressIndicator())
+              else if (_errorUnits != null)
+                Text(_errorUnits!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12))
+              else if (_units.isEmpty)
+                Text('No units found.',
+                    style: AppFontStyles.poppinsRegular(fontSize: 12))
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _units.map((unit) {
+                    final dt = DateTime.tryParse(unit['createdAt'] ?? '');
+                    final dtStr =
+                        dt != null ? DateFormat('yyyy-MM-dd').format(dt) : '-';
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(unit['name'] ?? '-',
+                                style: AppFontStyles.poppinsRegular()),
+                          ),
+                          Text('Created: $dtStr',
+                              style:
+                                  AppFontStyles.poppinsTextBold(fontSize: 12)),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              const Divider(height: 24),
+
+              // Hết phần Units
             ],
           ),
         ),

@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
-import 'package:eco_chat_bot/src/constants/services/token.service.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
+import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
@@ -31,48 +31,52 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String? userId;
   String? email;
+
+  // subscription info
+  String subscriptionName = '';
+  int usedToken = 0;
+  int totalToken = 0;
+
   List<dynamic> _aiModels = [];
   String botSelectedId = "";
-  dynamic botSelectedData;
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // Nếu không có email, mặc định hiển thị "Guest"
       email = prefs.getString(LocalStorageKey.email) ?? "Guest";
-      // Nếu không có userId, có thể để rỗng hoặc hiển thị "Guest" tùy ý
       userId = prefs.getString(LocalStorageKey.userId) ?? "";
     });
   }
 
+  Future<void> fetchSubscriptionUsage() async {
+    try {
+      final api = ApiBase();
+      final resp = await api.getSubscriptionUsage();
+      setState(() {
+        subscriptionName = resp['name'] ?? '';
+        // dailyTokens là limit hàng ngày
+        usedToken = resp['dailyTokens'] ?? 0;
+        totalToken = resp['dailyTokens'] ?? 0; // lấy limit daily cho progress
+      });
+    } catch (e) {
+      print('Error fetching subscription usage: $e');
+      // fallback nếu lỗi
+      setState(() {
+        subscriptionName = 'Free';
+        usedToken = 0;
+        totalToken = 0;
+      });
+    }
+  }
+
   int _currentPage = 0;
-  final int _limit = 10; // Number of items to load per request
+  final int _limit = 10;
   bool _isLoading = false;
   bool _hasMore = true;
   final ScrollController _scrollController = ScrollController();
 
-  int usedToken = 0;
-  int totalToken = 0;
-
-  Future<void> fetchTokenUsage() async {
-    try {
-      dynamic response = await TokenServiceApi.getTokenUsage();
-      final Map<String, dynamic> jsonResponse = json.decode(response);
-      final int availableTokens = jsonResponse['availableTokens'] ?? 0;
-
-      setState(() {
-        totalToken = jsonResponse['totalTokens'] ?? 0;
-        usedToken = totalToken - availableTokens;
-      });
-    } catch (e) {
-      // Handle the exception
-      print('Exception occurred while fetching token usage: $e');
-    }
-  }
-
   Future<void> fetchAiModels({String? searchQuery, bool reset = false}) async {
     if (_isLoading) return;
-
     setState(() {
       _isLoading = true;
       if (reset) {
@@ -81,42 +85,32 @@ class _ProfilePageState extends State<ProfilePage> {
         _aiModels.clear();
       }
     });
-
     try {
       final offset = _currentPage * _limit;
-      dynamic response = await BotServiceApi.getAllBots(search: searchQuery, offset: offset, limit: _limit);
-
-      final Map<String, dynamic> jsonResponse = json.decode(response);
-
+      final response = await BotServiceApi.getAllBots(
+          search: searchQuery, offset: offset, limit: _limit);
+      final jsonResponse = json.decode(response) as Map<String, dynamic>;
       if (jsonResponse.containsKey('data')) {
-        final newItems = jsonResponse['data'];
-
+        final newItems = jsonResponse['data'] as List<dynamic>;
         setState(() {
           _aiModels.addAll(newItems);
           _currentPage++;
-          // If we get fewer items than requested, we've reached the end
           _hasMore = newItems.length == _limit;
         });
       }
     } catch (e) {
-      // Handle the exception
-      print('Exception occurred while fetching AI models: $e');
+      print('Error fetching AI models: $e');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   Future<dynamic> fetchAiModelById() async {
-    if (botSelectedId.isEmpty) return;
-
+    if (botSelectedId.isEmpty) return null;
     try {
-      dynamic response = await BotServiceApi.getBotById(botSelectedId);
-
-      return response;
+      return await BotServiceApi.getBotById(botSelectedId);
     } catch (e) {
-      print('Exception occurred while fetching bot data: $e');
+      print('Error fetching bot by ID: $e');
     }
   }
 
@@ -124,11 +118,8 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUserData();
-
+    fetchSubscriptionUsage();
     _scrollController.addListener(_scrollListener);
-
-    fetchTokenUsage();
-
     fetchAiModels();
   }
 
@@ -140,25 +131,21 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
-        !_scrollController.position.outOfRange) {
-      if (!_isLoading && _hasMore) {
-        fetchAiModels();
-        // print('Loading more items...');
-      }
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange &&
+        !_isLoading &&
+        _hasMore) {
+      fetchAiModels();
     }
   }
 
   Future<void> updateBotData(dynamic body, Function endCallback) async {
     try {
-      await BotServiceApi.updateBotById(
-        botSelectedId,
-        body,
-      );
-
+      await BotServiceApi.updateBotById(botSelectedId, body);
       AppToast(
         context: context,
-        duration: Duration(seconds: 1),
+        duration: const Duration(seconds: 1),
         message: 'Bot updated successfully!',
         mode: AppToastMode.confirm,
       ).show(context);
@@ -166,55 +153,56 @@ class _ProfilePageState extends State<ProfilePage> {
       print('Error updating bot: $e');
       AppToast(
         context: context,
-        duration: Duration(seconds: 1),
+        duration: const Duration(seconds: 1),
         message: 'Error updating bot',
         mode: AppToastMode.error,
       ).show(context);
     } finally {
-      await Future.delayed(const Duration(milliseconds: 1000));
+      await Future.delayed(const Duration(milliseconds: 500));
       endCallback();
       fetchAiModels(reset: true);
     }
   }
 
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final overlay =
+        Overlay.of(context)!.context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
       color: ColorConst.backgroundGrayColor2,
       position: RelativeRect.fromRect(
-        tapPosition & const Size(spacing40, spacing40),
-        Offset.zero & overlay.size,
-      ),
+          tapPosition & const Size(spacing40, spacing40),
+          Offset.zero & overlay.size),
       items: [
         PopupMenuItem(
-          child: Row(
-            children: const [
-              Icon(Icons.edit, color: Colors.black),
-              SizedBox(width: spacing8),
-              Text('Edit Bot'),
-            ],
-          ),
+          child: Row(children: const [
+            Icon(Icons.edit, color: Colors.black),
+            SizedBox(width: spacing8),
+            Text('Edit Bot'),
+          ]),
           onTap: () async {
-            try {
-              final dynamic data = await fetchAiModelById();
-              Navigator.of(context).push(AnimationModal.fadeInModal(
-                  ManageBotModal(botData: data, endCallback: updateBotData, activeButtonText: 'Update')));
-            } catch (e) {
-              print('Error fetching bot data by ID: $e');
+            final data = await fetchAiModelById();
+            if (data != null) {
+              Navigator.of(context).push(
+                AnimationModal.fadeInModal(
+                  ManageBotModal(
+                    botData: data,
+                    endCallback: updateBotData,
+                    activeButtonText: 'Update',
+                  ),
+                ),
+              );
             }
           },
         ),
         PopupMenuItem(
-          child: Row(
-            children: const [
-              Icon(Icons.chat_bubble_outline, color: Colors.black),
-              SizedBox(width: spacing8),
-              Text('Preview'),
-            ],
-          ),
-          onTap: () async {
+          child: Row(children: const [
+            Icon(Icons.chat_bubble_outline, color: Colors.black),
+            SizedBox(width: spacing8),
+            Text('Preview'),
+          ]),
+          onTap: () {
             Navigator.of(context).pushNamed(
               ChatThreadScreen.routeName,
               arguments: {
@@ -222,72 +210,65 @@ class _ProfilePageState extends State<ProfilePage> {
                 'botId': _aiModels[index]['id'],
                 'isVisibleGadget': false,
               },
-            ).then((popValue) => {
-                  if (popValue != null && popValue == true) {fetchTokenUsage()}
-                });
-          },
-        ),
-        PopupMenuItem(
-          child: Row(
-            children: const [
-              Icon(Icons.source_outlined, color: Colors.black),
-              SizedBox(width: spacing8),
-              Text('Edit knowledge'),
-            ],
-          ),
-          onTap: () {
-            // Navigate to the knowledge base screen
-            Navigator.of(context).pushNamed(DataScreen.routeName, arguments: {
-              'isGotKnowledgeForEachBot': true,
-              'assistantId': _aiModels[index]['id'],
+            ).then((popValue) {
+              if (popValue == true) fetchSubscriptionUsage();
             });
           },
         ),
         PopupMenuItem(
-          child: Row(
-            children: [
-              const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
-              const SizedBox(width: spacing8),
-              Text('Remove Bot', style: TextStyle(color: ColorConst.textRedColor)),
-            ],
-          ),
-          onTap: () async {
-            // Add remove functionality
-            buildShowConfirmDialog(context, 'Are you sure you want to remove this bot?', 'Confirm').then(
-              (bool? popValue) async {
-                try {
-                  if (popValue == true) {
-                    final String response = await BotServiceApi.deleteBotById(botSelectedId);
-                    if (response == 'true') {
-                      AppToast(
-                        context: context,
-                        duration: const Duration(seconds: 1),
-                        message: 'Bot removed successfully!',
-                        mode: AppToastMode.confirm,
-                      ).show(context);
-                    }
-                  }
-                } catch (e) {
-                  print('Error removing bot: $e');
-                  AppToast(
-                    context: context,
-                    duration: const Duration(seconds: 1),
-                    message: 'Error removing bot',
-                    mode: AppToastMode.error,
-                  ).show(context);
-                } finally {
-                  await Future.delayed(const Duration(milliseconds: 1000));
-                  if (popValue == true) {
-                    fetchAiModels(reset: true);
-                  }
-                }
+          child: Row(children: const [
+            Icon(Icons.source_outlined, color: Colors.black),
+            SizedBox(width: spacing8),
+            Text('Edit knowledge'),
+          ]),
+          onTap: () {
+            Navigator.of(context).pushNamed(
+              DataScreen.routeName,
+              arguments: {
+                'isGotKnowledgeForEachBot': true,
+                'assistantId': _aiModels[index]['id'],
               },
             );
           },
         ),
+        PopupMenuItem(
+          child: Row(children: [
+            const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
+            const SizedBox(width: spacing8),
+            Text('Remove Bot',
+                style: TextStyle(color: ColorConst.textRedColor)),
+          ]),
+          onTap: () async {
+            final confirmed = await buildShowConfirmDialog(context,
+                'Are you sure you want to remove this bot?', 'Confirm');
+            if (confirmed == true) {
+              try {
+                final resp = await BotServiceApi.deleteBotById(botSelectedId);
+                if (resp == 'true') {
+                  AppToast(
+                    context: context,
+                    duration: const Duration(seconds: 1),
+                    message: 'Bot removed successfully!',
+                    mode: AppToastMode.confirm,
+                  ).show(context);
+                  fetchAiModels(reset: true);
+                }
+              } catch (e) {
+                print('Error removing bot: $e');
+                AppToast(
+                  context: context,
+                  duration: const Duration(seconds: 1),
+                  message: 'Error removing bot',
+                  mode: AppToastMode.error,
+                ).show(context);
+              }
+            }
+          },
+        ),
       ],
       elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
     );
   }
 
@@ -308,16 +289,16 @@ class _ProfilePageState extends State<ProfilePage> {
           ).createShader(bounds),
           child: Text(
             'EcoChatBot',
-            style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize24, color: ColorConst.textWhiteColor),
+            style: AppFontStyles.poppinsTitleSemiBold(
+                fontSize: fontSize24, color: ColorConst.textWhiteColor),
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () async {
-              // Điều hướng sang SettingsScreen và đợi kết quả trả về
-              await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
-              // Sau khi trở về, load lại thông tin người dùng
+              await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()));
               _loadUserData();
             },
           ),
@@ -326,7 +307,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Profile section
+            // Profile header
             Container(
               padding: const EdgeInsets.symmetric(vertical: spacing16),
               decoration: BoxDecoration(
@@ -341,68 +322,75 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      const SizedBox(width: spacing20),
-                      // Profile image
-                      CircleAvatar(
-                        radius: spacing40,
-                        backgroundImage: AssetImage(AssetPath.logoApp),
-                      ),
-                      const SizedBox(width: spacing20),
-                      // Profile info
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: spacing16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                  Row(children: [
+                    const SizedBox(width: spacing20),
+                    CircleAvatar(
+                      radius: spacing40,
+                      backgroundImage: AssetImage(AssetPath.logoApp),
+                    ),
+                    const SizedBox(width: spacing20),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: spacing16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              email != null && email != "Guest"
+                                  ? email!.split('@').first
+                                  : 'Guest',
+                              style: AppFontStyles.poppinsTitleSemiBold(
+                                  fontSize: fontSize20),
+                            ),
+                            Text(
+                              userId != null && userId!.isNotEmpty
+                                  ? 'ID: ${userId!.substring(0, 8)}'
+                                  : 'ID:',
+                              style: AppFontStyles.poppinsRegular(
+                                  color: ColorConst.textGrayColor),
+                            ),
+                            const SizedBox(height: spacing4),
+                            Row(children: [
                               Text(
-                                email != null && email != "Guest"
-                                    ? (email!.contains('@gmail.com')
-                                        ? email!.replaceFirst(RegExp(r'@gmail\.com$'), '')
-                                        : (email!.length > 10 ? '${email!.substring(0, 15)}...' : email!))
-                                    : 'Guest',
-                                style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize20),
+                                subscriptionName.isNotEmpty
+                                    ? subscriptionName
+                                    : 'Subscription: Free',
+                                style: AppFontStyles.poppinsRegular(
+                                    color: ColorConst.textGrayColor),
                               ),
+                              const SizedBox(width: spacing32),
                               Text(
-                                userId != null && userId!.isNotEmpty
-                                    ? 'ID: ${userId!.length > 5 ? userId!.substring(0, 8) : userId!}'
-                                    : 'ID: ',
-                                style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
+                                totalToken > 0
+                                    ? 'Daily: $usedToken / $totalToken'
+                                    : 'Daily: $usedToken',
+                                style: AppFontStyles.poppinsRegular(
+                                    color: ColorConst.textGrayColor),
                               ),
-                              SizedBox(height: spacing4),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Token/request: 1',
-                                    style: AppFontStyles.poppinsTitleSemiBold(color: ColorConst.textGrayColor),
-                                  ),
-                                  SizedBox(width: spacing32),
-                                  Icon(
-                                    Icons.edit_note_outlined,
-                                    color: ColorConst.backgroundBlackColor,
-                                    size: spacing24,
-                                  )
-                                ],
-                              )
-                            ],
-                          ),
+                              const Spacer(),
+                              Icon(
+                                Icons.edit_note_outlined,
+                                color: ColorConst.backgroundBlackColor,
+                                size: spacing24,
+                              ),
+                            ]),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: spacing8),
-                  // Token progress section
-                  ProgressTracker(
-                    today: usedToken,
-                    total: totalToken,
-                  ),
+                    ),
+                  ]),
+                  const SizedBox(height: spacing8),
+
+                  // Chỉ show progress khi có totalToken > 0
+                  if (totalToken > 0)
+                    ProgressTracker(
+                      today: usedToken,
+                      total: totalToken,
+                    ),
                 ],
               ),
             ),
 
-            // My bots section
+            // My bots
             Expanded(
               child: Container(
                 color: ColorConst.backgroundGrayColor2,
@@ -410,13 +398,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: spacing20, vertical: spacing12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: spacing20, vertical: spacing12),
                       child: Text(
                         'My bots',
-                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize18),
+                        style: AppFontStyles.poppinsTitleSemiBold(
+                            fontSize: fontSize18),
                       ),
                     ),
-                    // Dynamically render bot list
                     Expanded(
                       child: ListView.builder(
                         controller: _scrollController,
@@ -426,18 +415,13 @@ class _ProfilePageState extends State<ProfilePage> {
                           if (index == _aiModels.length) {
                             return buildLoadingIndicator(hasMore: _hasMore);
                           }
-
-                          Map<String, String> botAvatar = MockData.aiModels[index % MockData.aiModels.length];
-
+                          final botAvatar = MockData
+                              .aiModels[index % MockData.aiModels.length];
                           return GestureDetector(
-                            onTapUp: (TapUpDetails details) {
+                            onTapUp: (details) {
                               botSelectedId = _aiModels[index]['id'] ?? "";
-                              print("botSelectedId: $botSelectedId");
-
-                              _showBotMenu(context, index, details.globalPosition);
-                            },
-                            onTapDown: (_) {
-                              botSelectedId = "";
+                              _showBotMenu(
+                                  context, index, details.globalPosition);
                             },
                             child: AiBotItem(
                               botData: _aiModels[index],
