@@ -216,37 +216,6 @@ class ApiBase {
     }
   }
 
-  // API Lấy đơn vị tri thức của một kiến thức
-  Future<Map<String, dynamic>> getKnowledgeUnits({
-    required String knowledgeId,
-    String q = '',
-    String order = 'DESC',
-    String orderField = 'createdAt',
-    int offset = 0,
-    int limit = 20,
-  }) async {
-    final headers = await getAuthHeaders();
-    final uri =
-        Uri.parse('$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/units')
-            .replace(
-      queryParameters: {
-        'q': q,
-        'order': order,
-        'order_field': orderField,
-        'offset': offset.toString(),
-        'limit': limit.toString(),
-      },
-    );
-    final response = await http.get(uri, headers: headers);
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
-    } else {
-      throw Exception(
-          'Failed to fetch knowledge units: [${response.statusCode}] ${response.reasonPhrase}\n'
-          'Body: ${response.body}');
-    }
-  }
-
   // Xóa (disable) một bộ dữ liệu tri thức theo ID
   // Trả về `true` nếu xóa thành công, ngược lại ném Exception.
   Future<bool> deleteKnowledge(String knowledgeId) async {

@@ -24,17 +24,22 @@ class BotServiceApi {
 
     final encodedBody = body is String ? body : jsonEncode(body);
 
-    return await http.post(url, headers: headers, body: encodedBody).then((response) {
+    return await http
+        .post(url, headers: headers, body: encodedBody)
+        .then((response) {
       if (response.statusCode == HttpStatus.created) {
         return response.body;
       } else {
-        throw Exception('Failed to create bot response: ${response.reasonPhrase}');
+        throw Exception(
+            'Failed to create bot response: ${response.reasonPhrase}');
       }
     });
   }
 
-  static Future<dynamic> getAllBots({int offset = 0, int limit = 10, String? search}) async {
-    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant').replace(
+  static Future<dynamic> getAllBots(
+      {int offset = 0, int limit = 10, String? search}) async {
+    final url =
+        Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant').replace(
       queryParameters: {
         'q': search,
         'order': 'DESC',
@@ -57,7 +62,8 @@ class BotServiceApi {
   }
 
   static Future<dynamic> getBotById(String assistantId) async {
-    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId');
+    final url = Uri.parse(
+        '${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId');
 
     final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
 
@@ -65,29 +71,36 @@ class BotServiceApi {
       if (response.statusCode == HttpStatus.ok) {
         return response.body;
       } else {
-        throw Exception('Failed to load bot by ID $assistantId : ${response.reasonPhrase}');
+        throw Exception(
+            'Failed to load bot by ID $assistantId : ${response.reasonPhrase}');
       }
     });
   }
 
-  static Future<dynamic> updateBotById(String assistantId, Map<String, dynamic>? body) async {
-    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId');
+  static Future<dynamic> updateBotById(
+      String assistantId, Map<String, dynamic>? body) async {
+    final url = Uri.parse(
+        '${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId');
 
     final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
 
     final encodedBody = body is String ? body : jsonEncode(body);
 
-    return await http.patch(url, headers: headers, body: encodedBody).then((response) {
+    return await http
+        .patch(url, headers: headers, body: encodedBody)
+        .then((response) {
       if (response.statusCode == HttpStatus.ok) {
         return response.body;
       } else {
-        throw Exception('Failed to update bot by ID $assistantId : ${response.reasonPhrase}');
+        throw Exception(
+            'Failed to update bot by ID $assistantId : ${response.reasonPhrase}');
       }
     });
   }
 
   static Future<dynamic> deleteBotById(String assistantId) async {
-    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId');
+    final url = Uri.parse(
+        '${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId');
 
     final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
 
@@ -95,51 +108,9 @@ class BotServiceApi {
       if (response.statusCode == HttpStatus.ok) {
         return response.body;
       } else {
-        throw Exception('Failed to delete bot by ID $assistantId : ${response.reasonPhrase}');
+        throw Exception(
+            'Failed to delete bot by ID $assistantId : ${response.reasonPhrase}');
       }
     });
   }
-
-  static Future<dynamic> getAllBots({int offset = 0, int limit = 10, String? search}) async {
-    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant').replace(
-      queryParameters: {
-        'q': search,
-        'order': 'DESC',
-        'order_field': 'createdAt',
-        'offset': offset.toString(),
-        'limit': limit.toString(),
-        'is_published': null,
-      },
-    );
-
-    final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
-
-    return await http.get(url, headers: headers).then((response) {
-      if (response.statusCode == HttpStatus.ok) {
-        return response.body;
-      } else {
-        throw Exception('Failed to load bots: ${response.reasonPhrase}');
-      }
-    });
-  }
-
-  static Future<dynamic> getBotById(String assistantId) async {
-    final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant').replace(
-      queryParameters: {
-        'assistantId': assistantId,
-      },
-    );
-
-    final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
-
-    return await http.get(url, headers: headers).then((response) {
-      if (response.statusCode == HttpStatus.ok) {
-        return response.body;
-      } else {
-        throw Exception('Failed to load bot by ID $assistantId : ${response.reasonPhrase}');
-      }
-    });
-  }
-
-
 }

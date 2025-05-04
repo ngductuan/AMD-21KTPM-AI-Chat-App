@@ -10,9 +10,12 @@ import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_info_popup.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 
 class DataScreen extends StatefulWidget {
-  const DataScreen({super.key, this.isGotKnowledgeForEachBot = false, this.assistantId = ''});
+  const DataScreen(
+      {super.key,
+      this.isGotKnowledgeForEachBot = false,
+      this.assistantId = ''});
   static const String routeName = '/data';
-  
+
   final bool isGotKnowledgeForEachBot;
   final String assistantId;
 
@@ -194,7 +197,8 @@ class _DataScreenState extends State<DataScreen> {
                       // mở modal tạo mới và thêm kết quả vào danh sách
                       showDialog(
                           context: context,
-                          builder: (_) => CreateKnowledgePopup(onCreated: (newKb) {
+                          builder: (_) =>
+                              CreateKnowledgePopup(onCreated: (newKb) {
                                 setState(() {
                                   // map trực tiếp các trường từ API về structure của _knowledgeData
                                   _knowledgeData.insert(0, {
@@ -216,130 +220,137 @@ class _DataScreenState extends State<DataScreen> {
 
               const SizedBox(height: spacing16),
 
-            // Nội dung
-            Expanded(
-              child: _isLoading
-                  // loading indicator
-                  ? const Center(child: CircularProgressIndicator())
-                  : filtered.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ImageHelper.loadFromAsset(
-                                AssetPath.noData,
-                                width: 120,
-                                height: 120,
-                              ),
-                              const SizedBox(height: spacing16),
-                              Text(
-                                'No knowledge found',
-                                style: AppFontStyles.poppinsTextBold(
-                                    fontSize: fontSize16),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.separated(
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, __) => const Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: ColorConst.backgroundLightGrayColor,
-                          ),
-                          itemBuilder: (context, index) {
-                            final item = filtered[index];
-                            return ListTile(
-                              isThreeLine: true,
-                              title: Text(
-                                item['knowledgeName'] as String,
-                                style: AppFontStyles.poppinsTextBold(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // 1) Dòng mô tả
-                                  Text(
-                                    item['description'] as String? ?? '',
-                                    style: AppFontStyles.poppinsRegular(
-                                      color: ColorConst.textGrayColor,
-                                      fontSize: fontSize12,
+              // Nội dung
+              Expanded(
+                child: _isLoading
+                    // loading indicator
+                    ? const Center(child: CircularProgressIndicator())
+                    : filtered.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ImageHelper.loadFromAsset(
+                                  AssetPath.noData,
+                                  width: 120,
+                                  height: 120,
+                                ),
+                                const SizedBox(height: spacing16),
+                                Text(
+                                  'No knowledge found',
+                                  style: AppFontStyles.poppinsTextBold(
+                                      fontSize: fontSize16),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) => const Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: ColorConst.backgroundLightGrayColor,
+                            ),
+                            itemBuilder: (context, index) {
+                              final item = filtered[index];
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: spacing8),
+                                leading: ImageHelper.loadFromAsset(
+                                  AssetPath.icoDatabase,
+                                  width: spacing24,
+                                  height: spacing24,
+                                ),
+                                title: Text(
+                                  item['knowledgeName'] as String,
+                                  style: AppFontStyles.poppinsTextBold(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // 1) Dòng mô tả
+                                    Text(
+                                      item['description'] as String? ?? '',
+                                      style: AppFontStyles.poppinsRegular(
+                                        color: ColorConst.textGrayColor,
+                                        fontSize: fontSize12,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  // 2) Dòng pills Units + Total Size
-                                  Row(
-                                    children: [
-                                      // Units pill
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors
-                                              .green, // hoặc dùng ColorConst nếu có
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          '${item['numUnits'] ?? 0} units',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
+                                    const SizedBox(height: 6),
+                                    // 2) Dòng pills Units + Total Size
+                                    Row(
+                                      children: [
+                                        // Units pill
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors
+                                                .green, // hoặc dùng ColorConst nếu có
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${item['numUnits'] ?? 0} units',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      // Total Size pill
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors
-                                              .purple, // hoặc dùng ColorConst nếu có
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          _formatSize(item['totalSize'] ?? 0),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
+                                        const SizedBox(width: 8),
+                                        // Total Size pill
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors
+                                                .purple, // hoặc dùng ColorConst nếu có
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            _formatSize(item['totalSize'] ?? 0),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => KnowledgeInfoPopup(
-                                    knowledge: item,
-                                    onDeleted: () {
-                                      setState(() {
-                                        _knowledgeData.removeWhere(
-                                            (e) => e['id'] == item['id']);
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text('Knowledge deleted')),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            );
-                            ;
-                          },
-                        ),
-            ),
-          ],
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => KnowledgeInfoPopup(
+                                      knowledge: item,
+                                      onDeleted: () {
+                                        setState(() {
+                                          _knowledgeData.removeWhere(
+                                              (e) => e['id'] == item['id']);
+                                        });
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content:
+                                                  Text('Knowledge deleted')),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+              ),
+            ],
+          ),
         ),
       ),
     );
