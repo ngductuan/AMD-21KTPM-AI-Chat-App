@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
+import 'package:eco_chat_bot/src/constants/services/token.service.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
@@ -48,6 +49,22 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  Future<void> fetchTokenUsage() async {
+    try {
+      dynamic response = await TokenServiceApi.getTokenUsage();
+      final Map<String, dynamic> jsonResponse = json.decode(response);
+      final int availableTokens = jsonResponse['availableTokens'] ?? 0;
+
+      setState(() {
+        totalToken = jsonResponse['totalTokens'] ?? 0;
+        usedToken = totalToken - availableTokens;
+      });
+    } catch (e) {
+      // Handle the exception
+      print('Exception occurred while fetching token usage: $e');
+    }
+  }
+
   Future<void> fetchSubscriptionUsage() async {
     try {
       final api = ApiBase();
@@ -87,8 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
     });
     try {
       final offset = _currentPage * _limit;
-      final response = await BotServiceApi.getAllBots(
-          search: searchQuery, offset: offset, limit: _limit);
+      final response = await BotServiceApi.getAllBots(search: searchQuery, offset: offset, limit: _limit);
       final jsonResponse = json.decode(response) as Map<String, dynamic>;
       if (jsonResponse.containsKey('data')) {
         final newItems = jsonResponse['data'] as List<dynamic>;
@@ -118,7 +134,9 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUserData();
-    fetchSubscriptionUsage();
+
+    fetchTokenUsage();
+
     _scrollController.addListener(_scrollListener);
     fetchAiModels();
   }
@@ -131,8 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >=
-            _scrollController.position.maxScrollExtent &&
+    if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
         !_scrollController.position.outOfRange &&
         !_isLoading &&
         _hasMore) {
@@ -165,15 +182,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
-    final overlay =
-        Overlay.of(context)!.context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
       color: ColorConst.backgroundGrayColor2,
-      position: RelativeRect.fromRect(
-          tapPosition & const Size(spacing40, spacing40),
-          Offset.zero & overlay.size),
+      position: RelativeRect.fromRect(tapPosition & const Size(spacing40, spacing40), Offset.zero & overlay.size),
       items: [
         PopupMenuItem(
           child: Row(children: const [
@@ -235,12 +249,11 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Row(children: [
             const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
             const SizedBox(width: spacing8),
-            Text('Remove Bot',
-                style: TextStyle(color: ColorConst.textRedColor)),
+            Text('Remove Bot', style: TextStyle(color: ColorConst.textRedColor)),
           ]),
           onTap: () async {
-            final confirmed = await buildShowConfirmDialog(context,
-                'Are you sure you want to remove this bot?', 'Confirm');
+            final confirmed =
+                await buildShowConfirmDialog(context, 'Are you sure you want to remove this bot?', 'Confirm');
             if (confirmed == true) {
               try {
                 final resp = await BotServiceApi.deleteBotById(botSelectedId);
@@ -267,8 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ],
       elevation: 8,
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
     );
   }
 
@@ -289,16 +301,14 @@ class _ProfilePageState extends State<ProfilePage> {
           ).createShader(bounds),
           child: Text(
             'EcoChatBot',
-            style: AppFontStyles.poppinsTitleSemiBold(
-                fontSize: fontSize24, color: ColorConst.textWhiteColor),
+            style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize24, color: ColorConst.textWhiteColor),
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () async {
-              await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()));
+              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
               _loadUserData();
             },
           ),
@@ -336,37 +346,20 @@ class _ProfilePageState extends State<ProfilePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              email != null && email != "Guest"
-                                  ? email!.split('@').first
-                                  : 'Guest',
-                              style: AppFontStyles.poppinsTitleSemiBold(
-                                  fontSize: fontSize20),
+                              email != null && email != "Guest" ? email!.split('@').first : 'Guest',
+                              style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize20),
                             ),
                             Text(
-                              userId != null && userId!.isNotEmpty
-                                  ? 'ID: ${userId!.substring(0, 8)}'
-                                  : 'ID:',
-                              style: AppFontStyles.poppinsRegular(
-                                  color: ColorConst.textGrayColor),
+                              userId != null && userId!.isNotEmpty ? 'ID: ${userId!.substring(0, 8)}' : 'ID:',
+                              style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
                             ),
                             const SizedBox(height: spacing4),
                             Row(children: [
                               Text(
-                                subscriptionName.isNotEmpty
-                                    ? subscriptionName
-                                    : 'Subscription: Free',
-                                style: AppFontStyles.poppinsRegular(
-                                    color: ColorConst.textGrayColor),
+                                'Token/request: 1',
+                                style: AppFontStyles.poppinsTitleSemiBold(color: ColorConst.textGrayColor),
                               ),
-                              const SizedBox(width: spacing32),
-                              Text(
-                                totalToken > 0
-                                    ? 'Daily: $usedToken / $totalToken'
-                                    : 'Daily: $usedToken',
-                                style: AppFontStyles.poppinsRegular(
-                                    color: ColorConst.textGrayColor),
-                              ),
-                              const Spacer(),
+                              SizedBox(width: spacing32),
                               Icon(
                                 Icons.edit_note_outlined,
                                 color: ColorConst.backgroundBlackColor,
@@ -398,12 +391,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: spacing20, vertical: spacing12),
+                      padding: const EdgeInsets.symmetric(horizontal: spacing20, vertical: spacing12),
                       child: Text(
                         'My bots',
-                        style: AppFontStyles.poppinsTitleSemiBold(
-                            fontSize: fontSize18),
+                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize18),
                       ),
                     ),
                     Expanded(
@@ -415,13 +406,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           if (index == _aiModels.length) {
                             return buildLoadingIndicator(hasMore: _hasMore);
                           }
-                          final botAvatar = MockData
-                              .aiModels[index % MockData.aiModels.length];
+                          final botAvatar = MockData.aiModels[index % MockData.aiModels.length];
                           return GestureDetector(
                             onTapUp: (details) {
                               botSelectedId = _aiModels[index]['id'] ?? "";
-                              _showBotMenu(
-                                  context, index, details.globalPosition);
+                              _showBotMenu(context, index, details.globalPosition);
                             },
                             child: AiBotItem(
                               botData: _aiModels[index],
