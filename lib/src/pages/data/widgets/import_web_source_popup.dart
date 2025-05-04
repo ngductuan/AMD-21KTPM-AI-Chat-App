@@ -30,7 +30,6 @@ class ImportWebSourcePopup {
             builder: (_, isLoading, __) {
               return Container(
                 padding: const EdgeInsets.all(padding16),
-                // margin: const EdgeInsets.symmetric(horizontal: padding16),
                 decoration: BoxDecoration(
                   color: ColorConst.backgroundWhiteColor,
                   borderRadius: BorderRadius.circular(radius12),
@@ -42,9 +41,7 @@ class ImportWebSourcePopup {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Import Web Resource',
-                            style: AppFontStyles.poppinsTitleSemiBold(
-                                fontSize: fontSize16)),
+                        Text('Import Web Resource', style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16)),
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: isLoading ? null : _close,
@@ -54,18 +51,47 @@ class ImportWebSourcePopup {
                     const SizedBox(height: spacing24),
                     TextField(
                       controller: unitNameController,
-                      decoration: const InputDecoration(labelText: 'Unit Name'),
+                      decoration: const InputDecoration(labelText: 'Unit Name *'),
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: spacing24),
                     TextField(
                       controller: webUrlController,
-                      decoration: const InputDecoration(labelText: 'Web URL'),
+                      decoration: const InputDecoration(labelText: 'Web URL *'),
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: spacing32),
-                    if (isLoading) const CircularProgressIndicator(),
-                    const SizedBox(height: spacing16),
+                    // Limitation notice
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(spacing12),
+                      decoration: BoxDecoration(
+                        color: ColorConst.bluePastelColor,
+                        borderRadius: BorderRadius.circular(radius12),
+                        border: Border.all(
+                          color: ColorConst.blueColor.withAlpha((0.5 * 255).toInt()),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Current Limitation:',
+                            style: AppFontStyles.poppinsTitleSemiBold(
+                              fontSize: fontSize16,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: spacing8),
+                          Text('• You can load up to 64 pages at a time', style: AppFontStyles.poppinsRegular()),
+                          const SizedBox(height: spacing4),
+                          Text('• Need more? Contact us at', style: AppFontStyles.poppinsRegular()),
+                          Text('myjarvischat@gmail.com', style: AppFontStyles.poppinsRegular(color: Colors.blue)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: spacing40),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -77,14 +103,14 @@ class ImportWebSourcePopup {
                         const SizedBox(width: spacing12),
                         GradientFormButton(
                           text: 'Import',
-                          isActiveButton: !isLoading,
+                          isActiveButton: true,
+                          isLoading: isLoading,
                           onPressed: () {
                             final unit = unitNameController.text.trim();
                             final url = webUrlController.text.trim();
                             if (unit.isEmpty || url.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Please fill both fields')),
+                                const SnackBar(content: Text('Please fill both fields')),
                               );
                               return;
                             }
@@ -97,24 +123,22 @@ class ImportWebSourcePopup {
                             )
                                 .then((_) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Upload thành công!')),
+                                const SnackBar(content: Text('Upload successfully')),
                               );
                             }).catchError((e) {
                               // parse JSON nếu có
                               String msg = 'Internal server error';
                               try {
                                 final m = jsonDecode(
-                                  RegExp(r'\{.*\}')
-                                          .firstMatch(e.toString())
-                                          ?.group(0) ??
-                                      '{}',
+                                  RegExp(r'\{.*\}').firstMatch(e.toString())?.group(0) ?? '{}',
                                 ) as Map<String, dynamic>;
                                 msg = m['message'] ?? msg;
                               } catch (_) {}
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Lỗi: $msg')),
-                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $msg')),
+                                );
+                              }
                             }).whenComplete(() {
                               _close();
                             });

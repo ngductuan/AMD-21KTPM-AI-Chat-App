@@ -1,3 +1,5 @@
+import 'package:dotted_border/dotted_border.dart';
+import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
@@ -83,10 +85,8 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
     final data = widget.knowledge;
     final createdAt = DateTime.tryParse(data['createdAt'] ?? '');
     final updatedAt = DateTime.tryParse(data['updatedAt'] ?? '');
-    final createdStr =
-        createdAt != null ? DateFormat('yyyy-MM-dd').format(createdAt) : '-';
-    final updatedStr =
-        updatedAt != null ? DateFormat('yyyy-MM-dd').format(updatedAt) : '-';
+    final createdStr = createdAt != null ? DateFormat('yyyy-MM-dd').format(createdAt) : '-';
+    final updatedStr = updatedAt != null ? DateFormat('yyyy-MM-dd').format(updatedAt) : '-';
 
     Widget buildItem(String label, String value) {
       return Padding(
@@ -94,7 +94,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppFontStyles.poppinsTextBold(fontSize: 14)),
+            Text(label, style: AppFontStyles.poppinsTextBold()),
             const SizedBox(height: 2),
             Text(value, style: AppFontStyles.poppinsRegular(fontSize: 12)),
           ],
@@ -103,14 +103,14 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
     }
 
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: spacing8),
+      backgroundColor: ColorConst.backgroundWhiteColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Row(
         children: [
-          Icon(Icons.info_outline,
-              size: 20, color: Theme.of(context).primaryColor),
+          Icon(Icons.info_outline, size: 20, color: Theme.of(context).primaryColor),
           const SizedBox(width: 8),
-          Text('Knowledge Details',
-              style: AppFontStyles.poppinsTitleBold(fontSize: 16)),
+          Text('Knowledge Details', style: AppFontStyles.poppinsTitleBold(fontSize: 16)),
         ],
       ),
       content: ConstrainedBox(
@@ -120,8 +120,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (_error != null) ...[
-                Text(_error!,
-                    style: TextStyle(color: Colors.red, fontSize: 12)),
+                Text(_error!, style: TextStyle(color: Colors.red, fontSize: 12)),
                 const SizedBox(height: 8),
               ],
               buildItem('Name', data['knowledgeName'] as String? ?? '-'),
@@ -135,13 +134,9 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
               ),
               Row(
                 children: [
-                  Expanded(
-                      child: buildItem(
-                          'Units', data['numUnits']?.toString() ?? '0')),
+                  Expanded(child: buildItem('Units', data['numUnits']?.toString() ?? '0')),
                   const SizedBox(width: 16),
-                  Expanded(
-                      child: buildItem(
-                          'Total Size', data['totalSize']?.toString() ?? '0')),
+                  Expanded(child: buildItem('Total Size', data['totalSize']?.toString() ?? '0')),
                 ],
               ),
             ],
@@ -152,37 +147,46 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
       actions: [
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton(
-            onPressed: _handleAddSource,
-            child: const Text('Add Source', style: TextStyle(fontSize: 14)),
+          child: DottedBorder(
+            color: ColorConst.textHighlightColor,
+            borderType: BorderType.RRect,
+            dashPattern: [4, 2],
+            radius: Radius.circular(radius12),
+            child: InkWell(
+              onTap: _handleAddSource,
+              child: Container(
+                height: spacing32,
+                alignment: Alignment.center,
+                child: Text(
+                  '+ Add knowledge source',
+                  style: AppFontStyles.poppinsRegular(),
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close', style: TextStyle(fontSize: 14)),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: _isDeleting ? null : _handleDelete,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+        const SizedBox(height: spacing48),
+        Padding(
+          padding: const EdgeInsets.only(bottom: spacing8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GradientFormButton(
+                text: 'Cancel',
+                onPressed: () => Navigator.of(context).pop(),
+                isActiveButton: false,
               ),
-              child: _isDeleting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white)),
-                    )
-                  : const Text('Delete', style: TextStyle(fontSize: 14)),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(left: spacing12),
+                child: GradientFormButton(
+                  isLoading: _isDeleting,
+                  text: 'Delete',
+                  onPressed: () => _isDeleting ? null : _handleDelete,
+                  isActiveButton: true,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

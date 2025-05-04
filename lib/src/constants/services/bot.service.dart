@@ -6,9 +6,15 @@ import 'package:http/http.dart' as http;
 
 class BotServiceApi {
   static final assistant = {
-    "model": "knowledge-base",
-    "name": "votutrinh2002's Default Team Assistant",
-    "id": "29178123-34d4-4e52-94fb-8e580face2d5"
+    // "model": "knowledge-base",
+    // "name": "votutrinh2002's Default Team Assistant",
+    // "id": "29178123-34d4-4e52-94fb-8e580face2d5"
+    "id": "gemini-1.5-flash-latest",
+    "model": "dify",
+    "name": "Gemini 1.5 Flash"
+    // "id": "gpt-4o-mini",
+    // "model": "dify",
+    // "name": "GPT-4o mini"
   };
 
   static Future<dynamic> createBotResponse(Map<String, dynamic>? body) async {

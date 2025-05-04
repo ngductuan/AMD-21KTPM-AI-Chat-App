@@ -18,13 +18,12 @@ class ImportWebSourcePopup {
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (dialogContext) {
         // dùng builderContext để mọi InheritedWidget đều có sẵn
-        final w = MediaQuery.of(dialogContext).size.width * .8;
         return Dialog(
+          insetPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radius12),
           ),
           backgroundColor: ColorConst.backgroundWhiteColor,
-          insetPadding: EdgeInsets.symmetric(horizontal: (MediaQuery.of(dialogContext).size.width - w) / 2),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(padding16),

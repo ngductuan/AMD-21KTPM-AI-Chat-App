@@ -109,7 +109,7 @@ class _DataScreenState extends State<DataScreen> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Search knowledge base',
+                      hintText: 'Find knowledge base',
                       prefixIcon: const Icon(Icons.search),
                       filled: true,
                       fillColor: ColorConst.backgroundWhiteColor,
@@ -129,8 +129,7 @@ class _DataScreenState extends State<DataScreen> {
                     // mở modal tạo mới và thêm kết quả vào danh sách
                     showDialog(
                         context: context,
-                        builder: (_) =>
-                            CreateKnowledgePopup(onCreated: (newKb) {
+                        builder: (_) => CreateKnowledgePopup(onCreated: (newKb) {
                               setState(() {
                                 // map trực tiếp các trường từ API về structure của _knowledgeData
                                 _knowledgeData.insert(0, {
@@ -170,8 +169,7 @@ class _DataScreenState extends State<DataScreen> {
                               const SizedBox(height: spacing16),
                               Text(
                                 'No knowledge found',
-                                style: AppFontStyles.poppinsTextBold(
-                                    fontSize: fontSize16),
+                                style: AppFontStyles.poppinsTextBold(fontSize: fontSize16),
                               ),
                             ],
                           ),
@@ -208,13 +206,10 @@ class _DataScreenState extends State<DataScreen> {
                                     knowledge: item,
                                     onDeleted: () {
                                       setState(() {
-                                        _knowledgeData.removeWhere(
-                                            (e) => e['id'] == item['id']);
+                                        _knowledgeData.removeWhere((e) => e['id'] == item['id']);
                                       });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text('Knowledge deleted')),
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Knowledge deleted')),
                                       );
                                     },
                                   ),

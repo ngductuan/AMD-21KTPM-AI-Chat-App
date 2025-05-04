@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/constants/services/token.service.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
+import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
 import 'package:eco_chat_bot/src/pages/profile/widgets/token_progress.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
@@ -211,7 +213,18 @@ class _ProfilePageState extends State<ProfilePage> {
               Text('Preview'),
             ],
           ),
-          onTap: () async {},
+          onTap: () async {
+            Navigator.of(context).pushNamed(
+              ChatThreadScreen.routeName,
+              arguments: {
+                'chatStatus': ChatThreadStatus.newExplore,
+                'botId': _aiModels[index]['id'],
+                'isVisibleGadget': false,
+              },
+            ).then((popValue) => {
+                  if (popValue != null && popValue == true) {fetchTokenUsage()}
+                });
+          },
         ),
         PopupMenuItem(
           child: Row(
@@ -355,7 +368,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               Row(
                                 children: [
                                   Text(
-                                    'Token/request: 5',
+                                    'Token/request: 1',
                                     style: AppFontStyles.poppinsTitleSemiBold(color: ColorConst.textGrayColor),
                                   ),
                                   SizedBox(width: spacing32),

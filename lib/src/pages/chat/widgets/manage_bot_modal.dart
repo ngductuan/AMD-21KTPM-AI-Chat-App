@@ -166,6 +166,7 @@ class _ManageBotModalState extends State<ManageBotModal> {
                             ),
                             SizedBox(height: spacing20),
                             DottedBorder(
+                              color: ColorConst.textHighlightColor,
                               borderType: BorderType.RRect,
                               dashPattern: [4, 2],
                               radius: Radius.circular(radius12),

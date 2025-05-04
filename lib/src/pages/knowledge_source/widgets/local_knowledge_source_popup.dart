@@ -167,6 +167,6 @@ class LocalKnowledgeSourcePopup {
       ),
     );
 
-    overlay?.insert(entry);
+    overlay.insert(entry);
   }
 }
