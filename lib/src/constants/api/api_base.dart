@@ -11,9 +11,12 @@ import 'package:flutter/foundation.dart';
 
 class ApiBase {
   // Base URLs
-  static final authUrl = dotenv.maybeGet(EnvKey.authApi) ?? 'https://auth-api.dev.jarvis.cx';
-  static final jarvisUrl = dotenv.maybeGet(EnvKey.jarvisApi) ?? 'https://api.dev.jarvis.cx';
-  static final knowledgeUrl = dotenv.maybeGet(EnvKey.knowledgeApi) ?? 'https://knowledge-api.dev.jarvis.cx';
+  static final authUrl =
+      dotenv.maybeGet(EnvKey.authApi) ?? 'https://auth-api.dev.jarvis.cx';
+  static final jarvisUrl =
+      dotenv.maybeGet(EnvKey.jarvisApi) ?? 'https://api.dev.jarvis.cx';
+  static final knowledgeUrl = dotenv.maybeGet(EnvKey.knowledgeApi) ??
+      'https://knowledge-api.dev.jarvis.cx';
 
   // Other URLs
   static const verificationCallbackUrl =
@@ -21,7 +24,8 @@ class ApiBase {
   static const headerAuth = {
     'X-Stack-Access-Type': 'client',
     'X-Stack-Project-Id': 'a914f06b-5e46-4966-8693-80e4b9f4f409',
-    'X-Stack-Publishable-Client-Key': 'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
+    'X-Stack-Publishable-Client-Key':
+        'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
     'Content-Type': 'application/json',
   };
 
@@ -45,7 +49,8 @@ class ApiBase {
     final headers = {
       'X-Stack-Access-Type': 'client',
       'X-Stack-Project-Id': 'a914f06b-5e46-4966-8693-80e4b9f4f409',
-      'X-Stack-Publishable-Client-Key': 'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
+      'X-Stack-Publishable-Client-Key':
+          'pck_tqsy29b64a585km2g4wnpc57ypjprzzdch8xzpq0xhayr',
       'X-Stack-Refresh-Token': refreshToken ?? '',
     };
 
@@ -66,7 +71,8 @@ class ApiBase {
 
       // Cập nhật access token và thời gian hết hạn
       await prefs.setString(LocalStorageKey.accessToken, newAccessToken);
-      await prefs.setString(LocalStorageKey.accessTokenExpiry, newExpiryTime.toIso8601String());
+      await prefs.setString(
+          LocalStorageKey.accessTokenExpiry, newExpiryTime.toIso8601String());
       print('Access token refreshed successfully');
     } else {
       throw Exception('Failed to refresh token: ${response.reasonPhrase}');
@@ -90,7 +96,8 @@ class ApiBase {
   }
 
   /// Ví dụ về wrapper cho HTTP POST đã tích hợp refresh token
-  Future<http.Response> authenticatedPost(String endpoint, {Map<String, dynamic>? body}) async {
+  Future<http.Response> authenticatedPost(String endpoint,
+      {Map<String, dynamic>? body}) async {
     final headers = await getAuthHeaders();
     final url = Uri.parse('$jarvisUrl/$endpoint');
     return await http.post(url, headers: headers, body: jsonEncode(body));
@@ -180,6 +187,37 @@ class ApiBase {
     } else {
       throw Exception(
           'Failed to fetch knowledges: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
+    }
+  }
+
+  // API Lấy đơn vị tri thức của một kiến thức
+  Future<Map<String, dynamic>> getKnowledgeUnits({
+    required String knowledgeId,
+    String q = '',
+    String order = 'DESC',
+    String orderField = 'createdAt',
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    final headers = await getAuthHeaders();
+    final uri =
+        Uri.parse('$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/units')
+            .replace(
+      queryParameters: {
+        'q': q,
+        'order': order,
+        'order_field': orderField,
+        'offset': offset.toString(),
+        'limit': limit.toString(),
+      },
+    );
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+          'Failed to fetch knowledge units: [${response.statusCode}] ${response.reasonPhrase}\n'
           'Body: ${response.body}');
     }
   }
@@ -427,6 +465,41 @@ class ApiBase {
       throw Exception(
         'Failed to upload knowledge from Confluence: '
         '[${response.statusCode}] ${response.reasonPhrase}',
+      );
+    }
+  }
+
+  /// CÁC API SUBCRIPTION ///
+  // Lấy thông tin usage của subscription hiện tại
+  Future<Map<String, dynamic>> getSubscriptionUsage() async {
+    // Build URL
+    final uri = Uri.parse('$jarvisUrl/api/v1/subscriptions/me');
+    // Gọi GET với header đã auth
+    final response = await authenticatedGet(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to fetch subscription usage: '
+        '[${response.statusCode}] ${response.reasonPhrase}\n'
+        'Body: ${response.body}',
+      );
+    }
+  }
+
+  // Gửi request để subscribe (mở gói dịch vụ)
+  Future<Map<String, dynamic>> subscribe() async {
+    // Build URL
+    final uri = Uri.parse('$jarvisUrl/api/v1/subscriptions/subscribe');
+    // Gọi GET với header đã auth
+    final response = await authenticatedGet(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to subscribe: '
+        '[${response.statusCode}] ${response.reasonPhrase}\n'
+        'Body: ${response.body}',
       );
     }
   }
