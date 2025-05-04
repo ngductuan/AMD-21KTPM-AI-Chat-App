@@ -72,7 +72,7 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
       backgroundColor: ColorConst.backgroundWhiteColor,
       scrollable: true,
       title: Text(
-        'Create a Knowledge Base',
+        'Create knowledge base',
         style: AppFontStyles.poppinsTextBold(fontSize: fontSize16),
       ),
       content: SingleChildScrollView(
@@ -136,7 +136,7 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
           padding: const EdgeInsets.only(left: spacing8),
           child: GradientFormButton(
             isLoading: _isSubmitting,
-            text: 'Delete',
+            text: 'Confirm',
             onPressed: () async => _isSubmitting ? null : _handleCreate(),
             isActiveButton: true,
           ),

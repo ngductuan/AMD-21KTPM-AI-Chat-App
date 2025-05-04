@@ -135,9 +135,9 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
               ),
               Row(
                 children: [
-                  Expanded(child: buildItem('Units', data['numUnits']?.toString() ?? '0')),
+                  Expanded(child: buildItem('Units', data['numUnits']?.toString() ?? 'N/A')),
                   const SizedBox(width: 16),
-                  Expanded(child: buildItem('Total Size', data['totalSize']?.toString() ?? '0')),
+                  Expanded(child: buildItem('Total Size', data['totalSize']?.toString() ?? 'N/A')),
                 ],
               ),
             ],
