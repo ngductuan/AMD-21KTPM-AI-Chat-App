@@ -4,6 +4,7 @@ import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -62,38 +63,30 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response =
-          await http.post(url, headers: ApiBase.headerAuth, body: body);
+      final response = await http.post(url, headers: ApiBase.headerAuth, body: body);
       final responseJson = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Sau khi nhận phản hồi đăng nhập thành công:
         final prefs = await SharedPreferences.getInstance();
         final currentTime = DateTime.now();
-        final expiryTime =
-            currentTime.add(Duration(minutes: 5)); // hoặc 10 phút, tùy theo API
+        final expiryTime = currentTime.add(Duration(minutes: 5)); // hoặc 10 phút, tùy theo API
 
-        await prefs.setString(LocalStorageKey.accessToken,
-            responseJson[LocalStorageKey.accessToken]);
-        await prefs.setString(LocalStorageKey.refreshToken,
-            responseJson[LocalStorageKey.refreshToken]);
-        await prefs.setString(
-            LocalStorageKey.accessTokenExpiry, expiryTime.toIso8601String());
+        await prefs.setString(LocalStorageKey.accessToken, responseJson[LocalStorageKey.accessToken]);
+        await prefs.setString(LocalStorageKey.refreshToken, responseJson[LocalStorageKey.refreshToken]);
+        await prefs.setString(LocalStorageKey.accessTokenExpiry, expiryTime.toIso8601String());
 
-        await prefs.setString(
-            LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
+        await prefs.setString(LocalStorageKey.userId, responseJson[LocalStorageKey.userId]);
         await prefs.setString(LocalStorageKey.email, email);
-        await prefs.setBool(
-            LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
+        await prefs.setBool(LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Login successful!'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppToast(
+            context: context,
+            duration: Duration(seconds: 1),
+            message: 'Login successful!',
+            mode: AppToastMode.confirm,
+          ).show(context);
 
           await Future.delayed(const Duration(milliseconds: 800));
           Navigator.pushNamedAndRemoveUntil(
@@ -104,8 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         setState(() {
-          _errorMessage =
-              responseJson['error'] ?? 'Login failed. Please try again.';
+          _errorMessage = responseJson['error'] ?? 'Login failed. Please try again.';
         });
       }
     } catch (e) {
@@ -126,8 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -157,8 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -244,8 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const VerificationEmailScreen(),
+                                    builder: (context) => const VerificationEmailScreen(),
                                   ),
                                 );
                               },
@@ -270,8 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: Column(
                         children: [
-                          buildGradientButton(
-                              context, "Login", _signInWithEmail),
+                          buildGradientButton(context, "Login", _signInWithEmail),
                           const SizedBox(height: 16),
                           GoogleSignInButton(
                             onPressed: _signInWithGoogle,
@@ -298,23 +286,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.push(
                               context,
                               PageRouteBuilder(
-                                transitionDuration:
-                                    const Duration(milliseconds: 400),
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        const SignUpScreen(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
+                                transitionDuration: const Duration(milliseconds: 400),
+                                pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
+                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                   const begin = Offset(1.0, 0.0);
                                   const end = Offset.zero;
                                   const curve = Curves.easeInOut;
 
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
+                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
                                   var offsetAnimation = animation.drive(tween);
 
-                                  return SlideTransition(
-                                      position: offsetAnimation, child: child);
+                                  return SlideTransition(position: offsetAnimation, child: child);
                                 },
                               ),
                             );
@@ -343,23 +325,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: RichText(
                             textAlign: TextAlign.center,
                             text: const TextSpan(
-                              style: TextStyle(
-                                  color: Colors.black54, fontSize: 14),
+                              style: TextStyle(color: Colors.black54, fontSize: 14),
                               children: [
-                                TextSpan(
-                                    text: 'By continuing, you agree to our '),
+                                TextSpan(text: 'By continuing, you agree to our '),
                                 TextSpan(
                                   text: 'User Agreement',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black54),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                                 ),
                                 TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black54),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                                 ),
                                 TextSpan(text: '.'),
                               ],

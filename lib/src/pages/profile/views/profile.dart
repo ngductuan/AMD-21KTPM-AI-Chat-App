@@ -9,7 +9,6 @@ import 'package:eco_chat_bot/src/pages/ai_bot/widgets/ai_bot_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
 import 'package:eco_chat_bot/src/pages/data/views/data_screen.dart';
-import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_info_popup.dart';
 import 'package:eco_chat_bot/src/pages/profile/widgets/token_progress.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
 import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';

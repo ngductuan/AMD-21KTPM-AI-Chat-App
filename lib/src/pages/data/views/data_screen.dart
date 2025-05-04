@@ -10,10 +10,7 @@ import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_info_popup.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 
 class DataScreen extends StatefulWidget {
-  const DataScreen(
-      {super.key,
-      this.isGotKnowledgeForEachBot = false,
-      this.assistantId = ''});
+  const DataScreen({super.key, this.isGotKnowledgeForEachBot = false, this.assistantId = ''});
   static const String routeName = '/data';
 
   final bool isGotKnowledgeForEachBot;
@@ -29,7 +26,10 @@ class _DataScreenState extends State<DataScreen> {
 
   // Danh sách knowledges và loading flag
   List<Map<String, dynamic>> _knowledgeData = [];
+  // For fetch all data
   bool _isLoading = true;
+
+  List<Map<String, dynamic>> _knowledgeDataByBotId = [];
 
   @override
   void initState() {
@@ -37,7 +37,10 @@ class _DataScreenState extends State<DataScreen> {
 
     if (widget.isGotKnowledgeForEachBot) {
       // fetch knowledge by botId
-      _fetchKnowledgeByBotId(widget.assistantId);
+      _fetchKnowledgeByBotId(widget.assistantId).then((_) {
+        // fetch all knowledges
+        _fetchKnowledges();
+      });
     } else {
       // fetch all knowledges
       _fetchKnowledges();
@@ -52,6 +55,8 @@ class _DataScreenState extends State<DataScreen> {
   }
 
   Future<void> _fetchKnowledges() async {
+    setState(() => _isLoading = true);
+
     try {
       final api = ApiBase();
       // 3. Gọi API; có thể truyền tham số nếu cần
@@ -60,7 +65,7 @@ class _DataScreenState extends State<DataScreen> {
         order: 'DESC',
         orderField: 'createdAt',
         offset: 0,
-        limit: 45,
+        limit: 50,
       );
       // Giả định API trả về JSON với key 'data' là list các knowledge
       final data = resp['data'] as List<dynamic>;
@@ -76,10 +81,10 @@ class _DataScreenState extends State<DataScreen> {
             'updatedBy': e['updatedBy'],
             'userId': e['userId'],
             'numUnits': e['numUnits'],
-            'totalSize': e['totalSize']
+            'totalSize': e['totalSize'],
+            'isImported': _knowledgeDataByBotId.any((k) => k['id'] == e['id']),
           };
         }).toList();
-        _isLoading = false;
       });
     } catch (e) {
       print('Error fetching all knowledges: $e');
@@ -99,24 +104,17 @@ class _DataScreenState extends State<DataScreen> {
       // 3. Gọi API; có thể truyền tham số nếu cần
       final resp = await KnowledgeServiceApi.getImportedSourceByBotId(
         assistantId,
+        limit: 50,
       );
 
       // Giả định API trả về JSON với key 'data' là list các knowledge
       final data = resp['data'] as List<dynamic>;
       setState(() {
-        _knowledgeData = data.map((e) {
+        _knowledgeDataByBotId = data.map((e) {
           return {
             'id': e['id'],
-            'knowledgeName': e['knowledgeName'],
-            'description': e['description'],
-            'createdAt': e['createdAt'],
-            'updatedAt': e['updatedAt'],
-            'createdBy': e['createdBy'],
-            'updatedBy': e['updatedBy'],
-            'userId': e['userId'],
           };
         }).toList();
-        _isLoading = false;
       });
     } catch (e) {
       print('Error fetching knowledge by botId: $e');
@@ -126,8 +124,60 @@ class _DataScreenState extends State<DataScreen> {
         message: 'Error fetching knowledge by botId',
         mode: AppToastMode.error,
       ).show(context);
-    } finally {
-      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _postKnowledgeToAssistant(String knowledgeId) async {
+    try {
+      // 3. Gọi API; có thể truyền tham số nếu cần
+      final resp = await KnowledgeServiceApi.postKnowledgeToAssistant(
+        widget.assistantId,
+        knowledgeId,
+      );
+
+      if (resp == 'true') {
+        AppToast(
+          context: context,
+          duration: Duration(seconds: 1),
+          message: 'Imported successfully',
+          mode: AppToastMode.confirm,
+        ).show(context);
+      }
+    } catch (e) {
+      print('Error posting knowledge to assistant: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error posting knowledge to assistant',
+        mode: AppToastMode.error,
+      ).show(context);
+    }
+  }
+
+  Future<void> _deleteKnowledgeToAssistant(String knowledgeId) async {
+    try {
+      // 3. Gọi API; có thể truyền tham số nếu cần
+      final resp = await KnowledgeServiceApi.deleteKnowledgeFromAssistant(
+        widget.assistantId,
+        knowledgeId,
+      );
+
+      if (resp == 'true') {
+        AppToast(
+          context: context,
+          duration: Duration(seconds: 1),
+          message: 'Deleted successfully',
+          mode: AppToastMode.confirm,
+        ).show(context);
+      }
+    } catch (e) {
+      print('Error deleting knowledge to assistant: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error deleting knowledge to assistant',
+        mode: AppToastMode.error,
+      ).show(context);
     }
   }
 
@@ -197,8 +247,7 @@ class _DataScreenState extends State<DataScreen> {
                       // mở modal tạo mới và thêm kết quả vào danh sách
                       showDialog(
                           context: context,
-                          builder: (_) =>
-                              CreateKnowledgePopup(onCreated: (newKb) {
+                          builder: (_) => CreateKnowledgePopup(onCreated: (newKb) {
                                 setState(() {
                                   // map trực tiếp các trường từ API về structure của _knowledgeData
                                   _knowledgeData.insert(0, {
@@ -238,8 +287,7 @@ class _DataScreenState extends State<DataScreen> {
                                 const SizedBox(height: spacing16),
                                 Text(
                                   'No knowledge found',
-                                  style: AppFontStyles.poppinsTextBold(
-                                      fontSize: fontSize16),
+                                  style: AppFontStyles.poppinsTextBold(fontSize: fontSize16),
                                 ),
                               ],
                             ),
@@ -253,14 +301,38 @@ class _DataScreenState extends State<DataScreen> {
                             ),
                             itemBuilder: (context, index) {
                               final item = filtered[index];
+
+                              bool isImported = item['isImported'] as bool;
+
                               return ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: spacing8),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: spacing8),
                                 leading: ImageHelper.loadFromAsset(
                                   AssetPath.icoDatabase,
                                   width: spacing24,
                                   height: spacing24,
                                 ),
+                                trailing: widget.isGotKnowledgeForEachBot
+                                    ? GestureDetector(
+                                        onTap: () async {
+                                          if (!isImported) {
+                                            await _postKnowledgeToAssistant(item['id'] as String);
+                                            setState(() {
+                                              _knowledgeData[index]['isImported'] = true;
+                                            });
+                                          } else {
+                                            await _deleteKnowledgeToAssistant(item['id'] as String);
+                                            setState(() {
+                                              _knowledgeData[index]['isImported'] = false;
+                                            });
+                                          }
+                                        },
+                                        child: Icon(
+                                          isImported ? Icons.check : Icons.add,
+                                          size: spacing16,
+                                          color: isImported ? Colors.green[600] : Colors.black,
+                                        ),
+                                      )
+                                    : null,
                                 title: Text(
                                   item['knowledgeName'] as String,
                                   style: AppFontStyles.poppinsTextBold(),
@@ -286,13 +358,10 @@ class _DataScreenState extends State<DataScreen> {
                                       children: [
                                         // Units pill
                                         Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: Colors
-                                                .green, // hoặc dùng ColorConst nếu có
-                                            borderRadius:
-                                                BorderRadius.circular(12),
+                                            color: Colors.green, // hoặc dùng ColorConst nếu có
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
                                             '${item['numUnits'] ?? 0} units',
@@ -305,13 +374,10 @@ class _DataScreenState extends State<DataScreen> {
                                         const SizedBox(width: 8),
                                         // Total Size pill
                                         Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: Colors
-                                                .purple, // hoặc dùng ColorConst nếu có
-                                            borderRadius:
-                                                BorderRadius.circular(12),
+                                            color: Colors.purple, // hoặc dùng ColorConst nếu có
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
                                             _formatSize(item['totalSize'] ?? 0),
@@ -332,15 +398,15 @@ class _DataScreenState extends State<DataScreen> {
                                       knowledge: item,
                                       onDeleted: () {
                                         setState(() {
-                                          _knowledgeData.removeWhere(
-                                              (e) => e['id'] == item['id']);
+                                          _knowledgeData.removeWhere((e) => e['id'] == item['id']);
                                         });
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content:
-                                                  Text('Knowledge deleted')),
-                                        );
+
+                                        AppToast(
+                                          context: context,
+                                          duration: Duration(seconds: 1),
+                                          message: 'Knowledge deleted',
+                                          mode: AppToastMode.confirm,
+                                        ).show(context);
                                       },
                                     ),
                                   );
