@@ -10,9 +10,12 @@ import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_info_popup.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 
 class DataScreen extends StatefulWidget {
-  const DataScreen({super.key, this.isGotKnowledgeForEachBot = false, this.assistantId = ''});
+  const DataScreen(
+      {super.key,
+      this.isGotKnowledgeForEachBot = false,
+      this.assistantId = ''});
   static const String routeName = '/data';
-  
+
   final bool isGotKnowledgeForEachBot;
   final String assistantId;
 
@@ -134,6 +137,12 @@ class _DataScreenState extends State<DataScreen> {
     super.dispose();
   }
 
+  String _formatSize(dynamic bytes) {
+    final double b = (bytes is num) ? bytes.toDouble() : 0;
+    final double kb = b / 1024;
+    return '${kb.toStringAsFixed(2)} KB';
+  }
+
   @override
   Widget build(BuildContext context) {
     // 4. Lọc theo tên
@@ -188,7 +197,8 @@ class _DataScreenState extends State<DataScreen> {
                       // mở modal tạo mới và thêm kết quả vào danh sách
                       showDialog(
                           context: context,
-                          builder: (_) => CreateKnowledgePopup(onCreated: (newKb) {
+                          builder: (_) =>
+                              CreateKnowledgePopup(onCreated: (newKb) {
                                 setState(() {
                                   // map trực tiếp các trường từ API về structure của _knowledgeData
                                   _knowledgeData.insert(0, {
@@ -228,7 +238,8 @@ class _DataScreenState extends State<DataScreen> {
                                 const SizedBox(height: spacing16),
                                 Text(
                                   'No knowledge found',
-                                  style: AppFontStyles.poppinsTextBold(fontSize: fontSize16),
+                                  style: AppFontStyles.poppinsTextBold(
+                                      fontSize: fontSize16),
                                 ),
                               ],
                             ),
@@ -243,7 +254,8 @@ class _DataScreenState extends State<DataScreen> {
                             itemBuilder: (context, index) {
                               final item = filtered[index];
                               return ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: spacing8),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: spacing8),
                                 leading: ImageHelper.loadFromAsset(
                                   AssetPath.icoDatabase,
                                   width: spacing24,
@@ -255,14 +267,63 @@ class _DataScreenState extends State<DataScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                subtitle: Text(
-                                  item['description'] as String,
-                                  style: AppFontStyles.poppinsRegular(
-                                    color: ColorConst.textGrayColor,
-                                    fontSize: fontSize12,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // 1) Dòng mô tả
+                                    Text(
+                                      item['description'] as String? ?? '',
+                                      style: AppFontStyles.poppinsRegular(
+                                        color: ColorConst.textGrayColor,
+                                        fontSize: fontSize12,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    // 2) Dòng pills Units + Total Size
+                                    Row(
+                                      children: [
+                                        // Units pill
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors
+                                                .green, // hoặc dùng ColorConst nếu có
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${item['numUnits'] ?? 0} units',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Total Size pill
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors
+                                                .purple, // hoặc dùng ColorConst nếu có
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            _formatSize(item['totalSize'] ?? 0),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                                 onTap: () {
                                   showDialog(
@@ -271,10 +332,14 @@ class _DataScreenState extends State<DataScreen> {
                                       knowledge: item,
                                       onDeleted: () {
                                         setState(() {
-                                          _knowledgeData.removeWhere((e) => e['id'] == item['id']);
+                                          _knowledgeData.removeWhere(
+                                              (e) => e['id'] == item['id']);
                                         });
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Knowledge deleted')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content:
+                                                  Text('Knowledge deleted')),
                                         );
                                       },
                                     ),

@@ -10,6 +10,7 @@ import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eco_chat_bot/src/pages/profile/views/upgrade_account.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -64,7 +65,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
 
     // Nếu muốn điều hướng về màn hình login, bạn có thể mở dòng dưới đây
-    Navigator.of(context).pushNamedAndRemoveUntil(LoginScreen.routeName, (route) => false);
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(LoginScreen.routeName, (route) => false);
   }
 
   Future<bool?> _showLogoutDialog(BuildContext context) {
@@ -112,65 +114,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showUpgradeModal(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: ColorConst.backgroundWhiteColor,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Upgrade PRO account?',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: fontSize20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Benefit features',
-                style: TextStyle(fontSize: fontSize18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: fontSize16),
-              _buildBenefitItem('AI Chat Models (GPT-3.5, GPT-4.0, Gemini...)'),
-              const SizedBox(height: spacing12),
-              _buildBenefitItem('Unlimited queries per month'),
-              const SizedBox(height: spacing12),
-              _buildBenefitItem('Unlimited AI Action Injection'),
-              const SizedBox(height: spacing30),
-              const Text(
-                '\$9.99/month',
-                style: TextStyle(fontSize: fontSize24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: spacing24),
-              Row(
-                children: [
-                  Expanded(
-                    child: GradientFormButton(
-                      text: 'Cancel',
-                      onPressed: () => Navigator.of(context).pop(),
-                      isActiveButton: false,
-                    ),
-                  ),
-                  const SizedBox(width: spacing12),
-                  Expanded(
-                    child: GradientFormButton(
-                      text: 'Upgrade',
-                      onPressed: () => Navigator.of(context).pop(),
-                      isActiveButton: true,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildBenefitItem(String text) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +121,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Container(
           width: spacing24,
           height: spacing24,
-          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+          decoration:
+              const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
           child: const Icon(Icons.check, color: Colors.white, size: spacing20),
         ),
         const SizedBox(width: 12),
@@ -202,11 +146,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Text(
                 'Creator:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ColorConst.blueColor),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: ColorConst.blueColor),
               ),
               const SizedBox(height: 8),
-              const Text('Nguyễn Gia Bảo', style: TextStyle(fontSize: spacing18, fontWeight: FontWeight.bold)),
-              const Text('Nguyễn Đức Tuấn', style: TextStyle(fontSize: spacing18, fontWeight: FontWeight.bold)),
+              const Text('Nguyễn Gia Bảo',
+                  style: TextStyle(
+                      fontSize: spacing18, fontWeight: FontWeight.bold)),
+              const Text('Nguyễn Đức Tuấn',
+                  style: TextStyle(
+                      fontSize: spacing18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
               GradientFormButton(
                 text: 'Cancel',
@@ -231,14 +182,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, color: iconColor, size: 24),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      title: Text(title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (trailing != null) Text(trailing, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          if (trailing != null)
+            Text(trailing,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14)),
           Icon(Icons.chevron_right, color: Colors.grey[400]),
         ],
       ),
@@ -259,7 +215,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         title: const Text(
           'Settings',
-          style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -272,7 +229,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   // First group
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
                     child: Column(
                       children: [
                         _buildSettingItem(
@@ -291,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.workspace_premium,
                           iconColor: Colors.pink,
                           title: 'Upgrade account',
-                          onTap: () => _showUpgradeModal(context),
+                          onTap: () => showUpgradeAccountModal(context),
                         ),
                         Divider(height: 1, color: Colors.grey.withOpacity(0.3)),
                         _buildSettingItem(
@@ -306,7 +265,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 16),
                   // Log out or Login section
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
                     child: _buildSettingItem(
                       icon: isLoggedIn ? Icons.logout : Icons.login,
                       iconColor: Colors.orange,
@@ -318,7 +279,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             await _logout(context);
                           }
                         } else {
-                          Navigator.of(context).pushNamedAndRemoveUntil(LoginScreen.routeName, (route) => false);
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                              LoginScreen.routeName, (route) => false);
                         }
                       },
                     ),
@@ -330,9 +292,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(spacing16),
               child: Column(
                 children: const [
-                  Text('Version: 2.3.4', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text('Version: 2.3.4',
+                      style: TextStyle(color: Colors.grey, fontSize: 14)),
                   SizedBox(height: 4),
-                  Text('Design by @EcoTeam', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text('Design by @EcoTeam',
+                      style: TextStyle(color: Colors.grey, fontSize: 14)),
                   SizedBox(height: spacing24),
                 ],
               ),

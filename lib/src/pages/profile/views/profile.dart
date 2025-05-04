@@ -85,7 +85,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final offset = _currentPage * _limit;
-      dynamic response = await BotServiceApi.getAllBots(search: searchQuery, offset: offset, limit: _limit);
+      dynamic response = await BotServiceApi.getAllBots(
+          search: searchQuery, offset: offset, limit: _limit);
 
       final Map<String, dynamic> jsonResponse = json.decode(response);
 
@@ -141,7 +142,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
         !_scrollController.position.outOfRange) {
       if (!_isLoading && _hasMore) {
         fetchAiModels();
@@ -179,7 +181,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showBotMenu(BuildContext context, int index, Offset tapPosition) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
@@ -201,7 +204,10 @@ class _ProfilePageState extends State<ProfilePage> {
             try {
               final dynamic data = await fetchAiModelById();
               Navigator.of(context).push(AnimationModal.fadeInModal(
-                  ManageBotModal(botData: data, endCallback: updateBotData, activeButtonText: 'Update')));
+                  ManageBotModal(
+                      botData: data,
+                      endCallback: updateBotData,
+                      activeButtonText: 'Update')));
             } catch (e) {
               print('Error fetching bot data by ID: $e');
             }
@@ -249,16 +255,20 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               const Icon(Icons.delete, color: ColorConst.backgroundRedColor),
               const SizedBox(width: spacing8),
-              Text('Remove Bot', style: TextStyle(color: ColorConst.textRedColor)),
+              Text('Remove Bot',
+                  style: TextStyle(color: ColorConst.textRedColor)),
             ],
           ),
           onTap: () async {
             // Add remove functionality
-            buildShowConfirmDialog(context, 'Are you sure you want to remove this bot?', 'Confirm').then(
+            buildShowConfirmDialog(context,
+                    'Are you sure you want to remove this bot?', 'Confirm')
+                .then(
               (bool? popValue) async {
                 try {
                   if (popValue == true) {
-                    final String response = await BotServiceApi.deleteBotById(botSelectedId);
+                    final String response =
+                        await BotServiceApi.deleteBotById(botSelectedId);
                     if (response == 'true') {
                       AppToast(
                         context: context,
@@ -288,7 +298,8 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ],
       elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius8)),
     );
   }
 
@@ -309,7 +320,8 @@ class _ProfilePageState extends State<ProfilePage> {
           ).createShader(bounds),
           child: Text(
             'EcoChatBot',
-            style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize24, color: ColorConst.textWhiteColor),
+            style: AppFontStyles.poppinsTitleSemiBold(
+                fontSize: fontSize24, color: ColorConst.textWhiteColor),
           ),
         ),
         actions: [
@@ -317,7 +329,8 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: const Icon(Icons.settings_outlined),
             onPressed: () async {
               // Điều hướng sang SettingsScreen và đợi kết quả trả về
-              await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
+              await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const SettingsScreen()));
               // Sau khi trở về, load lại thông tin người dùng
               _loadUserData();
             },
@@ -361,23 +374,29 @@ class _ProfilePageState extends State<ProfilePage> {
                               Text(
                                 email != null && email != "Guest"
                                     ? (email!.contains('@gmail.com')
-                                        ? email!.replaceFirst(RegExp(r'@gmail\.com$'), '')
-                                        : (email!.length > 10 ? '${email!.substring(0, 15)}...' : email!))
+                                        ? email!.replaceFirst(
+                                            RegExp(r'@gmail\.com$'), '')
+                                        : (email!.length > 10
+                                            ? '${email!.substring(0, 15)}...'
+                                            : email!))
                                     : 'Guest',
-                                style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize20),
+                                style: AppFontStyles.poppinsTitleSemiBold(
+                                    fontSize: fontSize20),
                               ),
                               Text(
                                 userId != null && userId!.isNotEmpty
                                     ? 'ID: ${userId!.length > 5 ? userId!.substring(0, 8) : userId!}'
                                     : 'ID: ',
-                                style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
+                                style: AppFontStyles.poppinsRegular(
+                                    color: ColorConst.textGrayColor),
                               ),
                               SizedBox(height: spacing4),
                               Row(
                                 children: [
                                   Text(
                                     'Token/request: 1',
-                                    style: AppFontStyles.poppinsTitleSemiBold(color: ColorConst.textGrayColor),
+                                    style: AppFontStyles.poppinsTitleSemiBold(
+                                        color: ColorConst.textGrayColor),
                                   ),
                                   SizedBox(width: spacing32),
                                   Icon(
@@ -411,10 +430,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: spacing20, vertical: spacing12),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: spacing20, vertical: spacing12),
                       child: Text(
                         'My bots',
-                        style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize18),
+                        style: AppFontStyles.poppinsTitleSemiBold(
+                            fontSize: fontSize18),
                       ),
                     ),
                     // Dynamically render bot list
@@ -428,14 +449,16 @@ class _ProfilePageState extends State<ProfilePage> {
                             return buildLoadingIndicator(hasMore: _hasMore);
                           }
 
-                          Map<String, String> botAvatar = MockData.aiModels[index % MockData.aiModels.length];
+                          Map<String, String> botAvatar = MockData
+                              .aiModels[index % MockData.aiModels.length];
 
                           return GestureDetector(
                             onTapUp: (TapUpDetails details) {
                               botSelectedId = _aiModels[index]['id'] ?? "";
                               print("botSelectedId: $botSelectedId");
 
-                              _showBotMenu(context, index, details.globalPosition);
+                              _showBotMenu(
+                                  context, index, details.globalPosition);
                             },
                             onTapDown: (_) {
                               botSelectedId = "";
