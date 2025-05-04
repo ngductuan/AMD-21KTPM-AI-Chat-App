@@ -184,6 +184,12 @@ class _DataScreenState extends State<DataScreen> {
                           itemBuilder: (context, index) {
                             final item = filtered[index];
                             return ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: spacing8),
+                              leading: ImageHelper.loadFromAsset(
+                                AssetPath.icoDatabase,
+                                width: spacing24,
+                                height: spacing24,
+                              ),
                               title: Text(
                                 item['knowledgeName'] as String,
                                 style: AppFontStyles.poppinsTextBold(),

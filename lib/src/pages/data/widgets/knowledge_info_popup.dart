@@ -113,6 +113,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
           Text('Knowledge Details', style: AppFontStyles.poppinsTitleBold(fontSize: 16)),
         ],
       ),
+      scrollable: true,
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 380, maxWidth: 360),
         child: SingleChildScrollView(
@@ -181,7 +182,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
                 child: GradientFormButton(
                   isLoading: _isDeleting,
                   text: 'Delete',
-                  onPressed: () => _isDeleting ? null : _handleDelete,
+                  onPressed: () async => _isDeleting ? null : _handleDelete(),
                   isActiveButton: true,
                 ),
               ),
