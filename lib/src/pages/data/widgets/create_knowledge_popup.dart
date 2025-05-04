@@ -110,7 +110,7 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
               TextFormField(
                 controller: _descCtrl,
                 decoration: InputDecoration(
-                  labelText: 'Description *',
+                  labelText: 'Description',
                   labelStyle: AppFontStyles.poppinsRegular(fontSize: fontSize18),
                   hintText: 'Briefly describe the purpose',
                   hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
@@ -119,7 +119,7 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
                 minLines: 2,
                 maxLines: null,
                 maxLength: 500,
-                validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
+                // validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
               ),
               const SizedBox(height: spacing12),
             ],
