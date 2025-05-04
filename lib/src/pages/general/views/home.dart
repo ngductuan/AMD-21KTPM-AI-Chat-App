@@ -5,7 +5,6 @@ import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/pages/data/views/data_screen.dart';
 import 'package:eco_chat_bot/src/pages/profile/views/profile.dart';
 import 'package:eco_chat_bot/src/widgets/layouts/bottom_nav_bar.dart';
-import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {

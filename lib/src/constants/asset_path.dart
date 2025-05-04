@@ -63,6 +63,7 @@ class AssetPath {
       'assets/icons/white_exclamation.svg';
   static const String icoPromptLibrary = 'assets/icons/ic_prompt_library.svg';
   static const String icoDefaultImage = 'assets/icons/ic_default.svg';
+  static const String icoDatabase = 'assets/icons/ic_database.svg';
 
   // Assets for bottom nav bar
   static const String chatBeforeNavIcon =
