@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/constants/services/chat.service.dart';
+import 'package:eco_chat_bot/src/pages/chat/widgets/upload_image_widget.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,6 +27,9 @@ class ChatThreadScreen extends StatefulWidget {
 }
 
 class _ChatThreadScreenState extends State<ChatThreadScreen> {
+  List<File> _imageFiles = [];
+  final ImagePicker _picker = ImagePicker();
+
   bool isTyping = true;
   int activeAiModelIndex = 0;
   String activeAiModelId = "";
@@ -64,6 +70,28 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
     // Lắng nghe thay đổi nội dung của TextField chat
     _controller.addListener(_onChatInputChanged);
+  }
+
+  Future<void> _getImage(ImageSource source) async {
+    // Check and request permission if needed
+    if (source == ImageSource.camera) {
+      await Permission.camera.request();
+    } else {
+      await Permission.photos.request();
+    }
+
+    try {
+      final List<XFile> pickedFiles = await _picker.pickMultiImage();
+
+      if (pickedFiles.isNotEmpty) {
+        setState(() {
+          _imageFiles = _imageFiles + pickedFiles.map((file) => File(file.path)).toList();
+          print("Image files: $_imageFiles");
+        });
+      }
+    } catch (e) {
+      print("Image picker error: $e");
+    }
   }
 
   Future<void> fetchAiModels({String? searchQuery, bool reset = false}) async {
@@ -338,6 +366,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         // Update UI with user message
         setState(() {
           _messages.addAll([
+            {'content': content, 'imagePath': _imageFiles.isNotEmpty ? _imageFiles : null, 'role': ChatRole.user.text},
             {'content': content, 'role': ChatRole.user.text},
             {'content': "", 'role': ChatRole.model.text}
           ]);
@@ -352,8 +381,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
           };
         }).toList();
 
+        // Remove hello message
         messageDto.removeAt(0);
+        // Remove typing indicator
         messageDto.removeLast();
+        // Remove image path
+        messageDto.removeWhere((message) => message['imagePath'] != null);
 
         // Send message to server and wait for response
         dynamic response = await ChatServiceApi.createChatWithBot(content, messageDto);
@@ -508,20 +541,26 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             : SizedBox.shrink(),
                         Align(
                           alignment: isModel ? Alignment.centerLeft : Alignment.centerRight,
-                          child: IntrinsicWidth(
-                            child: Container(
-                              padding: EdgeInsets.all(spacing8),
-                              margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
-                              decoration: BoxDecoration(
-                                color: isModel ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
-                                borderRadius: BorderRadius.circular(radius12),
+                          child: Column(
+                            children: [
+                              if (message['imagePath'] != null)
+                                UploadImageWidget.buildUploadImageWidget(
+                                  context: context,
+                                  imageFile: message['imagePath'],
+                                ),
+                              Container(
+                                padding: EdgeInsets.all(spacing8),
+                                margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
+                                decoration: BoxDecoration(
+                                  color: isModel ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
+                                  borderRadius: BorderRadius.circular(radius12),
+                                ),
+                                child: Text(
+                                  message['content'],
+                                  style: TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
+                                ),
                               ),
-                              child: Text(
-                                message['content'],
-                                style:
-                                    TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
-                              ),
-                            ),
+                            ],
                           ),
                         ),
                       ],
@@ -597,19 +636,24 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             // Các icon chức năng
                             Row(
                               children: [
-                                const Icon(Icons.camera_enhance_outlined, color: ColorConst.backgroundBlackColor),
-                                SizedBox(width: spacing16),
-                                const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
-                                SizedBox(width: spacing16),
-                                const Icon(Icons.history_outlined, color: ColorConst.backgroundBlackColor),
-                                SizedBox(width: spacing16),
-                                const Icon(Icons.add_circle_outline, color: ColorConst.backgroundBlackColor),
+                                GestureDetector(
+                                  child: const Icon(Icons.camera_alt, color: ColorConst.backgroundBlackColor),
+                                  onTap: () => _getImage(ImageSource.camera),
+                                ),
+                                SizedBox(width: spacing24),
+                                GestureDetector(
+                                  child: const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
+                                  onTap: () => _getImage(ImageSource.gallery),
+                                ),
+                                SizedBox(width: spacing8),
                               ],
                             )
                           ],
                         )
                       : SizedBox.shrink(),
                   SizedBox(height: spacing12),
+
+                  // Chat section
                   Container(
                     margin: EdgeInsets.only(bottom: spacing16),
                     decoration: BoxDecoration(
@@ -624,7 +668,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                       ],
                     ),
                     child: SizedBox(
-                      height: 140,
+                      height: _imageFiles.isNotEmpty ? 200 : 150,
                       child: Column(
                         children: [
                           Expanded(
@@ -637,14 +681,44 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 color: Colors.transparent,
                               ),
                               padding: EdgeInsets.only(left: spacing16, right: spacing16, top: spacing12),
-                              child: TextField(
-                                controller: _controller,
-                                maxLines: null,
-                                decoration: InputDecoration(
-                                  hintText: "Ask me anything...",
-                                  border: InputBorder.none,
-                                  hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
-                                ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _imageFiles.isNotEmpty
+                                      ? Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            child: Row(
+                                                children: List.generate(_imageFiles.length, (index) {
+                                              return Padding(
+                                                padding: EdgeInsets.only(right: spacing8, top: spacing8),
+                                                child: UploadImageWidget.buildUploadImageWidget(
+                                                  context: context,
+                                                  imageFile: _imageFiles[index],
+                                                  onTap: () {
+                                                    setState(() {
+                                                      _imageFiles.removeAt(index);
+                                                    });
+                                                  },
+                                                ),
+                                              );
+                                            })),
+                                          ),
+                                        )
+                                      : SizedBox.shrink(),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _controller,
+                                      maxLines: null,
+                                      decoration: InputDecoration(
+                                        hintText: "Ask me anything...",
+                                        border: InputBorder.none,
+                                        hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
