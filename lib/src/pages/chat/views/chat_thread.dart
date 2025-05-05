@@ -27,7 +27,8 @@ class ChatThreadScreen extends StatefulWidget {
 }
 
 class _ChatThreadScreenState extends State<ChatThreadScreen> {
-  List<File> _imageFiles = [];
+  // List<File> _imageFiles = [];
+  File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
   bool isTyping = true;
@@ -81,12 +82,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     }
 
     try {
-      final List<XFile> pickedFiles = await _picker.pickMultiImage();
-
-      if (pickedFiles.isNotEmpty) {
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
         setState(() {
-          _imageFiles = _imageFiles + pickedFiles.map((file) => File(file.path)).toList();
-          print("Image files: $_imageFiles");
+          _imageFile = File(pickedFile.path);
         });
       }
     } catch (e) {
@@ -366,12 +365,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         // Update UI with user message
         setState(() {
           _messages.addAll([
-            {'content': content, 'imagePath': _imageFiles.isNotEmpty ? _imageFiles : null, 'role': ChatRole.user.text},
-            {'content': content, 'role': ChatRole.user.text},
+            {'content': content, 'role': ChatRole.user.text, 'imagePath': _imageFile},
             {'content': "", 'role': ChatRole.model.text}
           ]);
           _controller.clear();
         });
+
+        // Remove temp image file
+        _imageFile = null;
 
         // Transform messages to remove unnecessary elements
         final messageDto = _messages.map((message) {
@@ -542,11 +543,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                         Align(
                           alignment: isModel ? Alignment.centerLeft : Alignment.centerRight,
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               if (message['imagePath'] != null)
                                 UploadImageWidget.buildUploadImageWidget(
                                   context: context,
                                   imageFile: message['imagePath'],
+                                  height: 120,
+                                  hasExit: false,
                                 ),
                               Container(
                                 padding: EdgeInsets.all(spacing8),
@@ -557,7 +561,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 ),
                                 child: Text(
                                   message['content'],
-                                  style: TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
+                                  style:
+                                      TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
                                 ),
                               ),
                             ],
@@ -668,7 +673,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                       ],
                     ),
                     child: SizedBox(
-                      height: _imageFiles.isNotEmpty ? 200 : 150,
+                      height: _imageFile != null ? 190 : 150,
                       child: Column(
                         children: [
                           Expanded(
@@ -684,26 +689,17 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  _imageFiles.isNotEmpty
+                                  _imageFile != null
                                       ? Align(
                                           alignment: Alignment.centerLeft,
-                                          child: SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: Row(
-                                                children: List.generate(_imageFiles.length, (index) {
-                                              return Padding(
-                                                padding: EdgeInsets.only(right: spacing8, top: spacing8),
-                                                child: UploadImageWidget.buildUploadImageWidget(
-                                                  context: context,
-                                                  imageFile: _imageFiles[index],
-                                                  onTap: () {
-                                                    setState(() {
-                                                      _imageFiles.removeAt(index);
-                                                    });
-                                                  },
-                                                ),
-                                              );
-                                            })),
+                                          child: UploadImageWidget.buildUploadImageWidget(
+                                            context: context,
+                                            imageFile: _imageFile!,
+                                            onTap: () {
+                                              setState(() {
+                                                _imageFile = null;
+                                              });
+                                            },
                                           ),
                                         )
                                       : SizedBox.shrink(),
