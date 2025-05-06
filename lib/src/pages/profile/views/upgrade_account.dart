@@ -6,7 +6,6 @@ import 'package:eco_chat_bot/src/widgets/gradient_form_button.dart';
 /// Gọi hàm này để show dialog upgrade
 void showUpgradeAccountModal(BuildContext context) {
   final size = MediaQuery.of(context).size;
-  // Tạo controller để quản lý PageView
   final pageController = PageController();
   int currentPage = 0;
 
@@ -28,85 +27,63 @@ void showUpgradeAccountModal(BuildContext context) {
                 // Tiêu đề
                 Center(
                   child: Text(
-                    'Upgrade PRO account?',
+                    'Upgrade PRO Account',
                     style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(height: spacing16),
+                const SizedBox(height: spacing12),
 
-                // PageView để swipe ngang qua 3 gói
+                // PageView
                 Expanded(
                   child: PageView(
                     controller: pageController,
                     padEnds: false,
-                    onPageChanged: (idx) {
-                      setState(() => currentPage = idx);
-                    },
+                    onPageChanged: (idx) => setState(() => currentPage = idx),
                     children: [
                       _buildPlanPage(
                         ctx,
                         title: 'Basic',
                         subtitle: 'Free',
                         features: [
-                          'AI Chat Model\nGPT-3.5',
-                          'AI Action Injection',
-                          'Select Text for AI Action',
-                          '50 free queries per day',
+                          'AI Chat Model: GPT-3.5',
+                          '50 queries per day',
                           'AI Reading Assistant',
                           'Real-time Web Access',
                           'AI Writing Assistant',
-                          'AI Pro Search',
-                          'Lower response speed during high-traffic',
                         ],
-                        buttonText: 'Sign up to subscribe',
+                        buttonText: 'Select Basic',
                         isHotPick: false,
                       ),
                       _buildPlanPage(
                         ctx,
                         title: 'Starter',
-                        subtitle: '1-month Free Trial\nThen \$9.99/mo',
+                        subtitle: '1-month Free Trial, then \$9.99/mo',
                         features: [
-                          'AI Chat Models\nGPT-3.5 & GPT-4.0/Turbo & Gemini Pro & Gemini Ultra',
-                          'AI Action Injection',
-                          'Select Text for AI Action',
+                          'AI Chat Models: GPT-4 Turbo',
                           'Unlimited queries per month',
-                          'AI Reading Assistant',
-                          'Real-time Web Access',
-                          'AI Writing Assistant',
-                          'AI Pro Search',
-                          'Jira Copilot Assistant',
-                          'Github Copilot Assistant',
-                          'Maximize productivity with unlimited* queries',
-                          'No request limits during high-traffic',
-                          '2X faster response speed',
+                          '2× faster speed',
                           'Priority email support',
+                          'Jira & Github Copilots',
                         ],
-                        buttonText: 'Sign up to subscribe',
+                        buttonText: 'Select Starter',
                         isHotPick: false,
                       ),
                       _buildPlanPage(
                         ctx,
-                        title: 'Pro Annually',
-                        subtitle: '1-month Free Trial\nThen \$79.99/yr',
-                        trialInfo: 'Save 33% on annual plan!',
+                        title: 'Pro Annual',
+                        subtitle: 'Save 33% - \$79.99/yr',
+                        trialInfo: '1-month Free Trial',
                         features: [
-                          'AI Chat Models\nGPT-3.5 & GPT-4.0/Turbo & Gemini Pro & Gemini Ultra',
-                          'AI Action Injection',
-                          'Select Text for AI Action',
-                          'Unlimited queries per year',
-                          'AI Reading Assistant',
-                          'Real-time Web Access',
-                          'AI Writing Assistant',
-                          'AI Pro Search',
-                          'Jira Copilot Assistant',
-                          'Github Copilot Assistant',
-                          'Maximize productivity with unlimited* queries',
-                          'No request limits during high-traffic',
-                          '2X faster response speed',
-                          'Priority email support',
+                          'All Starter features',
+                          'Enterprise integrations',
+                          'Dedicated support',
+                          'Custom AI workflows',
+                          'Unlimited usage',
                         ],
-                        buttonText: 'Sign up to subscribe',
+                        buttonText: 'Select Pro',
                         isHotPick: true,
                       ),
                     ],
@@ -118,14 +95,15 @@ void showUpgradeAccountModal(BuildContext context) {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(3, (idx) {
-                    return Container(
-                      width: 8,
-                      height: 8,
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: currentPage == idx ? 12 : 8,
+                      height: currentPage == idx ? 12 : 8,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: currentPage == idx
-                            ? Colors.blueAccent
+                            ? Theme.of(context).primaryColor
                             : Colors.grey.shade400,
                       ),
                     );
@@ -140,7 +118,7 @@ void showUpgradeAccountModal(BuildContext context) {
   );
 }
 
-/// Xây dựng từng trang của PageView (có truyền context)
+/// Xây dựng từng trang của PageView
 Widget _buildPlanPage(
   BuildContext context, {
   required String title,
@@ -165,25 +143,32 @@ Widget _buildPlanPage(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: spacing8),
-              Text(subtitle,
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+              Text(
+                subtitle,
+                style: const TextStyle(fontSize: 18, color: Colors.black54),
+              ),
               if (trialInfo != null) ...[
-                const SizedBox(height: spacing4),
-                Text(trialInfo,
-                    style:
-                        TextStyle(fontSize: 12, color: Colors.orange.shade700)),
+                const SizedBox(height: spacing6),
+                Text(
+                  trialInfo,
+                  style: TextStyle(fontSize: 16, color: Colors.orange.shade700),
+                ),
               ],
               const SizedBox(height: spacing12),
 
-              // Scroll danh sách tính năng
+              // Danh sách tính năng (đã phóng to chữ)
               Expanded(
                 child: ListView(
                   physics: const BouncingScrollPhysics(),
-                  children: features.map((f) => _FeatureItem(text: f)).toList(),
+                  children: features
+                      .map((f) => _FeatureItem(text: f, fontSize: 16))
+                      .toList(),
                 ),
               ),
 
@@ -196,16 +181,15 @@ Widget _buildPlanPage(
             ],
           ),
         ),
-
         // Hot Pick badge
         if (isHotPick)
           Positioned(
             top: -10,
             right: -10,
             child: Chip(
-              label: const Text('HOT PICK',
+              label: const Text('HOT',
                   style: TextStyle(color: Colors.white, fontSize: 10)),
-              backgroundColor: Colors.orange,
+              backgroundColor: Colors.redAccent,
             ),
           ),
       ],
@@ -213,10 +197,13 @@ Widget _buildPlanPage(
   );
 }
 
-/// Widget cho mỗi dòng feature
+/// Widget cho mỗi dòng feature với kích thước chữ lớn hơn
 class _FeatureItem extends StatelessWidget {
   final String text;
-  const _FeatureItem({Key? key, required this.text}) : super(key: key);
+  final double fontSize;
+
+  const _FeatureItem({Key? key, required this.text, required this.fontSize})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -225,11 +212,15 @@ class _FeatureItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check, size: 16, color: Colors.green),
-          const SizedBox(width: 8),
+          Icon(Icons.check,
+              size: fontSize, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 6),
           Expanded(
-              child: Text(text,
-                  style: const TextStyle(fontSize: 12, height: 1.4))),
+            child: Text(
+              text,
+              style: TextStyle(fontSize: fontSize, height: 1.4),
+            ),
+          ),
         ],
       ),
     );
