@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="48" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Đế vương miện -->
+  <path d="M4 40 L60 40 L52 20 L40 34 L32 14 L24 34 L12 20 Z" fill="#FFC107" stroke="#FFB300" stroke-width="2"/>
+  <!-- Đính hạt -->
+  <circle cx="12" cy="26" r="4" fill="#FFFFFF" stroke="#FFB300" stroke-width="1"/>
+  <circle cx="32" cy="20" r="4" fill="#FFFFFF" stroke="#FFB300" stroke-width="1"/>
+  <circle cx="52" cy="26" r="4" fill="#FFFFFF" stroke="#FFB300" stroke-width="1"/>
+</svg>
