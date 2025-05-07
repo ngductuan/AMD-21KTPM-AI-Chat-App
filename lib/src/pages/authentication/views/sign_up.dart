@@ -11,6 +11,7 @@ import 'login.dart';
 import 'verification_email.dart';
 import 'package:eco_chat_bot/src/pages/general/views/home.dart';
 import '../../../constants/colors.dart';
+import 'package:email_validator/email_validator.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -40,6 +41,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
+    // 1. Kiểm tra rỗng/khớp mật khẩu
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       setState(() {
         _errorMessage = 'Please fill in all fields.';
@@ -50,6 +52,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (password != confirmPassword) {
       setState(() {
         _errorMessage = 'Passwords do not match.';
+      });
+      return;
+    }
+
+    // 2. Kiểm tra định dạng email
+    if (!EmailValidator.validate(email)) {
+      setState(() {
+        _errorMessage = 'Invalid email!';
+      });
+      return;
+    }
+// 3. Chỉ cho phép gmail.com
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      setState(() {
+        _errorMessage = 'Please use a valid email address!';
       });
       return;
     }
@@ -106,9 +123,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
           });
         }
       } else {
-        setState(() {
-          _errorMessage = 'Sign up failed: ${response.reasonPhrase}';
-        });
+        // đọc body JSON để lấy thông tin lỗi cụ thể
+        try {
+          final errorJson = jsonDecode(responseBody) as Map<String, dynamic>;
+          String serverMsg = '';
+
+          if (response.statusCode == 409) {
+            // conflict: email đã tồn tại
+            serverMsg = errorJson['message'] ??
+                'This email is already associated with an account!';
+          } else if (response.statusCode == 400) {
+            // bad request: có thể có chi tiết
+            if (errorJson['details'] is List) {
+              serverMsg = (errorJson['details'] as List)
+                  .map((d) => d['issue'] as String)
+                  .join('\n');
+            } else {
+              serverMsg = errorJson['message'] ?? 'Invalid data!';
+            }
+          } else {
+            // các lỗi khác
+            serverMsg = errorJson['message'] ??
+                'Registration failed (${response.statusCode}).';
+          }
+
+          setState(() {
+            _errorMessage = serverMsg;
+          });
+        } catch (_) {
+          // nếu parse JSON lỗi, fallback
+          setState(() {
+            _errorMessage = 'Sign up failed: ${response.reasonPhrase}';
+          });
+        }
       }
     } catch (e) {
       setState(() {

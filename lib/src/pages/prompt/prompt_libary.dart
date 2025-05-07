@@ -278,7 +278,7 @@ class _PromptLibraryState extends State<PromptLibrary>
         request.headers.addAll(await api.getAuthHeaders());
 
         final response = await request.send();
-        if (response.statusCode == 200) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
           final responseBody = await response.stream.bytesToString();
           final updatedData = jsonDecode(responseBody);
 
@@ -310,7 +310,7 @@ class _PromptLibraryState extends State<PromptLibrary>
           body: json.encode(bodyData),
         );
 
-        if (response.statusCode == 200) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
           final newPrompt = jsonDecode(response.body);
           // Thêm ngay vào danh sách custom local
           setState(() {

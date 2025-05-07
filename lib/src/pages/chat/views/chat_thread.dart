@@ -53,7 +53,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   // Lưu trữ các message chat
   final List<Map<String, dynamic>> _messages = [
-    {'content': "Hello.👋 I'm your new friend, StarryAI Bot.", 'role': ChatRole.model.text},
+    {
+      'content': "Hello.👋 I'm your new friend, StarryAI Bot.",
+      'role': ChatRole.model.text
+    },
   ];
 
   bool isFirstLoading = true;
@@ -101,17 +104,20 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     });
 
     try {
-      dynamic response = await BotServiceApi.getAllBots(search: searchQuery, offset: 0, limit: 50);
+      dynamic response = await BotServiceApi.getAllBots(
+          search: searchQuery, offset: 0, limit: 50);
 
       final Map<String, dynamic> jsonResponse = json.decode(response);
 
       if (jsonResponse.containsKey('data')) {
         final List<dynamic> dataList = jsonResponse['data'];
 
-        final List<Map<String, String>> newItems = dataList.where((item) => item is Map<String, dynamic>).map((item) {
+        final List<Map<String, String>> newItems =
+            dataList.where((item) => item is Map<String, dynamic>).map((item) {
           // Convert each dynamic value to String
           final Map<String, dynamic> dynamicMap = item as Map<String, dynamic>;
-          return dynamicMap.map((key, value) => MapEntry(key, value?.toString() ?? ''));
+          return dynamicMap
+              .map((key, value) => MapEntry(key, value?.toString() ?? ''));
         }).toList();
 
         // print('listMap: $newItems');
@@ -143,7 +149,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   Future<void> _fetchInitialPrompts() async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
-    final authHeader = (accessToken == null || accessToken.isEmpty) ? '' : 'Bearer $accessToken';
+    final authHeader = (accessToken == null || accessToken.isEmpty)
+        ? ''
+        : 'Bearer $accessToken';
     var headers = {'Authorization': authHeader};
     final url = 'https://api.dev.jarvis.cx/api/v1/prompts?limit=3';
 
@@ -173,9 +181,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   Future<void> _fetchPromptSuggestions(String query) async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
-    final authHeader = (accessToken == null || accessToken.isEmpty) ? '' : 'Bearer $accessToken';
+    final authHeader = (accessToken == null || accessToken.isEmpty)
+        ? ''
+        : 'Bearer $accessToken';
     var headers = {'Authorization': authHeader};
-    final url = 'https://api.dev.jarvis.cx/api/v1/prompts?query=$query&limit=3&offset=0';
+    final url =
+        'https://api.dev.jarvis.cx/api/v1/prompts?query=$query&limit=3&offset=0';
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -298,10 +309,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     onPressed: () {
                       // Thay thế các placeholder bằng giá trị người dùng nhập
                       final replacements = <String, String>{};
-                      _placeholderControllers.forEach((placeholder, controller) {
-                        replacements[placeholder] = controller.text.isNotEmpty ? controller.text : placeholder;
+                      _placeholderControllers
+                          .forEach((placeholder, controller) {
+                        replacements[placeholder] = controller.text.isNotEmpty
+                            ? controller.text
+                            : placeholder;
                       });
-                      final finalPrompt = _replacePlaceholders(result['prompt'], replacements);
+                      final finalPrompt =
+                          _replacePlaceholders(result['prompt'], replacements);
 
                       setState(() {
                         _controller.text = finalPrompt;
@@ -348,7 +363,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   // Hàm thay thế placeholder bằng giá trị người dùng nhập
-  String _replacePlaceholders(String promptText, Map<String, String> replacements) {
+  String _replacePlaceholders(
+      String promptText, Map<String, String> replacements) {
     String result = promptText;
     replacements.forEach((placeholder, value) {
       result = result.replaceAll('[$placeholder]', value);
@@ -365,7 +381,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         // Update UI with user message
         setState(() {
           _messages.addAll([
-            {'content': content, 'role': ChatRole.user.text, 'imagePath': _imageFile},
+            {
+              'content': content,
+              'role': ChatRole.user.text,
+              'imagePath': _imageFile
+            },
             {'content': "", 'role': ChatRole.model.text}
           ]);
           _controller.clear();
@@ -390,7 +410,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         messageDto.removeWhere((message) => message['imagePath'] != null);
 
         // Send message to server and wait for response
-        dynamic response = await ChatServiceApi.createChatWithBot(content, messageDto);
+        dynamic response =
+            await ChatServiceApi.createChatWithBot(content, messageDto);
 
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
 
@@ -411,7 +432,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
         if (jsonResponse.containsKey('message')) {
           setState(() {
-            _messages[_messages.length - 1]['content'] = jsonResponse['message'];
+            _messages[_messages.length - 1]['content'] =
+                jsonResponse['message'];
           });
         }
       } catch (e) {
@@ -465,7 +487,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         {'content': "Have a healthy meal.", 'role': ChatRole.model.text},
         {'content': "How much price is it?", 'role': ChatRole.user.text},
         {'content': "Only 5\$ for hamburger.", 'role': ChatRole.model.text},
-        {'content': 'What is this image?', 'imagePath': AssetPath.imgUploadChat, 'role': ChatRole.user.text},
+        {
+          'content': 'What is this image?',
+          'imagePath': AssetPath.imgUploadChat,
+          'role': ChatRole.user.text
+        },
         {'content': "", 'role': ChatRole.model.text}
       ]);
 
@@ -537,11 +563,15 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                         isModel
                             ? Padding(
                                 padding: EdgeInsets.only(left: spacing8),
-                                child: _buildModelLabel(activeAiModelId, iconSize: spacing20, isDefaultMessage: true),
+                                child: _buildModelLabel(activeAiModelId,
+                                    iconSize: spacing20,
+                                    isDefaultMessage: true),
                               )
                             : SizedBox.shrink(),
                         Align(
-                          alignment: isModel ? Alignment.centerLeft : Alignment.centerRight,
+                          alignment: isModel
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
@@ -554,15 +584,20 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 ),
                               Container(
                                 padding: EdgeInsets.all(spacing8),
-                                margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
+                                margin: EdgeInsets.symmetric(
+                                    vertical: spacing6, horizontal: spacing8),
                                 decoration: BoxDecoration(
-                                  color: isModel ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
+                                  color: isModel
+                                      ? ColorConst.textWhiteColor
+                                      : ColorConst.textHighlightColor,
                                   borderRadius: BorderRadius.circular(radius12),
                                 ),
                                 child: Text(
                                   message['content'],
-                                  style:
-                                      TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
+                                  style: TextStyle(
+                                      color: isModel
+                                          ? ColorConst.textBlackColor
+                                          : ColorConst.textWhiteColor),
                                 ),
                               ),
                             ],
@@ -604,7 +639,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           children: [
                             // Dropdown chọn AI model
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: spacing8, vertical: spacing4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: spacing8, vertical: spacing4),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(radius16),
                                 color: ColorConst.backgroundWhiteColor,
@@ -619,8 +655,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 ),
                                 value: activeAiModelId.isNotEmpty
                                     ? activeAiModelId
-                                    : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null),
-                                items: _aiModels.map<DropdownMenuItem<String>>((model) {
+                                    : (_aiModels.isNotEmpty
+                                        ? _aiModels[activeAiModelIndex]["id"]
+                                        : null),
+                                items: _aiModels
+                                    .map<DropdownMenuItem<String>>((model) {
                                   return DropdownMenuItem<String>(
                                     value: model["id"],
                                     child: _buildModelLabel(model['id']!),
@@ -630,7 +669,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                   setState(() {
                                     isFirstLoading = false;
 
-                                    activeAiModelIndex = _aiModels.indexWhere((element) => element["id"] == value);
+                                    activeAiModelIndex = _aiModels.indexWhere(
+                                        (element) => element["id"] == value);
                                     activeAiModelId = value!;
                                     // print(activeAiModelIndex);
                                     print(activeAiModelId);
@@ -642,12 +682,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             Row(
                               children: [
                                 GestureDetector(
-                                  child: const Icon(Icons.camera_alt, color: ColorConst.backgroundBlackColor),
+                                  child: const Icon(Icons.camera_alt,
+                                      color: ColorConst.backgroundBlackColor),
                                   onTap: () => _getImage(ImageSource.camera),
                                 ),
                                 SizedBox(width: spacing24),
                                 GestureDetector(
-                                  child: const Icon(Icons.image, color: ColorConst.backgroundBlackColor),
+                                  child: const Icon(Icons.image,
+                                      color: ColorConst.backgroundBlackColor),
                                   onTap: () => _getImage(ImageSource.gallery),
                                 ),
                                 SizedBox(width: spacing8),
@@ -685,14 +727,18 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 ),
                                 color: Colors.transparent,
                               ),
-                              padding: EdgeInsets.only(left: spacing16, right: spacing16, top: spacing12),
+                              padding: EdgeInsets.only(
+                                  left: spacing16,
+                                  right: spacing16,
+                                  top: spacing12),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   _imageFile != null
                                       ? Align(
                                           alignment: Alignment.centerLeft,
-                                          child: UploadImageWidget.buildUploadImageWidget(
+                                          child: UploadImageWidget
+                                              .buildUploadImageWidget(
                                             context: context,
                                             imageFile: _imageFile!,
                                             onTap: () {
@@ -710,7 +756,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                       decoration: InputDecoration(
                                         hintText: "Ask me anything...",
                                         border: InputBorder.none,
-                                        hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textLightGrayColor),
+                                        hintStyle: AppFontStyles.poppinsRegular(
+                                            color:
+                                                ColorConst.textLightGrayColor),
                                       ),
                                     ),
                                   ),
@@ -719,7 +767,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.only(left: spacing16, right: spacing16, bottom: spacing12),
+                            padding: EdgeInsets.only(
+                                left: spacing16,
+                                right: spacing16,
+                                bottom: spacing12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(radius20),
@@ -735,14 +786,20 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                     final result = await Navigator.push(
                                       context,
                                       PageRouteBuilder(
-                                        transitionDuration: const Duration(milliseconds: 500),
-                                        pageBuilder: (context, animation, secondaryAnimation) => const PromptLibrary(),
-                                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                        transitionDuration:
+                                            const Duration(milliseconds: 500),
+                                        pageBuilder: (context, animation,
+                                                secondaryAnimation) =>
+                                            const PromptLibrary(),
+                                        transitionsBuilder: (context, animation,
+                                            secondaryAnimation, child) {
                                           const begin = Offset(1.0, 0.0);
                                           const end = Offset.zero;
                                           const curve = Curves.easeInOut;
 
-                                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                          var tween = Tween(
+                                                  begin: begin, end: end)
+                                              .chain(CurveTween(curve: curve));
 
                                           return SlideTransition(
                                             position: animation.drive(tween),
@@ -754,9 +811,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
                                     if (result != null) {
                                       _placeholderControllers.clear();
-                                      final placeholders = _extractPlaceholders(result['prompt']);
+                                      final placeholders = _extractPlaceholders(
+                                          result['prompt']);
                                       for (final placeholder in placeholders) {
-                                        _placeholderControllers[placeholder] = TextEditingController();
+                                        _placeholderControllers[placeholder] =
+                                            TextEditingController();
                                       }
                                       if (placeholders.isNotEmpty) {
                                         showModalBottomSheet(
@@ -764,102 +823,164 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                           isScrollControlled: true,
                                           backgroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                            borderRadius: BorderRadius.vertical(
+                                                top: Radius.circular(20)),
                                           ),
-                                          builder: (context) => Padding(
-                                            padding: EdgeInsets.only(
-                                              bottom: MediaQuery.of(context).viewInsets.bottom,
-                                            ),
-                                            child: Container(
-                                              padding: EdgeInsets.all(16),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                          builder: (context) {
+                                            // AnimatedPadding giúp smooth khi keyboard show/hide
+                                            return AnimatedPadding(
+                                              duration: const Duration(
+                                                  milliseconds: 100),
+                                              padding: MediaQuery.of(context)
+                                                  .viewInsets,
+                                              child: Wrap(
                                                 children: [
-                                                  Text(
-                                                    result['title'],
-                                                    style: TextStyle(
-                                                      fontSize: 24,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                  Text(
-                                                    result['prompt'],
-                                                    style: TextStyle(
-                                                      fontSize: 16,
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 16),
-                                                  ...placeholders.map((placeholder) {
-                                                    return Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            16),
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize
+                                                          .min, // co nhỏ lại vừa nội dung
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: [
                                                         Text(
-                                                          placeholder,
-                                                          style: TextStyle(
-                                                            fontSize: 16,
-                                                            fontWeight: FontWeight.w500,
+                                                          result['title'],
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 24,
+                                                            fontWeight:
+                                                                FontWeight.bold,
                                                           ),
                                                         ),
-                                                        SizedBox(height: 8),
-                                                        TextField(
-                                                          controller: _placeholderControllers[placeholder],
-                                                          decoration: InputDecoration(
-                                                            hintText: placeholder,
-                                                            filled: true,
-                                                            fillColor: Colors.grey[100],
-                                                            border: OutlineInputBorder(
-                                                              borderRadius: BorderRadius.circular(12),
-                                                              borderSide: BorderSide.none,
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        Text(
+                                                          result['prompt'],
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            color: Colors
+                                                                .grey[600],
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 16),
+
+                                                        // Thay vì để Column “cứng” thì gom list vào SingleChildScrollView
+                                                        SingleChildScrollView(
+                                                          child: Column(
+                                                            children:
+                                                                placeholders.map(
+                                                                    (placeholder) {
+                                                              return Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .only(
+                                                                        bottom:
+                                                                            16),
+                                                                child:
+                                                                    TextField(
+                                                                  controller:
+                                                                      _placeholderControllers[
+                                                                          placeholder],
+                                                                  decoration:
+                                                                      InputDecoration(
+                                                                    labelText:
+                                                                        placeholder,
+                                                                    filled:
+                                                                        true,
+                                                                    fillColor:
+                                                                        Colors.grey[
+                                                                            100],
+                                                                    border:
+                                                                        OutlineInputBorder(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              12),
+                                                                      borderSide:
+                                                                          BorderSide
+                                                                              .none,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }).toList(),
+                                                          ),
+                                                        ),
+
+                                                        SizedBox(
+                                                          width:
+                                                              double.infinity,
+                                                          child: ElevatedButton(
+                                                            onPressed: () {
+                                                              final replacements =
+                                                                  <String,
+                                                                      String>{};
+                                                              _placeholderControllers
+                                                                  .forEach(
+                                                                      (placeholder,
+                                                                          controller) {
+                                                                replacements[
+                                                                    placeholder] = controller
+                                                                        .text
+                                                                        .isNotEmpty
+                                                                    ? controller
+                                                                        .text
+                                                                    : placeholder;
+                                                              });
+
+                                                              final finalPrompt =
+                                                                  _replacePlaceholders(
+                                                                      result[
+                                                                          'prompt'],
+                                                                      replacements);
+
+                                                              setState(() {
+                                                                _controller
+                                                                        .text =
+                                                                    finalPrompt;
+                                                              });
+                                                              Navigator.pop(
+                                                                  context);
+                                                              _sendMessage();
+                                                            },
+                                                            style:
+                                                                ElevatedButton
+                                                                    .styleFrom(
+                                                              backgroundColor:
+                                                                  Colors.green,
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                      vertical:
+                                                                          16),
+                                                              shape:
+                                                                  RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12),
+                                                              ),
+                                                            ),
+                                                            child: const Text(
+                                                              'Send',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
-                                                        SizedBox(height: 16),
                                                       ],
-                                                    );
-                                                  }).toList(),
-                                                  SizedBox(
-                                                    width: double.infinity,
-                                                    child: ElevatedButton(
-                                                      onPressed: () {
-                                                        final replacements = <String, String>{};
-                                                        _placeholderControllers.forEach((placeholder, controller) {
-                                                          replacements[placeholder] = controller.text.isNotEmpty
-                                                              ? controller.text
-                                                              : placeholder;
-                                                        });
-
-                                                        final finalPrompt =
-                                                            _replacePlaceholders(result['prompt'], replacements);
-
-                                                        setState(() {
-                                                          _controller.text = finalPrompt;
-                                                        });
-                                                        Navigator.pop(context);
-                                                        _sendMessage();
-                                                      },
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: Colors.green,
-                                                        padding: EdgeInsets.symmetric(vertical: 16),
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(12),
-                                                        ),
-                                                      ),
-                                                      child: Text(
-                                                        'Send',
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight: FontWeight.w600,
-                                                        ),
-                                                      ),
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                            ),
-                                          ),
+                                            );
+                                          },
                                         );
                                       } else {
                                         setState(() {
@@ -869,7 +990,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                     }
                                   },
                                   child: InkWell(
-                                    borderRadius: BorderRadius.circular(spacing10),
+                                    borderRadius:
+                                        BorderRadius.circular(spacing10),
                                     splashColor: Colors.grey.withOpacity(0.2),
                                     child: ImageHelper.loadFromAsset(
                                       AssetPath.icoPromptLibrary,
@@ -902,22 +1024,26 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     );
   }
 
-  Widget _buildModelLabel(String modelId, {double iconSize = spacing24, bool isDefaultMessage = false}) {
-    Map<String, String> botModel = _aiModels.firstWhere((model) => model["id"] == modelId,
-        orElse: () => {
-              "assistantName": "Jarvis AI",
-              'id': "jarvis_ai",
-            });
+  Widget _buildModelLabel(String modelId,
+      {double iconSize = spacing24, bool isDefaultMessage = false}) {
+    Map<String, String> botModel =
+        _aiModels.firstWhere((model) => model["id"] == modelId,
+            orElse: () => {
+                  "assistantName": "Jarvis AI",
+                  'id': "jarvis_ai",
+                });
 
     int indexOfItem = _aiModels.indexOf(botModel);
 
-    Map<String, String> modelAvatar = MockData.aiModels[indexOfItem % MockData.aiModels.length];
+    Map<String, String> modelAvatar =
+        MockData.aiModels[indexOfItem % MockData.aiModels.length];
 
     return Row(children: [
       ImageHelper.loadFromAsset(
         botModel["id"] == "jarvis_ai"
             ? AssetPath.aiJarvisModel
-            : (AssetPath.aiModels[modelAvatar["value"]] ?? AssetPath.icoDefaultImage),
+            : (AssetPath.aiModels[modelAvatar["value"]] ??
+                AssetPath.icoDefaultImage),
         width: iconSize,
         height: iconSize,
       ),
