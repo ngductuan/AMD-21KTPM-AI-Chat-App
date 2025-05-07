@@ -302,7 +302,7 @@ class _DataScreenState extends State<DataScreen> {
                             itemBuilder: (context, index) {
                               final item = filtered[index];
 
-                              bool isImported = item['isImported'] as bool;
+                              bool isImported = item['isImported'] == null ? false : item['isImported'] as bool;
 
                               return ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: spacing8),
