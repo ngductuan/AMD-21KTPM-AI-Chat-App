@@ -73,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         subscriptionName = resp['name'] ?? '';
         // dailyTokens là limit hàng ngày
-        usedToken = resp['dailyTokens'] ?? 0;
+        //usedToken = resp['dailyTokens'] ?? 0;
         totalToken = resp['dailyTokens'] ?? 0; // lấy limit daily cho progress
       });
     } catch (e) {
