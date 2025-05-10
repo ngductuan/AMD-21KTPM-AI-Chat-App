@@ -575,13 +575,20 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              if (message['imagePath'] != null)
-                                UploadImageWidget.buildUploadImageWidget(
-                                  context: context,
-                                  imageFile: message['imagePath'],
-                                  height: 120,
-                                  hasExit: false,
-                                ),
+                              message['imagePath'] != null
+                                  ? (ChatThreadStatus.new_ == chatStatus
+                                      ? UploadImageWidget.buildUploadImageWidget(
+                                          context: context,
+                                          imageFile: message['imagePath'],
+                                          height: 120,
+                                          hasExit: false,
+                                        )
+                                      : ImageHelper.loadFromAsset(
+                                          message['imagePath'],
+                                          width: 120,
+                                          radius: BorderRadius.circular(radius20),
+                                        ))
+                                  : SizedBox.shrink(),
                               Container(
                                 padding: EdgeInsets.all(spacing8),
                                 margin: EdgeInsets.symmetric(

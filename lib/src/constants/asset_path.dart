@@ -45,6 +45,8 @@ class AssetPath {
     "google_drive": 'assets/icons/ic_google_drive.png',
     "slack": 'assets/icons/ic_slack.png',
     "confluence": 'assets/icons/ic_confluence.png',
+    "telegram": 'assets/icons/ic_telegram.png',
+    "messenger": 'assets/icons/ic_messenger.png',
   };
 
   // Explore
