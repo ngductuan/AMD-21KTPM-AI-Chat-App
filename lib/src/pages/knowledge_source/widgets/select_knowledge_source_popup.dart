@@ -1,6 +1,6 @@
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
-import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
+import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/select_source_item.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/pages/knowledge_source/widgets/local_knowledge_source_popup.dart';
@@ -86,63 +86,9 @@ class SelectKnowledgeSourcePopup {
                                 ).show(context);
                               }
                             },
-                            child: Container(
-                              padding: EdgeInsets.all(spacing12),
-                              margin: EdgeInsets.only(bottom: spacing8),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: ColorConst.backgroundLightGrayColor,
-                                  width: 1,
-                                ),
-                                borderRadius: BorderRadius.circular(radius12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: spacing32,
-                                    height: spacing32,
-                                    decoration: BoxDecoration(
-                                      color: ColorConst.bluePastelColor,
-                                      borderRadius: BorderRadius.circular(radius24),
-                                    ),
-                                    child: Center(
-                                      child: ImageHelper.loadFromAsset(
-                                        avatarPath,
-                                        width: spacing16,
-                                        height: spacing16,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: spacing12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          data['display']!,
-                                          style: AppFontStyles.poppinsTextBold(),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: spacing4),
-                                        Text(
-                                          data['hint']!,
-                                          style: AppFontStyles.poppinsRegular(
-                                            color: ColorConst.textGrayColor,
-                                            fontSize: fontSize12,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward,
-                                    color: ColorConst.textGrayColor,
-                                  ),
-                                ],
-                              ),
+                            child: SelectSourceItem.build(
+                              avatarPath,
+                              data,
                             ),
                           );
                         },

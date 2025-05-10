@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/integration/views/app_integration.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/views/explore.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/welcome.dart';
@@ -38,4 +39,7 @@ final Map<String, WidgetBuilder> routes = {
 
   // Profile
   ProfilePage.routeName: (context) => const ProfilePage(),
+
+  // Integration
+  AppIntegration.routeName: (context) => const AppIntegration(),
 };
