@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/emails/pages/email_thread.dart';
 import 'package:eco_chat_bot/src/integration/views/app_integration.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/views/explore.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/login.dart';
@@ -20,6 +21,9 @@ final Map<String, WidgetBuilder> routes = {
   // Chat
   ChatListScreen.routeName: (context) => const ChatListScreen(),
   ChatThreadScreen.routeName: (context) => const ChatThreadScreen(),
+
+  // Email
+  EmailThreadScreen.routeName: (context) => const EmailThreadScreen(),
 
   // Explore
   ExploreScreen.routeName: (context) => const ExploreScreen(),

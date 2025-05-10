@@ -4,6 +4,7 @@ import 'package:eco_chat_bot/src/constants/dimensions.dart';
 import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/font_styles.dart';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
+import 'package:eco_chat_bot/src/emails/pages/email_thread.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
 import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
@@ -39,7 +40,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   Future<void> createBotData(dynamic body, Function endCallback) async {
     try {
-
       await BotServiceApi.createBotResponse(body);
 
       AppToast(
@@ -48,7 +48,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
         message: 'Bot created successfully!',
         mode: AppToastMode.confirm,
       ).show(context);
-
     } catch (e) {
       print('Error creating bot: $e');
       AppToast(
@@ -57,7 +56,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
         message: 'Error creating bot',
         mode: AppToastMode.error,
       ).show(context);
-
     } finally {
       await Future.delayed(const Duration(milliseconds: 1000));
       endCallback();
@@ -155,18 +153,20 @@ class _ChatListScreenState extends State<ChatListScreen> {
             Navigator.of(context)
                 .pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
           } else if (value == 2) {
-            Navigator.of(context).push(AnimationModal.fadeInModal(ManageBotModal(endCallback: createBotData, activeButtonText: 'Create',)));
-
-            // not use
-            // showDialog(
-            //   context: context,
-            //   builder: (context) => ManageBotModal(),
-            // );
+            Navigator.of(context).push(AnimationModal.fadeInModal(ManageBotModal(
+              endCallback: createBotData,
+              activeButtonText: 'Create',
+            )));
+          } else if (value == 3) {
+            Navigator.of(context).pushNamed(
+              EmailThreadScreen.routeName,
+            );
           }
         },
         itemBuilder: (context) => [
           _buildPopupItem(1, Icons.chat_bubble_outline, "New Chat"),
           _buildPopupItem(2, Icons.smart_toy_outlined, "Create Bot"),
+          _buildPopupItem(3, Icons.email_outlined, "New email"),
         ],
       ),
     );
