@@ -105,7 +105,7 @@ class BotServiceApi {
     final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
 
     return await http.delete(url, headers: headers).then((response) {
-      if (response.statusCode == HttpStatus.ok) {
+      if (response.statusCode == HttpStatus.noContent) {
         return response.body;
       } else {
         throw Exception(

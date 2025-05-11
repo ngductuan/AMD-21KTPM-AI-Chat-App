@@ -40,7 +40,7 @@ class KnowledgeServiceApi {
     print('Post knowledge to assistant: $assistantId, knowledgeId: $knowledgeId');
 
     return await http.post(url, headers: headers).then((response) {
-      if (response.statusCode == HttpStatus.ok) {
+      if (response.statusCode == HttpStatus.noContent) {
         return response.body;
       } else {
         throw Exception('Failed to post knowledge to assistant $assistantId : ${response.reasonPhrase}');
@@ -55,11 +55,11 @@ class KnowledgeServiceApi {
   ) async {
     final url = Uri.parse('${ApiBase.knowledgeUrl}/kb-core/v1/ai-assistant/$assistantId/knowledges/$knowledgeId');
     final Map<String, String> headers = await apiBaseInstance.getAuthHeaders();
-    
+
     print('Delete knowledge from assistant: $assistantId, knowledgeId: $knowledgeId');
 
     return await http.delete(url, headers: headers).then((response) {
-      if (response.statusCode == HttpStatus.ok) {
+      if (response.statusCode == HttpStatus.noContent) {
         return response.body;
       } else {
         throw Exception('Failed to delete knowledge from assistant $assistantId : ${response.reasonPhrase}');

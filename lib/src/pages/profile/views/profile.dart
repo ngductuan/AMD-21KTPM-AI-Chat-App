@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/mock_data.dart';
@@ -178,7 +179,7 @@ class _ProfilePageState extends State<ProfilePage> {
         mode: AppToastMode.error,
       ).show(context);
     } finally {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 1000));
       endCallback();
       fetchAiModels(reset: true);
     }
@@ -271,16 +272,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 await buildShowConfirmDialog(context, 'Are you sure you want to remove this bot?', 'Confirm');
             if (confirmed == true) {
               try {
-                final resp = await BotServiceApi.deleteBotById(botSelectedId);
-                if (resp == 'true') {
-                  AppToast(
-                    context: context,
-                    duration: const Duration(seconds: 1),
-                    message: 'Bot removed successfully!',
-                    mode: AppToastMode.confirm,
-                  ).show(context);
-                  fetchAiModels(reset: true);
-                }
+                await BotServiceApi.deleteBotById(botSelectedId);
+
+                AppToast(
+                  context: context,
+                  duration: const Duration(seconds: 1),
+                  message: 'Bot removed successfully!',
+                  mode: AppToastMode.confirm,
+                ).show(context);
+                fetchAiModels(reset: true);
               } catch (e) {
                 print('Error removing bot: $e');
                 AppToast(
