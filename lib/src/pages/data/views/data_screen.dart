@@ -130,19 +130,17 @@ class _DataScreenState extends State<DataScreen> {
   Future<void> _postKnowledgeToAssistant(String knowledgeId) async {
     try {
       // 3. Gọi API; có thể truyền tham số nếu cần
-      final resp = await KnowledgeServiceApi.postKnowledgeToAssistant(
+      await KnowledgeServiceApi.postKnowledgeToAssistant(
         widget.assistantId,
         knowledgeId,
       );
 
-      if (resp == 'true') {
-        AppToast(
+      AppToast(
           context: context,
           duration: Duration(seconds: 1),
           message: 'Imported successfully',
           mode: AppToastMode.confirm,
         ).show(context);
-      }
     } catch (e) {
       print('Error posting knowledge to assistant: $e');
       AppToast(
@@ -157,19 +155,17 @@ class _DataScreenState extends State<DataScreen> {
   Future<void> _deleteKnowledgeToAssistant(String knowledgeId) async {
     try {
       // 3. Gọi API; có thể truyền tham số nếu cần
-      final resp = await KnowledgeServiceApi.deleteKnowledgeFromAssistant(
+      await KnowledgeServiceApi.deleteKnowledgeFromAssistant(
         widget.assistantId,
         knowledgeId,
       );
 
-      if (resp == 'true') {
-        AppToast(
-          context: context,
-          duration: Duration(seconds: 1),
-          message: 'Deleted successfully',
-          mode: AppToastMode.confirm,
-        ).show(context);
-      }
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Deleted successfully',
+        mode: AppToastMode.confirm,
+      ).show(context);
     } catch (e) {
       print('Error deleting knowledge to assistant: $e');
       AppToast(

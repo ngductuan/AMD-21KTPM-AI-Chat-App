@@ -272,8 +272,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 await buildShowConfirmDialog(context, 'Are you sure you want to remove this bot?', 'Confirm');
             if (confirmed == true) {
               try {
-                final resp = await BotServiceApi.deleteBotById(botSelectedId);
-                print('Response: $resp');
+                await BotServiceApi.deleteBotById(botSelectedId);
 
                 AppToast(
                   context: context,

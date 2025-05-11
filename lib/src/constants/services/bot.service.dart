@@ -106,7 +106,7 @@ class BotServiceApi {
 
     return await http.delete(url, headers: headers).then((response) {
       if (response.statusCode == HttpStatus.noContent) {
-        return response;
+        return response.body;
       } else {
         throw Exception(
             'Failed to delete bot by ID $assistantId : ${response.reasonPhrase}');
