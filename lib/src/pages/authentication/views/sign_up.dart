@@ -127,6 +127,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         try {
           final errorJson = jsonDecode(responseBody) as Map<String, dynamic>;
           String serverMsg = '';
+          debugPrint("Error in Sign up: $errorJson");
 
           if (response.statusCode == 409) {
             // conflict: email đã tồn tại
@@ -139,7 +140,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   .map((d) => d['issue'] as String)
                   .join('\n');
             } else {
-              serverMsg = errorJson['message'] ?? 'Invalid data!';
+              serverMsg = errorJson['error'] ?? 'Invalid data!';
             }
           } else {
             // các lỗi khác
