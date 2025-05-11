@@ -139,7 +139,7 @@ class _KnowledgeInfoPopupState extends State<KnowledgeInfoPopup> {
             _fetchUnits();
           }).catchError((e) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Error: $e")),
+              SnackBar(content: Text("Upload local files failed!")),
             );
           });
         }

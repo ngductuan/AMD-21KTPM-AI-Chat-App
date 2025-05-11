@@ -249,102 +249,105 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (context) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context) {
+          // AnimatedPadding giúp smooth khi keyboard show/hide
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 100),
+            padding: MediaQuery.of(context).viewInsets,
+            child: Wrap(
               children: [
-                Text(
-                  result['title'],
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  result['prompt'],
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 16),
-                ...placeholders.map((placeholder) {
-                  return Column(
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min, // co nhỏ lại vừa nội dung
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        placeholder,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                        result['title'],
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
-                      TextField(
-                        controller: _placeholderControllers[placeholder],
-                        decoration: InputDecoration(
-                          hintText: placeholder,
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                      const SizedBox(height: 8),
+                      Text(
+                        result['prompt'],
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Thay vì để Column “cứng” thì gom list vào SingleChildScrollView
+                      SingleChildScrollView(
+                        child: Column(
+                          children: placeholders.map((placeholder) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: TextField(
+                                controller:
+                                    _placeholderControllers[placeholder],
+                                decoration: InputDecoration(
+                                  labelText: placeholder,
+                                  filled: true,
+                                  fillColor: Colors.grey[100],
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final replacements = <String, String>{};
+                            _placeholderControllers
+                                .forEach((placeholder, controller) {
+                              replacements[placeholder] =
+                                  controller.text.isNotEmpty
+                                      ? controller.text
+                                      : placeholder;
+                            });
+
+                            final finalPrompt = _replacePlaceholders(
+                                result['prompt'], replacements);
+
+                            setState(() {
+                              _controller.text = finalPrompt;
+                            });
+                            Navigator.pop(context);
+                            _sendMessage();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Send',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                      SizedBox(height: 16),
                     ],
-                  );
-                }).toList(),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Thay thế các placeholder bằng giá trị người dùng nhập
-                      final replacements = <String, String>{};
-                      _placeholderControllers
-                          .forEach((placeholder, controller) {
-                        replacements[placeholder] = controller.text.isNotEmpty
-                            ? controller.text
-                            : placeholder;
-                      });
-                      final finalPrompt =
-                          _replacePlaceholders(result['prompt'], replacements);
-
-                      setState(() {
-                        _controller.text = finalPrompt;
-                        _showSuggestions = false;
-                      });
-                      Navigator.pop(context);
-                      _sendMessage();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Send',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       );
     } else {
       // Nếu không có placeholder, gán trực tiếp prompt và ẩn danh sách gợi ý
@@ -501,6 +504,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back), // Your back icon
@@ -577,7 +581,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                             children: [
                               message['imagePath'] != null
                                   ? (ChatThreadStatus.new_ == chatStatus
-                                      ? UploadImageWidget.buildUploadImageWidget(
+                                      ? UploadImageWidget
+                                          .buildUploadImageWidget(
                                           context: context,
                                           imageFile: message['imagePath'],
                                           height: 120,
@@ -586,7 +591,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                       : ImageHelper.loadFromAsset(
                                           message['imagePath'],
                                           width: 120,
-                                          radius: BorderRadius.circular(radius20),
+                                          radius:
+                                              BorderRadius.circular(radius20),
                                         ))
                                   : SizedBox.shrink(),
                               Container(
@@ -616,24 +622,78 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                 ),
               ),
             ),
+
             // Hiển thị danh sách gợi ý prompt nếu người dùng gõ '/' ở TextField
             if (_showSuggestions && _controller.text.startsWith('/'))
-              Container(
-                color: Colors.white,
-                // Có thể tuỳ chỉnh chiều cao phù hợp
-                height: 150,
-                child: ListView.builder(
-                  itemCount: _prompts.length,
-                  itemBuilder: (context, index) {
-                    final prompt = _prompts[index];
-                    return ListTile(
-                      title: Text(prompt['title'] ?? ''),
-                      subtitle: Text(prompt['description'] ?? ''),
-                      onTap: () => _handlePromptSelection(prompt),
-                    );
-                  },
+              Flexible(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) => SizeTransition(
+                    axisAlignment: -1.0,
+                    sizeFactor: animation,
+                    child: child,
+                  ),
+                  child: Container(
+                    key: const ValueKey('prompt_suggestions'),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 8,
+                            offset: Offset(0, 4))
+                      ],
+                    ),
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: Scrollbar(
+                      radius: const Radius.circular(12),
+                      thickness: 4,
+                      child: ListView.separated(
+                        padding: EdgeInsets.zero,
+                        itemCount: _prompts.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final prompt = _prompts[index];
+                          return InkWell(
+                            onTap: () => _handlePromptSelection(prompt),
+                            borderRadius: BorderRadius.circular(12),
+                            splashColor: Colors.grey.withOpacity(0.2),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    prompt['title'] ?? '',
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  if ((prompt['description'] ?? '').isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        prompt['description']!,
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600]),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ),
+
             // Phần nhập tin nhắn
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
