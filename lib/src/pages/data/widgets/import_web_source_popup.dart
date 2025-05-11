@@ -41,7 +41,9 @@ class ImportWebSourcePopup {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Import Web Resource', style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16)),
+                        Text('Import Web Resource',
+                            style: AppFontStyles.poppinsTitleSemiBold(
+                                fontSize: fontSize16)),
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: isLoading ? null : _close,
@@ -51,7 +53,8 @@ class ImportWebSourcePopup {
                     const SizedBox(height: spacing24),
                     TextField(
                       controller: unitNameController,
-                      decoration: const InputDecoration(labelText: 'Unit Name *'),
+                      decoration:
+                          const InputDecoration(labelText: 'Unit Name *'),
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: spacing24),
@@ -69,7 +72,8 @@ class ImportWebSourcePopup {
                         color: ColorConst.bluePastelColor,
                         borderRadius: BorderRadius.circular(radius12),
                         border: Border.all(
-                          color: ColorConst.blueColor.withAlpha((0.5 * 255).toInt()),
+                          color: ColorConst.blueColor
+                              .withAlpha((0.5 * 255).toInt()),
                           width: 1,
                         ),
                       ),
@@ -84,10 +88,14 @@ class ImportWebSourcePopup {
                             ),
                           ),
                           const SizedBox(height: spacing8),
-                          Text('• You can load up to 64 pages at a time', style: AppFontStyles.poppinsRegular()),
+                          Text('• You can load up to 64 pages at a time',
+                              style: AppFontStyles.poppinsRegular()),
                           const SizedBox(height: spacing4),
-                          Text('• Need more? Contact us at', style: AppFontStyles.poppinsRegular()),
-                          Text('myjarvischat@gmail.com', style: AppFontStyles.poppinsRegular(color: Colors.blue)),
+                          Text('• Need more? Contact us at',
+                              style: AppFontStyles.poppinsRegular()),
+                          Text('myjarvischat@gmail.com',
+                              style: AppFontStyles.poppinsRegular(
+                                  color: Colors.blue)),
                         ],
                       ),
                     ),
@@ -110,7 +118,8 @@ class ImportWebSourcePopup {
                             final url = webUrlController.text.trim();
                             if (unit.isEmpty || url.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please fill both fields')),
+                                const SnackBar(
+                                    content: Text('Please fill both fields')),
                               );
                               return;
                             }
@@ -123,14 +132,18 @@ class ImportWebSourcePopup {
                             )
                                 .then((_) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Upload successfully')),
+                                const SnackBar(
+                                    content: Text('Upload successfully')),
                               );
                             }).catchError((e) {
                               // parse JSON nếu có
                               String msg = 'Internal server error';
                               try {
                                 final m = jsonDecode(
-                                  RegExp(r'\{.*\}').firstMatch(e.toString())?.group(0) ?? '{}',
+                                  RegExp(r'\{.*\}')
+                                          .firstMatch(e.toString())
+                                          ?.group(0) ??
+                                      '{}',
                                 ) as Map<String, dynamic>;
                                 msg = m['message'] ?? msg;
                               } catch (_) {}
@@ -139,6 +152,9 @@ class ImportWebSourcePopup {
                                   SnackBar(content: Text('Error: $msg')),
                                 );
                               }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Upload web failed!")),
+                              );
                             }).whenComplete(() {
                               _close();
                             });

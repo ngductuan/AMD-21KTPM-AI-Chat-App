@@ -196,7 +196,7 @@ class ApiBase {
   }) async {
     final headers = await getAuthHeaders();
     final uri =
-        Uri.parse('$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/units')
+        Uri.parse('$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/datasources')
             .replace(
       queryParameters: {
         'q': q,
@@ -229,7 +229,9 @@ class ApiBase {
     final response = await http.delete(uri, headers: headers);
 
     // Xử lý kết quả
-    if (response.statusCode == 200 || response.statusCode == 201) {
+    if (response.statusCode == 200 ||
+        response.statusCode == 201 ||
+        response.statusCode == 204) {
       // API trả về body là "true" hoặc "false"
       final result = jsonDecode(response.body) as bool;
       return result;
