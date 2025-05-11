@@ -8,8 +8,7 @@ class CreateKnowledgePopup extends StatefulWidget {
   /// callback để trả về object vừa tạo lên DataScreen
   final void Function(Map<String, dynamic> newKnowledge) onCreated;
 
-  const CreateKnowledgePopup({Key? key, required this.onCreated})
-      : super(key: key);
+  const CreateKnowledgePopup({Key? key, required this.onCreated}) : super(key: key);
 
   @override
   State<CreateKnowledgePopup> createState() => _CreateKnowledgePopupState();
@@ -53,9 +52,7 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
           final jsonPart = errStr.substring(jsonStart);
           final Map<String, dynamic> errJson = jsonDecode(jsonPart);
           if (errJson['details'] is List) {
-            _apiError = (errJson['details'] as List)
-                .map((d) => d['issue'] as String)
-                .join('\n');
+            _apiError = (errJson['details'] as List).map((d) => d['issue'] as String).join('\n');
           } else if (errJson['message'] != null) {
             _apiError = errJson['message'] as String;
           }
@@ -70,10 +67,13 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // insetPadding: const EdgeInsets.symmetric(horizontal: spacing8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(spacing12)),
+      backgroundColor: ColorConst.backgroundWhiteColor,
       scrollable: true,
       title: Text(
-        'Create a Knowledge Base',
-        style: AppFontStyles.poppinsTextBold(fontSize: fontSize18),
+        'Create knowledge base',
+        style: AppFontStyles.poppinsTextBold(fontSize: fontSize16),
       ),
       content: SingleChildScrollView(
         padding: EdgeInsets.only(
@@ -82,7 +82,6 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               if (_apiError != null) ...[
                 Padding(
@@ -95,46 +94,52 @@ class _CreateKnowledgePopupState extends State<CreateKnowledgePopup> {
               ],
               TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Knowledge Base Name *',
-                  hintText: 'Enter a unique name for your knowledge base',
+                  labelStyle: AppFontStyles.poppinsRegular(fontSize: fontSize18),
+                  hintText: 'Enter unique name',
+                  hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
                 ),
+                minLines: 1,
+                maxLines: 1,
                 maxLength: 50,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'This field is required'
-                    : null,
+                validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: spacing12),
               TextFormField(
                 controller: _descCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Description *',
-                  hintText:
-                      'Briefly describe the purpose of this knowledge base (e.g., Jarvis AI\'s knowledge base,...)',
+                decoration: InputDecoration(
+                  labelText: 'Description',
+                  labelStyle: AppFontStyles.poppinsRegular(fontSize: fontSize18),
+                  hintText: 'Briefly describe the purpose',
+                  hintStyle: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
                 ),
-                maxLines: 4,
+                minLines: 2,
+                maxLines: null,
                 maxLength: 500,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'This field is required'
-                    : null,
+                // validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
               ),
+              const SizedBox(height: spacing12),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
         GradientFormButton(
-          text: 'Create',
-          isActiveButton: !_isSubmitting,
-          onPressed: () {
-            if (!_isSubmitting) {
-              _handleCreate();
-            }
-          },
+          text: 'Cancel',
+          onPressed: () => Navigator.of(context).pop(),
+          isActiveButton: false,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: spacing8),
+          child: GradientFormButton(
+            isLoading: _isSubmitting,
+            text: 'Confirm',
+            onPressed: () async => _isSubmitting ? null : _handleCreate(),
+            isActiveButton: true,
+          ),
         ),
       ],
     );

@@ -6,6 +6,7 @@ class GradientFormButton extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isActiveButton;
   final double padding;
+  final bool isLoading;
 
   const GradientFormButton({
     super.key,
@@ -13,6 +14,7 @@ class GradientFormButton extends StatelessWidget {
     required this.onPressed,
     required this.isActiveButton,
     this.padding = 0,
+    this.isLoading = false,
   });
 
   @override
@@ -23,11 +25,10 @@ class GradientFormButton extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(spacing8),
         gradient: isActiveButton == true ? ColorConst.primaryGradientColor : null,
-        border:
-            Border.all(color: isActiveButton == false ? ColorConst.textHighlightColor : Colors.transparent, width: 1),
+        border: Border.all(color: isActiveButton == false ? ColorConst.textHighlightColor : Colors.transparent, width: 1),
       ),
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: isActiveButton == false ? ColorConst.backgroundWhiteColor : Colors.transparent,
           shadowColor: Colors.transparent,
@@ -35,11 +36,28 @@ class GradientFormButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(spacing8),
           ),
         ),
-        child: Text(
-          text,
-          style: AppFontStyles.poppinsTitleBold(
-            color: isActiveButton ? ColorConst.textWhiteColor : ColorConst.textBlackColor,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.only(right: spacing8),
+                child: SizedBox(
+                  height: spacing14,
+                  width: spacing14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ),
+            Text(
+              text,
+              style: AppFontStyles.poppinsTitleBold(
+                color: isActiveButton ? ColorConst.textWhiteColor : ColorConst.textBlackColor,
+              ),
+            ),
+          ],
         ),
       ),
     );

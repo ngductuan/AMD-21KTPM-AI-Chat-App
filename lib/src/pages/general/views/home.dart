@@ -5,7 +5,6 @@ import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
 import 'package:eco_chat_bot/src/pages/data/views/data_screen.dart';
 import 'package:eco_chat_bot/src/pages/profile/views/profile.dart';
 import 'package:eco_chat_bot/src/widgets/layouts/bottom_nav_bar.dart';
-import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -23,23 +22,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final tabs = [
     ChatListScreen(),
     ExploreScreen(),
+    Text('Add'),
     DataScreen(),
-    const Center(child: Text('Create')),
-    const Center(child: Text('Message')),
     ProfilePage(),
   ];
 
   void onTabChanged(int page) {
-    if (page == 3) {
-      Navigator.of(context).pushNamed(ChatThreadScreen.routeName,
-          arguments: {'chatStatus': ChatThreadStatus.new_});
-      return;
-    } else if (page == 4) {
-      AppToast(
-        context: context,
-        message: 'Coming soon!',
-        mode: AppToastMode.info,
-      ).show(context);
+    if (page == 2) {
+      Navigator.of(context).pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
       return;
     }
 

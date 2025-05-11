@@ -13,6 +13,14 @@ import 'package:shared_preferences/shared_preferences.dart'; // <-- Thêm dòng 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables
+  // await dotenv.load(fileName: ".env");
+
+  // Check required variables
+  // if (dotenv.get(EnvKey.authApi).isEmpty) {
+  //   throw Exception('${EnvKey.authApi} is missing in .env');
+  // }
+
   try {
     // Initialize Firebase
     await Firebase.initializeApp(

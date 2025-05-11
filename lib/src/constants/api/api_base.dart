@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
@@ -9,9 +8,9 @@ import 'package:flutter/foundation.dart';
 
 class ApiBase {
   // Base URLs
-  static const authUrl = 'https://auth-api.dev.jarvis.cx';
-  static const jarvisUrl = 'https://api.dev.jarvis.cx';
-  static const knowledgeUrl = 'https://knowledge-api.dev.jarvis.cx';
+  static final authUrl = 'https://auth-api.dev.jarvis.cx';
+  static final jarvisUrl = 'https://api.dev.jarvis.cx';
+  static final knowledgeUrl = 'https://knowledge-api.dev.jarvis.cx';
 
   // Other URLs
   static const verificationCallbackUrl =
@@ -186,6 +185,37 @@ class ApiBase {
     }
   }
 
+  // API Lấy đơn vị tri thức của một kiến thức
+  Future<Map<String, dynamic>> getKnowledgeUnits({
+    required String knowledgeId,
+    String q = '',
+    String order = 'DESC',
+    String orderField = 'createdAt',
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    final headers = await getAuthHeaders();
+    final uri =
+        Uri.parse('$knowledgeUrl/kb-core/v1/knowledge/$knowledgeId/datasources')
+            .replace(
+      queryParameters: {
+        'q': q,
+        'order': order,
+        'order_field': orderField,
+        'offset': offset.toString(),
+        'limit': limit.toString(),
+      },
+    );
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+          'Failed to fetch knowledge units: [${response.statusCode}] ${response.reasonPhrase}\n'
+          'Body: ${response.body}');
+    }
+  }
+
   // Xóa (disable) một bộ dữ liệu tri thức theo ID
   // Trả về `true` nếu xóa thành công, ngược lại ném Exception.
   Future<bool> deleteKnowledge(String knowledgeId) async {
@@ -199,7 +229,9 @@ class ApiBase {
     final response = await http.delete(uri, headers: headers);
 
     // Xử lý kết quả
-    if (response.statusCode == 200 || response.statusCode == 201) {
+    if (response.statusCode == 200 ||
+        response.statusCode == 201 ||
+        response.statusCode == 204) {
       // API trả về body là "true" hoặc "false"
       final result = jsonDecode(response.body) as bool;
       return result;
@@ -432,4 +464,41 @@ class ApiBase {
       );
     }
   }
+
+  /// CÁC API SUBCRIPTION ///
+  // Lấy thông tin usage của subscription hiện tại
+  Future<Map<String, dynamic>> getSubscriptionUsage() async {
+    // Build URL
+    final uri = Uri.parse('$jarvisUrl/api/v1/subscriptions/me');
+    // Gọi GET với header đã auth
+    final response = await authenticatedGet(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to fetch subscription usage: '
+        '[${response.statusCode}] ${response.reasonPhrase}\n'
+        'Body: ${response.body}',
+      );
+    }
+  }
+
+  // Gửi request để subscribe (mở gói dịch vụ)
+  Future<Map<String, dynamic>> subscribe() async {
+    // Build URL
+    final uri = Uri.parse('$jarvisUrl/api/v1/subscriptions/subscribe');
+    // Gọi GET với header đã auth
+    final response = await authenticatedGet(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to subscribe: '
+        '[${response.statusCode}] ${response.reasonPhrase}\n'
+        'Body: ${response.body}',
+      );
+    }
+  }
 }
+
+final apiBaseInstance = ApiBase();

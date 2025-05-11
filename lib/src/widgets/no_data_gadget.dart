@@ -11,7 +11,7 @@ class NoDataGadget extends StatelessWidget {
     super.key,
     this.width = 120,
     this.height = 140,
-    this.leftSpacing = spacing20,
+    this.leftSpacing = spacing18,
   });
 
   @override

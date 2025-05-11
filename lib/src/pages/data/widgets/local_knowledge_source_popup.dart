@@ -9,8 +9,7 @@ class LocalKnowledgeSourcePopup {
   static void build(
     BuildContext context, {
     required String knowledgeId,
-    required void Function(String knowledgeId, List<String> paths)
-        onFilesSelected,
+    required void Function(String knowledgeId, List<String> paths) onFilesSelected,
   }) {
     final overlay = Overlay.of(context) ?? Navigator.of(context).overlay;
     OverlayEntry? overlayEntry;
@@ -23,7 +22,7 @@ class LocalKnowledgeSourcePopup {
         color: Colors.black.withOpacity(0.5),
         child: Center(
           child: Container(
-            width: MediaQuery.of(overlayContext).size.width * 0.8,
+            // width: MediaQuery.of(overlayContext).size.width * 0.8,
             decoration: BoxDecoration(
               color: ColorConst.backgroundWhiteColor,
               borderRadius: BorderRadius.circular(radius12),
@@ -71,8 +70,7 @@ class LocalKnowledgeSourcePopup {
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(spacing16),
-                        color: ColorConst.backgroundGrayColor
-                            .withAlpha((0.5 * 255).toInt()),
+                        color: ColorConst.backgroundGrayColor.withAlpha((0.5 * 255).toInt()),
                         child: _pickedFiles.isEmpty
                             ? Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -103,8 +101,7 @@ class LocalKnowledgeSourcePopup {
                                 children: _pickedFiles.map((p) {
                                   final name = p.split('/').last;
                                   return Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
                                     child: Row(
                                       children: [
                                         const Icon(Icons.insert_drive_file),
@@ -133,13 +130,15 @@ class LocalKnowledgeSourcePopup {
                       const SizedBox(width: spacing12),
                       GradientFormButton(
                         text: 'Import',
-                        isActiveButton: _pickedFiles.isNotEmpty,
-                        onPressed: () {
-                          if (_pickedFiles.isNotEmpty) {
-                            onFilesSelected(knowledgeId, _pickedFiles);
-                            _close();
-                          }
-                        },
+                        isActiveButton: true,
+                        onPressed: _pickedFiles.isNotEmpty
+                            ? () {
+                                if (_pickedFiles.isNotEmpty) {
+                                  onFilesSelected(knowledgeId, _pickedFiles);
+                                  _close();
+                                }
+                              }
+                            : () {},
                       ),
                     ],
                   ),

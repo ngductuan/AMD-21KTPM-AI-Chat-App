@@ -30,7 +30,7 @@ class SlackSourcePopup {
             builder: (_, isLoading, __) {
               return Container(
                 padding: const EdgeInsets.all(padding16),
-                margin: const EdgeInsets.symmetric(horizontal: padding16),
+                //margin: const EdgeInsets.symmetric(horizontal: padding16),
                 decoration: BoxDecoration(
                   color: ColorConst.backgroundWhiteColor,
                   borderRadius: BorderRadius.circular(radius12),
@@ -44,8 +44,7 @@ class SlackSourcePopup {
                       children: [
                         Text(
                           'Import from Slack',
-                          style: AppFontStyles.poppinsTitleSemiBold(
-                              fontSize: fontSize16),
+                          style: AppFontStyles.poppinsTitleSemiBold(fontSize: fontSize16),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close),
@@ -110,8 +109,7 @@ class SlackSourcePopup {
                             final token = botTokenController.text.trim();
                             if (unit.isEmpty || ws.isEmpty || token.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Please fill all fields')),
+                                const SnackBar(content: Text('Please fill all fields')),
                               );
                               return;
                             }
@@ -125,17 +123,13 @@ class SlackSourcePopup {
                             )
                                 .then((_) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text('Import from Slack thành công!')),
+                                const SnackBar(content: Text('Import from Slack thành công!')),
                               );
                             }).catchError((e) {
                               String msg = 'Internal server error';
                               try {
-                                final m = jsonDecode(RegExp(r'\{.*\}')
-                                        .firstMatch(e.toString())
-                                        ?.group(0) ??
-                                    '{}') as Map<String, dynamic>;
+                                final m = jsonDecode(RegExp(r'\{.*\}').firstMatch(e.toString())?.group(0) ?? '{}')
+                                    as Map<String, dynamic>;
                                 msg = m['message'] ?? msg;
                               } catch (_) {}
                               ScaffoldMessenger.of(context).showSnackBar(

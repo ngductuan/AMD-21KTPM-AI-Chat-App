@@ -3,11 +3,17 @@ import 'package:eco_chat_bot/src/constants/colors.dart';
 import 'package:eco_chat_bot/src/constants/dimensions.dart';
 import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/constants/font_styles.dart';
+import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
+import 'package:eco_chat_bot/src/constants/services/chat.service.dart';
+import 'package:eco_chat_bot/src/emails/pages/email_thread.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
+import 'package:eco_chat_bot/src/helpers/utility_helper.dart';
 import 'package:eco_chat_bot/src/pages/chat/views/chat_thread.dart';
-import 'package:eco_chat_bot/src/pages/chat/widgets/create_bot_modal.dart';
+import 'package:eco_chat_bot/src/pages/chat/widgets/manage_bot_modal.dart';
 import 'package:eco_chat_bot/src/widgets/animations/animation_modal.dart';
+import 'package:eco_chat_bot/src/widgets/loading_indicator.dart';
 import 'package:eco_chat_bot/src/widgets/no_data_gadget.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -20,20 +26,71 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  int listCount = 1;
+  List<Map<String, dynamic>> chatData = [];
 
-  // Dummy chat data
-  final List<Map<String, String>> chatData = [
-    {"title": "Give me some example about Docker...", "subtitle": "Dr. Sage answers uni med questions in a..."},
-    {"title": "Ask for flutter", "subtitle": "Hello! I can provide assistance with your..."},
-    {"title": "How to code fast for homework...", "subtitle": "Generate photo-realistic pictures with Re..."},
-    {"title": "Why does it use scss instead of css?", "subtitle": "I will help you learn anything you need h..."},
-    {"title": "Translate english to vietnamese", "subtitle": "Describe the image you want to create."},
-    {"title": "Generate for me a 2D picture", "subtitle": "This bot generates realistic, stock photo..."},
-    {"title": "Propose for me a statement", "subtitle": "Expert in Psychology"},
-    {"title": "What pharmacy have been closed near...", "subtitle": "Dr. Sage answers uni med questions in a..."},
-    {"title": "How much cost is it for water?", "subtitle": "Your very own therapist with relationship..."},
-  ];
+  bool isLoading = false;
+
+  Future<void> getChatHistory() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      // Simulate a network call
+      final response = await ChatServiceApi.getChatHistory();
+
+      final data = response['items'] as List<dynamic>;
+
+      // Update the chat data with the response
+      setState(() {
+        chatData = data.map((e) {
+          return {
+            'id': e['id'],
+            'title': e['title'],
+            'createdAt': e['createdAt'],
+          };
+        }).toList();
+      });
+
+      // Update the list count to simulate data retrieval
+      setState(() {});
+    } catch (e) {
+      print('Error fetching chat history: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> createBotData(dynamic body, Function endCallback) async {
+    try {
+      await BotServiceApi.createBotResponse(body);
+
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Bot created successfully!',
+        mode: AppToastMode.confirm,
+      ).show(context);
+    } catch (e) {
+      print('Error creating bot: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error creating bot',
+        mode: AppToastMode.error,
+      ).show(context);
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      endCallback();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getChatHistory();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +109,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ],
       ),
       backgroundColor: ColorConst.backgroundGrayColor,
-      body: listCount == 0
+      body: isLoading ? buildLoadingIndicator(hasMore: isLoading) : (chatData.isEmpty
           ? NoDataGadget()
           : ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: padding8),
@@ -69,13 +126,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     radius: BorderRadius.circular(radius32),
                   ),
                   title: Text(
-                    chatData[index]["title"]!,
+                    chatData[index]["title"],
                     style: AppFontStyles.poppinsTextBold(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    chatData[index]["subtitle"]!,
+                    UtilityHelper.formatTimeAgo(chatData[index]["createdAt"]),
                     style: AppFontStyles.poppinsRegular(color: ColorConst.textGrayColor, fontSize: fontSize12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -85,6 +142,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     Navigator.of(context).pushNamed(
                       ChatThreadScreen.routeName,
                       arguments: {
+                        "conversationId": chatData[index]['id'],
                         ...chatData[index],
                         'avatarPath': avatarPath,
                         'chatStatus': ChatThreadStatus.existing,
@@ -103,7 +161,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                 );
               },
-            ),
+            )),
     );
   }
 
@@ -126,12 +184,20 @@ class _ChatListScreenState extends State<ChatListScreen> {
             Navigator.of(context)
                 .pushNamed(ChatThreadScreen.routeName, arguments: {'chatStatus': ChatThreadStatus.new_});
           } else if (value == 2) {
-            Navigator.of(context).push(AnimationModal.fadeInModal(CreateBotModal()));
+            Navigator.of(context).push(AnimationModal.fadeInModal(ManageBotModal(
+              endCallback: createBotData,
+              activeButtonText: 'Create',
+            )));
+          } else if (value == 3) {
+            Navigator.of(context).pushNamed(
+              EmailThreadScreen.routeName,
+            );
           }
         },
         itemBuilder: (context) => [
           _buildPopupItem(1, Icons.chat_bubble_outline, "New Chat"),
           _buildPopupItem(2, Icons.smart_toy_outlined, "Create Bot"),
+          _buildPopupItem(3, Icons.email_outlined, "New email"),
         ],
       ),
     );

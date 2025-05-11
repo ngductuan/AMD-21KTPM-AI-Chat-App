@@ -4,6 +4,7 @@ import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 import 'package:eco_chat_bot/src/constants/share_preferences/local_storage_key.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/pages/authentication/views/sign_up.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -38,6 +39,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Kiểm tra email có hợp lệ hay không
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
+  }
+
   Future<void> _signInWithEmail() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -45,6 +52,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty || password.isEmpty) {
       setState(() {
         _errorMessage = 'Please fill in all fields.';
+      });
+      return;
+    }
+
+    if (!_isValidEmail(email)) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address.';
       });
       return;
     }
@@ -87,13 +101,12 @@ class _LoginScreenState extends State<LoginScreen> {
             LocalStorageKey.hasSeenWelcome, true); // Đánh dấu đã vào app
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Đăng nhập thành công!'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppToast(
+            context: context,
+            duration: Duration(seconds: 1),
+            message: 'Login successful!',
+            mode: AppToastMode.confirm,
+          ).show(context);
 
           await Future.delayed(const Duration(milliseconds: 800));
           Navigator.pushNamedAndRemoveUntil(

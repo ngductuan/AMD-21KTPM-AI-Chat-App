@@ -1,3 +1,5 @@
+import 'package:eco_chat_bot/src/constants/services/knowledge.service.dart';
+import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:eco_chat_bot/src/constants/styles.dart';
 import 'package:eco_chat_bot/src/helpers/image_helpers.dart';
@@ -8,8 +10,11 @@ import 'package:eco_chat_bot/src/pages/data/widgets/knowledge_info_popup.dart';
 import 'package:eco_chat_bot/src/constants/api/api_base.dart';
 
 class DataScreen extends StatefulWidget {
-  const DataScreen({super.key});
+  const DataScreen({super.key, this.isGotKnowledgeForEachBot = false, this.assistantId = ''});
   static const String routeName = '/data';
+
+  final bool isGotKnowledgeForEachBot;
+  final String assistantId;
 
   @override
   State<DataScreen> createState() => _DataScreenState();
@@ -21,13 +26,26 @@ class _DataScreenState extends State<DataScreen> {
 
   // Danh sách knowledges và loading flag
   List<Map<String, dynamic>> _knowledgeData = [];
+  // For fetch all data
   bool _isLoading = true;
+
+  List<Map<String, dynamic>> _knowledgeDataByBotId = [];
 
   @override
   void initState() {
     super.initState();
-    // gọi fetch ngay khi khởi tạo
-    _fetchKnowledges();
+
+    if (widget.isGotKnowledgeForEachBot) {
+      // fetch knowledge by botId
+      _fetchKnowledgeByBotId(widget.assistantId).then((_) {
+        // fetch all knowledges
+        _fetchKnowledges();
+      });
+    } else {
+      // fetch all knowledges
+      _fetchKnowledges();
+    }
+
     // lắng nghe thay đổi search
     _searchController.addListener(() {
       setState(() {
@@ -37,6 +55,8 @@ class _DataScreenState extends State<DataScreen> {
   }
 
   Future<void> _fetchKnowledges() async {
+    setState(() => _isLoading = true);
+
     try {
       final api = ApiBase();
       // 3. Gọi API; có thể truyền tham số nếu cần
@@ -45,7 +65,7 @@ class _DataScreenState extends State<DataScreen> {
         order: 'DESC',
         orderField: 'createdAt',
         offset: 0,
-        limit: 45,
+        limit: 50,
       );
       // Giả định API trả về JSON với key 'data' là list các knowledge
       final data = resp['data'] as List<dynamic>;
@@ -61,14 +81,99 @@ class _DataScreenState extends State<DataScreen> {
             'updatedBy': e['updatedBy'],
             'userId': e['userId'],
             'numUnits': e['numUnits'],
-            'totalSize': e['totalSize']
+            'totalSize': e['totalSize'],
+            'isImported': _knowledgeDataByBotId.any((k) => k['id'] == e['id']),
           };
         }).toList();
-        _isLoading = false;
       });
     } catch (e) {
-      // TODO: xử lý lỗi (hiện snackbar, retry, v.v.)
+      print('Error fetching all knowledges: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error fetching all knowledges',
+        mode: AppToastMode.error,
+      ).show(context);
+    } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _fetchKnowledgeByBotId(String assistantId) async {
+    try {
+      // 3. Gọi API; có thể truyền tham số nếu cần
+      final resp = await KnowledgeServiceApi.getImportedSourceByBotId(
+        assistantId,
+        limit: 50,
+      );
+
+      // Giả định API trả về JSON với key 'data' là list các knowledge
+      final data = resp['data'] as List<dynamic>;
+      setState(() {
+        _knowledgeDataByBotId = data.map((e) {
+          return {
+            'id': e['id'],
+          };
+        }).toList();
+      });
+    } catch (e) {
+      print('Error fetching knowledge by botId: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error fetching knowledge by botId',
+        mode: AppToastMode.error,
+      ).show(context);
+    }
+  }
+
+  Future<void> _postKnowledgeToAssistant(String knowledgeId) async {
+    try {
+      // 3. Gọi API; có thể truyền tham số nếu cần
+      await KnowledgeServiceApi.postKnowledgeToAssistant(
+        widget.assistantId,
+        knowledgeId,
+      );
+
+      AppToast(
+          context: context,
+          duration: Duration(seconds: 1),
+          message: 'Imported successfully',
+          mode: AppToastMode.confirm,
+        ).show(context);
+    } catch (e) {
+      print('Error posting knowledge to assistant: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error posting knowledge to assistant',
+        mode: AppToastMode.error,
+      ).show(context);
+    }
+  }
+
+  Future<void> _deleteKnowledgeToAssistant(String knowledgeId) async {
+    try {
+      // 3. Gọi API; có thể truyền tham số nếu cần
+      await KnowledgeServiceApi.deleteKnowledgeFromAssistant(
+        widget.assistantId,
+        knowledgeId,
+      );
+
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Deleted successfully',
+        mode: AppToastMode.confirm,
+      ).show(context);
+    } catch (e) {
+      print('Error deleting knowledge to assistant: $e');
+      AppToast(
+        context: context,
+        duration: Duration(seconds: 1),
+        message: 'Error deleting knowledge to assistant',
+        mode: AppToastMode.error,
+      ).show(context);
     }
   }
 
@@ -76,6 +181,12 @@ class _DataScreenState extends State<DataScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  String _formatSize(dynamic bytes) {
+    final double b = (bytes is num) ? bytes.toDouble() : 0;
+    final double kb = b / 1024;
+    return '${kb.toStringAsFixed(2)} KB';
   }
 
   @override
@@ -97,134 +208,211 @@ class _DataScreenState extends State<DataScreen> {
         backgroundColor: ColorConst.backgroundWhiteColor,
         shadowColor: ColorConst.backgroundLightGrayColor,
       ),
-      backgroundColor: ColorConst.backgroundGrayColor,
-      body: Padding(
-        padding: const EdgeInsets.all(padding16),
-        child: Column(
-          children: [
-            // Search + Create
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search knowledge base',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: ColorConst.backgroundWhiteColor,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(radius12),
-                        borderSide: BorderSide.none,
+      // backgroundColor: ColorConst.backgroundGrayColor,
+      backgroundColor: ColorConst.backgroundWhiteColor,
+      body: Container(
+        color: ColorConst.backgroundGrayColor,
+        child: Padding(
+          padding: const EdgeInsets.all(padding16),
+          child: Column(
+            children: [
+              // Search + Create
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Find knowledge base',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: ColorConst.backgroundWhiteColor,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(radius12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: spacing12),
-                GradientFormButton(
-                  text: 'Create',
-                  isActiveButton: true,
-                  onPressed: () {
-                    // mở modal tạo mới và thêm kết quả vào danh sách
-                    showDialog(
-                        context: context,
-                        builder: (_) =>
-                            CreateKnowledgePopup(onCreated: (newKb) {
-                              setState(() {
-                                // map trực tiếp các trường từ API về structure của _knowledgeData
-                                _knowledgeData.insert(0, {
-                                  'id': newKb['knowledgeId'] ?? newKb['id'],
-                                  'knowledgeName': newKb['knowledgeName'],
-                                  'description': newKb['description'],
-                                  'createdAt': newKb['createdAt'],
-                                  'updatedAt': newKb['updatedAt'],
-                                  'createdBy': newKb['createdBy'],
-                                  'updatedBy': newKb['updatedBy'],
-                                  'userId': newKb['userId'],
+                  const SizedBox(width: spacing12),
+                  GradientFormButton(
+                    text: 'Create',
+                    isActiveButton: true,
+                    onPressed: () {
+                      // mở modal tạo mới và thêm kết quả vào danh sách
+                      showDialog(
+                          context: context,
+                          builder: (_) => CreateKnowledgePopup(onCreated: (newKb) {
+                                setState(() {
+                                  // map trực tiếp các trường từ API về structure của _knowledgeData
+                                  _knowledgeData.insert(0, {
+                                    'id': newKb['knowledgeId'] ?? newKb['id'],
+                                    'knowledgeName': newKb['knowledgeName'],
+                                    'description': newKb['description'],
+                                    'createdAt': newKb['createdAt'],
+                                    'updatedAt': newKb['updatedAt'],
+                                    'createdBy': newKb['createdBy'],
+                                    'updatedBy': newKb['updatedBy'],
+                                    'userId': newKb['userId'],
+                                  });
                                 });
-                              });
-                            }));
-                  },
-                ),
-              ],
-            ),
+                              }));
+                    },
+                  ),
+                ],
+              ),
 
-            const SizedBox(height: spacing16),
+              const SizedBox(height: spacing16),
 
-            // Nội dung
-            Expanded(
-              child: _isLoading
-                  // loading indicator
-                  ? const Center(child: CircularProgressIndicator())
-                  : filtered.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ImageHelper.loadFromAsset(
-                                AssetPath.noData,
-                                width: 120,
-                                height: 120,
-                              ),
-                              const SizedBox(height: spacing16),
-                              Text(
-                                'No knowledge found',
-                                style: AppFontStyles.poppinsTextBold(
-                                    fontSize: fontSize16),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.separated(
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, __) => const Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: ColorConst.backgroundLightGrayColor,
-                          ),
-                          itemBuilder: (context, index) {
-                            final item = filtered[index];
-                            return ListTile(
-                              title: Text(
-                                item['knowledgeName'] as String,
-                                style: AppFontStyles.poppinsTextBold(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                item['description'] as String,
-                                style: AppFontStyles.poppinsRegular(
-                                  color: ColorConst.textGrayColor,
-                                  fontSize: fontSize12,
+              // Nội dung
+              Expanded(
+                child: _isLoading
+                    // loading indicator
+                    ? const Center(child: CircularProgressIndicator())
+                    : filtered.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ImageHelper.loadFromAsset(
+                                  AssetPath.noData,
+                                  width: 120,
+                                  height: 120,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => KnowledgeInfoPopup(
-                                    knowledge: item,
-                                    onDeleted: () {
-                                      setState(() {
-                                        _knowledgeData.removeWhere(
-                                            (e) => e['id'] == item['id']);
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text('Knowledge deleted')),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-            ),
-          ],
+                                const SizedBox(height: spacing16),
+                                Text(
+                                  'No knowledge found',
+                                  style: AppFontStyles.poppinsTextBold(fontSize: fontSize16),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) => const Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: ColorConst.backgroundLightGrayColor,
+                            ),
+                            itemBuilder: (context, index) {
+                              final item = filtered[index];
+
+                              bool isImported = item['isImported'] == null ? false : item['isImported'] as bool;
+
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: spacing8),
+                                leading: ImageHelper.loadFromAsset(
+                                  AssetPath.icoDatabase,
+                                  width: spacing24,
+                                  height: spacing24,
+                                ),
+                                trailing: widget.isGotKnowledgeForEachBot
+                                    ? GestureDetector(
+                                        onTap: () async {
+                                          if (!isImported) {
+                                            await _postKnowledgeToAssistant(item['id'] as String);
+                                            setState(() {
+                                              _knowledgeData[index]['isImported'] = true;
+                                            });
+                                          } else {
+                                            await _deleteKnowledgeToAssistant(item['id'] as String);
+                                            setState(() {
+                                              _knowledgeData[index]['isImported'] = false;
+                                            });
+                                          }
+                                        },
+                                        child: Icon(
+                                          isImported ? Icons.check : Icons.add,
+                                          size: spacing16,
+                                          color: isImported ? Colors.green[600] : Colors.black,
+                                        ),
+                                      )
+                                    : null,
+                                title: Text(
+                                  item['knowledgeName'] as String,
+                                  style: AppFontStyles.poppinsTextBold(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // 1) Dòng mô tả
+                                    Text(
+                                      item['description'] as String? ?? '',
+                                      style: AppFontStyles.poppinsRegular(
+                                        color: ColorConst.textGrayColor,
+                                        fontSize: fontSize12,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    // 2) Dòng pills Units + Total Size
+                                    Row(
+                                      children: [
+                                        // Units pill
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green, // hoặc dùng ColorConst nếu có
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${item['numUnits'] ?? 0} units',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Total Size pill
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.purple, // hoặc dùng ColorConst nếu có
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            _formatSize(item['totalSize'] ?? 0),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => KnowledgeInfoPopup(
+                                      knowledge: item,
+                                      onDeleted: () {
+                                        setState(() {
+                                          _knowledgeData.removeWhere((e) => e['id'] == item['id']);
+                                        });
+
+                                        AppToast(
+                                          context: context,
+                                          duration: Duration(seconds: 1),
+                                          message: 'Knowledge deleted',
+                                          mode: AppToastMode.confirm,
+                                        ).show(context);
+                                      },
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+              ),
+            ],
+          ),
         ),
       ),
     );
