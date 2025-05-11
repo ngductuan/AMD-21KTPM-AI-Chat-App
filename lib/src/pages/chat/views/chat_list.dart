@@ -142,6 +142,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     Navigator.of(context).pushNamed(
                       ChatThreadScreen.routeName,
                       arguments: {
+                        "conversationId": chatData[index]['id'],
                         ...chatData[index],
                         'avatarPath': avatarPath,
                         'chatStatus': ChatThreadStatus.existing,

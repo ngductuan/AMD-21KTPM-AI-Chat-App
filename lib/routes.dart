@@ -1,3 +1,4 @@
+import 'package:eco_chat_bot/src/constants/enum.dart';
 import 'package:eco_chat_bot/src/emails/pages/email_thread.dart';
 import 'package:eco_chat_bot/src/integration/views/app_integration.dart';
 import 'package:eco_chat_bot/src/pages/ai_bot/views/explore.dart';
@@ -20,7 +21,23 @@ final Map<String, WidgetBuilder> routes = {
 
   // Chat
   ChatListScreen.routeName: (context) => const ChatListScreen(),
-  ChatThreadScreen.routeName: (context) => const ChatThreadScreen(),
+  ChatThreadScreen.routeName: (context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
+    final String conversationId = args['id'] ?? '';
+    final String avatarPath = args['avatarPath'] ?? '';
+    final String title = args['title'] ?? '';
+    final ChatThreadStatus chatStatus = args['chatStatus'] ?? ChatThreadStatus.new_;
+    final String botId = args['botId'] ?? '';
+
+    return ChatThreadScreen(
+      conversationId: conversationId,
+      avatarPath: avatarPath,
+      title: title,
+      chatStatus: chatStatus,
+      botId: botId,
+    );
+  },
 
   // Email
   EmailThreadScreen.routeName: (context) => const EmailThreadScreen(),
@@ -29,7 +46,7 @@ final Map<String, WidgetBuilder> routes = {
   ExploreScreen.routeName: (context) => const ExploreScreen(),
 
   // Data source
-  DataScreen.routeName: (context){
+  DataScreen.routeName: (context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
 
     final bool isGotKnowledgeForEachBot = args['isGotKnowledgeForEachBot'] as bool? ?? false;
