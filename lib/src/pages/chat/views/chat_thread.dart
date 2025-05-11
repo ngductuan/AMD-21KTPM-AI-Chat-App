@@ -115,38 +115,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     }
   }
 
-  // Future<void> getChatHistory() async {
-  //   setState(() {
-  //     isLoading = true;
-  //   });
-  //   try {
-  //     // Simulate a network call
-  //     final response = await ChatServiceApi.getChatHistory();
-
-  //     final data = response['items'] as List<dynamic>;
-
-  //     // Update the chat data with the response
-  //     setState(() {
-  //       chatData = data.map((e) {
-  //         return {
-  //           'id': e['id'],
-  //           'title': e['title'],
-  //           'createdAt': e['createdAt'],
-  //         };
-  //       }).toList();
-  //     });
-
-  //     // Update the list count to simulate data retrieval
-  //     setState(() {});
-  //   } catch (e) {
-  //     print('Error fetching chat history: $e');
-  //   } finally {
-  //     setState(() {
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-
   Future<void> _getChatHistoryById(String conversationId) async {
     try {
       final response = await ChatServiceApi.getChatHistoryById(conversationId);
@@ -155,12 +123,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
       // Update the chat data with the response
       setState(() {
-        // _messages.clear();
-        // print('get chat history: $data');
         _messages.addAll(data.map((e) {
           return {
-            // 'content': e['content'],
-            // 'role': e['role'],
             'query': e['query'] ?? '',
             'answer': e['answer'] ?? '',
             'createdAt': e['createdAt'] ?? '',
@@ -197,8 +161,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
           final Map<String, dynamic> dynamicMap = item as Map<String, dynamic>;
           return dynamicMap.map((key, value) => MapEntry(key, value?.toString() ?? ''));
         }).toList();
-
-        // print('listMap: $newItems');
 
         setState(() {
           _aiModels.addAll(newItems);
@@ -502,42 +464,18 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final args = ModalRoute.of(context)!.settings.arguments as Map;
     String avatarPath = widget.avatarPath.isEmpty ? AssetPath.chatThreadAvatarList[0] : widget.avatarPath;
     String title = widget.title.isEmpty ? "New chat" : widget.title;
 
     ChatThreadStatus chatStatus = widget.chatStatus;
 
     if (chatStatus == ChatThreadStatus.existing) {
-      // print('args: $args');
-      // setState(() {
-      //   // title = args['title'];
-
-      // });
     } else if (chatStatus == ChatThreadStatus.newExplore && isFirstLoading) {
-      // print('get botId: ${args['botId']} ${isFirstLoading}');
-      // print(
-      //     'bool: ${activeAiModelId.isNotEmpty ? activeAiModelId : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null)}');
       setState(() {
-        // activeAiModelId = args['botId'];
         activeAiModelId = widget.botId;
         isVisibleGadget = widget.isVisibleGadget;
       });
     }
-
-    // if (chatStatus == ChatThreadStatus.existing && isFirstLoading) {
-    //   _messages.addAll([
-    //     {'content': "Have a healthy meal.", 'role': ChatRole.model.text},
-    //     {'content': "How much price is it?", 'role': ChatRole.user.text},
-    //     {'content': "Only 5\$ for hamburger.", 'role': ChatRole.model.text},
-    //     {'content': 'What is this image?', 'imagePath': AssetPath.imgUploadChat, 'role': ChatRole.user.text},
-    //     {'content': "", 'role': ChatRole.model.text}
-    //   ]);
-
-    //   setState(() {
-    //     isFirstLoading = false;
-    //   });
-    // }
 
     return Scaffold(
       appBar: AppBar(
@@ -589,11 +527,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final message = _messages[index];
-                    // bool isModel = message['role'] == ChatRole.model.text;
-
-                    // if (replyContent.isEmpty) {
-                    //   return TypingIndicator();
-                    // }
 
                     return Column(
                       children: [
@@ -607,53 +540,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                                 chatStatus: chatStatus),
                       ],
                     );
-
-                    // return Column(
-                    //   children: [
-                    //     isModel
-                    //         ? Padding(
-                    //             padding: EdgeInsets.only(left: spacing8),
-                    //             child: _buildModelLabel(activeAiModelId, iconSize: spacing20, isDefaultMessage: true),
-                    //           )
-                    //         : SizedBox.shrink(),
-                    //     Align(
-                    //       alignment: isModel ? Alignment.centerLeft : Alignment.centerRight,
-                    //       child: Column(
-                    //         crossAxisAlignment: CrossAxisAlignment.end,
-                    //         children: [
-                    //           message['imagePath'] != null
-                    //               ? (ChatThreadStatus.new_ == chatStatus
-                    //                   ? UploadImageWidget.buildUploadImageWidget(
-                    //                       context: context,
-                    //                       imageFile: message['imagePath'],
-                    //                       height: 120,
-                    //                       hasExit: false,
-                    //                     )
-                    //                   : ImageHelper.loadFromAsset(
-                    //                       message['imagePath'],
-                    //                       width: 120,
-                    //                       radius: BorderRadius.circular(radius20),
-                    //                     ))
-                    //               : SizedBox.shrink(),
-                    //           Container(
-                    //             padding: EdgeInsets.all(spacing8),
-                    //             margin: EdgeInsets.symmetric(vertical: spacing6, horizontal: spacing8),
-                    //             decoration: BoxDecoration(
-                    //               color: isModel ? ColorConst.textWhiteColor : ColorConst.textHighlightColor,
-                    //               borderRadius: BorderRadius.circular(radius12),
-                    //             ),
-                    //             child: Text(
-                    //               message['content'],
-                    //               style:
-                    //                   TextStyle(color: isModel ? ColorConst.textBlackColor : ColorConst.textWhiteColor),
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //   ],
-                    // );
-                    // return Text('Test');
                   },
                 ),
               ),
