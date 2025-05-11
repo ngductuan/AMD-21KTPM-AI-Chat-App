@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final tabs = [
     ChatListScreen(),
     ExploreScreen(),
-    ChatThreadScreen(),
+    Text('Add'),
     DataScreen(),
     ProfilePage(),
   ];

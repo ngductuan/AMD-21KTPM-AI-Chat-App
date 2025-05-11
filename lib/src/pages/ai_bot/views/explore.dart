@@ -224,14 +224,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-
-  Widget _buildLoadingIndicator() {
-    return Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Center(
-        // Show a loading indicator if more items are being loaded
-        child: _hasMore ? CircularProgressIndicator() : SizedBox.shrink(),
-      ),
-    );
-  }
 }

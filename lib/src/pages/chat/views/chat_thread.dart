@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:eco_chat_bot/src/constants/services/bot.service.dart';
 import 'package:eco_chat_bot/src/constants/services/chat.service.dart';
+import 'package:eco_chat_bot/src/pages/chat/widgets/chat_line_item.dart';
 import 'package:eco_chat_bot/src/pages/chat/widgets/upload_image_widget.dart';
 import 'package:eco_chat_bot/src/widgets/toast/app_toast.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +19,26 @@ import 'package:eco_chat_bot/src/widgets/animations/typing_indicator.dart';
 import 'package:eco_chat_bot/src/pages/prompt/prompt_libary.dart';
 
 class ChatThreadScreen extends StatefulWidget {
-  const ChatThreadScreen({super.key});
+  const ChatThreadScreen({
+    super.key,
+    this.conversationId = "",
+    // this.chatIndex = 0,
+    this.title = "",
+    this.avatarPath = '',
+    this.chatStatus = ChatThreadStatus.new_,
+    this.botId = "",
+    this.isVisibleGadget = true,
+  });
 
   static const String routeName = '/chat-thread';
+
+  final String conversationId;
+  // final int chatIndex;
+  final String title;
+  final String avatarPath;
+  final ChatThreadStatus chatStatus;
+  final String botId;
+  final bool isVisibleGadget;
 
   @override
   State<ChatThreadScreen> createState() => _ChatThreadScreenState();
@@ -53,10 +71,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   // Lưu trữ các message chat
   final List<Map<String, dynamic>> _messages = [
-    {
-      'content': "Hello.👋 I'm your new friend, StarryAI Bot.",
-      'role': ChatRole.model.text
-    },
   ];
 
   bool isFirstLoading = true;
@@ -67,6 +81,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
     if (isVisibleGadget) {
       fetchAiModels();
+    }
+
+    if (widget.chatStatus == ChatThreadStatus.existing) {
+      _getChatHistoryById(widget.conversationId);
     }
 
     // Gọi API ban đầu để lấy danh sách prompt (limit 3)
@@ -96,6 +114,32 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     }
   }
 
+  Future<void> _getChatHistoryById(String conversationId) async {
+    try {
+      final response = await ChatServiceApi.getChatHistoryById(conversationId);
+
+      final data = response['items'] as List<dynamic>;
+
+      // Update the chat data with the response
+      setState(() {
+        _messages.addAll(data.map((e) {
+          return {
+            'query': e['query'] ?? '',
+            'answer': e['answer'] ?? '',
+            'createdAt': e['createdAt'] ?? '',
+          };
+        }).toList());
+      });
+    } catch (e) {
+      // Handle the exception
+      print('Exception occurred while fetching chat history: $e');
+    } finally {
+      setState(() {
+        isFirstLoading = false;
+      });
+    }
+  }
+
   Future<void> fetchAiModels({String? searchQuery, bool reset = false}) async {
     if (_isModelsLoading) return;
 
@@ -119,8 +163,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
           return dynamicMap
               .map((key, value) => MapEntry(key, value?.toString() ?? ''));
         }).toList();
-
-        // print('listMap: $newItems');
 
         setState(() {
           _aiModels.addAll(newItems);
@@ -384,12 +426,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         // Update UI with user message
         setState(() {
           _messages.addAll([
-            {
-              'content': content,
-              'role': ChatRole.user.text,
-              'imagePath': _imageFile
-            },
-            {'content': "", 'role': ChatRole.model.text}
+            {'query': content, 'answer': '', 'imagePath': _imageFile},
           ]);
           _controller.clear();
         });
@@ -397,48 +434,29 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         // Remove temp image file
         _imageFile = null;
 
-        // Transform messages to remove unnecessary elements
-        final messageDto = _messages.map((message) {
-          return {
-            ...message,
+        final List<Map<String, dynamic>> history = [];
+        for (final message in _messages) {
+          history.add({
+            "role": "user",
+            'content': message['query'],
             'assistant': BotServiceApi.assistant,
-          };
-        }).toList();
+          });
 
-        // Remove hello message
-        messageDto.removeAt(0);
-        // Remove typing indicator
-        messageDto.removeLast();
-        // Remove image path
-        messageDto.removeWhere((message) => message['imagePath'] != null);
+          history.add({
+            "role": "model",
+            'content': message['answer'],
+            'assistant': BotServiceApi.assistant,
+          });
+        }
 
         // Send message to server and wait for response
-        dynamic response =
-            await ChatServiceApi.createChatWithBot(content, messageDto);
+        final response = await ChatServiceApi.createChatWithBot(widget.conversationId, content, history);
 
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        final data = jsonDecode(response) as Map<String, dynamic>;
 
-        if (response.statusCode == HttpStatus.unprocessableEntity) {
-          setState(() {
-            _messages.removeLast();
-          });
-
-          AppToast(
-            context: context,
-            duration: Duration(seconds: 1),
-            message: jsonResponse['message'] ?? 'Error sending message',
-            mode: AppToastMode.error,
-          ).show(context);
-
-          return;
-        }
-
-        if (jsonResponse.containsKey('message')) {
-          setState(() {
-            _messages[_messages.length - 1]['content'] =
-                jsonResponse['message'];
-          });
-        }
+        setState(() {
+          _messages[_messages.length - 1]['answer'] = data['message'];
+        });
       } catch (e) {
         // Handle any errors that occur during the API call
         print("Error sending message: $e");
@@ -450,7 +468,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         AppToast(
           context: context,
           duration: Duration(seconds: 1),
-          message: 'Error sending message',
+          message: 'Error sending message: $e',
           mode: AppToastMode.error,
         ).show(context);
       }
@@ -461,45 +479,16 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map;
-    String avatarPath = args['avatarPath'] ?? AssetPath.chatThreadAvatarList[0];
-    String title = 'New chat';
+    String avatarPath = widget.avatarPath.isEmpty ? AssetPath.chatThreadAvatarList[0] : widget.avatarPath;
+    String title = widget.title.isEmpty ? "New chat" : widget.title;
 
-    ChatThreadStatus chatStatus = args['chatStatus'];
+    ChatThreadStatus chatStatus = widget.chatStatus;
 
     if (chatStatus == ChatThreadStatus.existing) {
-      print('args: $args');
-      setState(() {
-        title = args['title'];
-      });
     } else if (chatStatus == ChatThreadStatus.newExplore && isFirstLoading) {
-      print('get botId: ${args['botId']} ${isFirstLoading}');
-      // print(
-      //     'bool: ${activeAiModelId.isNotEmpty ? activeAiModelId : (_aiModels.isNotEmpty ? _aiModels[activeAiModelIndex]["id"] : null)}');
       setState(() {
-        activeAiModelId = args['botId'];
-        if (args['isVisibleGadget'] != null) {
-          isVisibleGadget = args['isVisibleGadget'];
-          title = 'Preview';
-        }
-      });
-    }
-
-    if (chatStatus == ChatThreadStatus.existing && isFirstLoading) {
-      _messages.addAll([
-        {'content': "Have a healthy meal.", 'role': ChatRole.model.text},
-        {'content': "How much price is it?", 'role': ChatRole.user.text},
-        {'content': "Only 5\$ for hamburger.", 'role': ChatRole.model.text},
-        {
-          'content': 'What is this image?',
-          'imagePath': AssetPath.imgUploadChat,
-          'role': ChatRole.user.text
-        },
-        {'content': "", 'role': ChatRole.model.text}
-      ]);
-
-      setState(() {
-        isFirstLoading = false;
+        activeAiModelId = widget.botId;
+        isVisibleGadget = widget.isVisibleGadget;
       });
     }
 
@@ -554,68 +543,17 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final message = _messages[index];
-                    String messageContent = message['content'];
-
-                    bool isModel = message['role'] == ChatRole.model.text;
-
-                    if (messageContent.isEmpty) {
-                      return TypingIndicator();
-                    }
 
                     return Column(
                       children: [
-                        isModel
-                            ? Padding(
-                                padding: EdgeInsets.only(left: spacing8),
-                                child: _buildModelLabel(activeAiModelId,
-                                    iconSize: spacing20,
-                                    isDefaultMessage: true),
-                              )
-                            : SizedBox.shrink(),
-                        Align(
-                          alignment: isModel
-                              ? Alignment.centerLeft
-                              : Alignment.centerRight,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              message['imagePath'] != null
-                                  ? (ChatThreadStatus.new_ == chatStatus
-                                      ? UploadImageWidget
-                                          .buildUploadImageWidget(
-                                          context: context,
-                                          imageFile: message['imagePath'],
-                                          height: 120,
-                                          hasExit: false,
-                                        )
-                                      : ImageHelper.loadFromAsset(
-                                          message['imagePath'],
-                                          width: 120,
-                                          radius:
-                                              BorderRadius.circular(radius20),
-                                        ))
-                                  : SizedBox.shrink(),
-                              Container(
-                                padding: EdgeInsets.all(spacing8),
-                                margin: EdgeInsets.symmetric(
-                                    vertical: spacing6, horizontal: spacing8),
-                                decoration: BoxDecoration(
-                                  color: isModel
-                                      ? ColorConst.textWhiteColor
-                                      : ColorConst.textHighlightColor,
-                                  borderRadius: BorderRadius.circular(radius12),
-                                ),
-                                child: Text(
-                                  message['content'],
-                                  style: TextStyle(
-                                      color: isModel
-                                          ? ColorConst.textBlackColor
-                                          : ColorConst.textWhiteColor),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        // isModel = false
+                        ChatLineItem.build(context, false, message, activeAiModelId, _buildModelLabel,
+                            chatStatus: chatStatus),
+                        // isModel = true
+                        message['answer'].isEmpty
+                            ? Align(alignment: Alignment.centerLeft, child: TypingIndicator())
+                            : ChatLineItem.build(context, true, message, activeAiModelId, _buildModelLabel,
+                                chatStatus: chatStatus),
                       ],
                     );
                   },
