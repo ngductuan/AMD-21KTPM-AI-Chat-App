@@ -178,7 +178,7 @@ class _ProfilePageState extends State<ProfilePage> {
         mode: AppToastMode.error,
       ).show(context);
     } finally {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 1000));
       endCallback();
       fetchAiModels(reset: true);
     }
