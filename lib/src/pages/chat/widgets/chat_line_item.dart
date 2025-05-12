@@ -23,7 +23,7 @@ class ChatLineItem {
             children: [
               isModel == false && message['imagePath'] != null
                   ? Padding(
-                      padding: const EdgeInsets.only(top: spacing8),
+                      padding: const EdgeInsets.only(top: spacing8, right: spacing8),
                       child: UploadImageWidget.buildUploadImageWidget(
                         context: context,
                         imageFile: message['imagePath'],
